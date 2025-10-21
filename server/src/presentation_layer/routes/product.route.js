@@ -3,6 +3,6 @@ import { searchProductsController } from '../../composition-root.js';
 
 const router = Router()
 
-router.get('/', async (req, res) => searchProductsController.execute(req, res));
+router.get('/', async (req, res) => await searchProductsController.execute(req, res));
 
 export default router

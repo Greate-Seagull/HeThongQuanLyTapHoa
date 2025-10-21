@@ -1,0 +1,35 @@
+{
+	"name": "server",
+	"version": "1.0.0",
+	"description": "",
+	"homepage": "https://github.com/Greate-Seagull/HeThongQuanLyTapHoa#readme",
+	"bugs": {
+		"url": "https://github.com/Greate-Seagull/HeThongQuanLyTapHoa/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Greate-Seagull/HeThongQuanLyTapHoa.git"
+	},
+	"license": "ISC",
+	"author": "Hung",
+	"type": "module",
+	"main": "server.js",
+	"directories": {
+		"test": "tests"
+	},
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"dev": "npx nodemon src/server.js"
+	},
+	"dependencies": {
+		"dotenv": "^17.2.3",
+		"express": "^5.1.0",
+		"jsonwebtoken": "^9.0.2"
+	},
+	"devDependencies": {
+		"@babel/preset-env": "^7.28.3",
+		"jest": "^30.2.0",
+		"nodemon": "^3.1.10",
+		"supertest": "^7.1.4"
+	}
+}
