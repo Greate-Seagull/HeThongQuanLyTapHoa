@@ -7,6 +7,6 @@ export class SearchProductsUseCase {
 
     async execute({ id }) {
         console.log("Enter search products use case");
-        return await this.#productRepository.findById(productId);
+        return await this.#productRepository.findById(id);
     }
 }

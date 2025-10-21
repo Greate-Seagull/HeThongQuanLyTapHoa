@@ -8,7 +8,7 @@ export class SearchProductsController {
     async execute(req, res) {
         try {
             console.log('Enter search products controller');
-            const res = await this.#usecase.execute(req.body);
+            const result = await this.#usecase.execute(req.body);
             res.json();
         }
         catch (error) {
