@@ -10,26 +10,31 @@
 		"type": "git",
 		"url": "git+https://github.com/Greate-Seagull/HeThongQuanLyTapHoa.git"
 	},
-	"license": "ISC",
+	"license": "UNLICENSED",
 	"author": "Hung",
-	"type": "module",
 	"main": "server.js",
 	"directories": {
 		"test": "tests"
 	},
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1",
-		"dev": "npx nodemon src/server.js"
+		"build": "tsc",
+		"start": "node dist/index.js",
+		"test": "npx jest"
 	},
 	"dependencies": {
+		"@prisma/client": "^6.18.0",
 		"dotenv": "^17.2.3",
 		"express": "^5.1.0",
 		"jsonwebtoken": "^9.0.2"
 	},
 	"devDependencies": {
-		"@babel/preset-env": "^7.28.3",
+		"@types/express": "^5.0.3",
+		"@types/jest": "^30.0.0",
+		"@types/supertest": "^6.0.3",
 		"jest": "^30.2.0",
 		"nodemon": "^3.1.10",
-		"supertest": "^7.1.4"
+		"prisma": "^6.18.0",
+		"supertest": "^7.1.4",
+		"ts-jest": "^29.4.5"
 	}
 }
