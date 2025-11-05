@@ -1,30 +1,35 @@
 import { Product } from "src/domain/product";
-import { ProductRepository } from "src/infrastructure/repositories/product.repository";
+import { ProductReadAccessor } from "src/infrastructure/read_accessors/product.read-accessor";
 
 export class SearchProductsUsecaseInput {
-	id: number = 0;
+	constructor(public productId: number) {}
 }
 
 export class SearchProductsUsecaseOutput {
-	post: Product;
-
-	constructor(post: Product) {
-		this.post = post;
-	}
+	constructor(
+		public id: Number,
+		public name: String,
+		public price: Number,
+		public unit: String
+	) {}
 }
 
 export class SearchProductsUsecase {
-	private productRepository: ProductRepository;
-
-	constructor(productRepository: ProductRepository) {
-		this.productRepository = productRepository;
-	}
+	constructor(private readonly productRepository: ProductReadAccessor) {}
 
 	async execute(
 		input: SearchProductsUsecaseInput
 	): Promise<SearchProductsUsecaseOutput> {
-		console.log("Enter search products use case");
-		const result = await this.productRepository.getById(null, input.id);
-		return new SearchProductsUsecaseOutput(result);
+		const output = await this.productRepository.getProductDetailById(
+			input.productId
+		);
+		if (!output) throw Error(`Product not found. ${input.productId}`);
+
+		return new SearchProductsUsecaseOutput(
+			output.id,
+			output.name,
+			output.price,
+			output.unit
+		);
 	}
 }

@@ -1,9 +1,16 @@
+import "dotenv/config";
 import { SearchProductsUsecase } from "./application/search-products.usecase";
-import { ProductRepositoryPostgree } from "./infrastructure/repositories/product.repository.postgree";
-import { SearchProductsController } from "./presentation/controllers/search-products.controller";
+import { PrismaClient } from "./generated/client";
+import { ProductReadAccessor } from "./infrastructure/read_accessors/product.read-accessor";
+import { CreatePromotionUsecase } from "./application/create-promotion.usecase";
+import { PromotionRepository } from "./infrastructure/repositories/promotion.repository";
 
-const productRepository = new ProductRepositoryPostgree();
-const searchProductsUsecase = new SearchProductsUsecase(productRepository);
-export const searchProductsController = new SearchProductsController(
-	searchProductsUsecase
+export const prisma = new PrismaClient();
+
+const productReadAccessor = new ProductReadAccessor(prisma);
+const promotionRepo = new PromotionRepository(prisma);
+
+export const searchProductsUsecase = new SearchProductsUsecase(
+	productReadAccessor
 );
+export const createPromotionUsecase = new CreatePromotionUsecase(promotionRepo);

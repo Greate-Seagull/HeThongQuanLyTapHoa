@@ -1,11 +1,8 @@
 import { Router } from "express";
-import { searchProductsController } from "../../composition-root";
+import { controlSearchProduct } from "../controllers/product.controller";
 
 const router = Router();
 
-router.get(
-	"/",
-	async (req, res) => await searchProductsController.execute(req, res)
-);
+router.get("/:productId", controlSearchProduct);
 
 export default router;
