@@ -1,35 +1,72 @@
 import { Product } from "src/domain/product";
 import { ProductReadAccessor } from "src/infrastructure/read_accessors/product.read-accessor";
+import { PromotionType } from "../domain/promotion";
+import { PromotionRepository } from "../infrastructure/repositories/promotion.repository";
+import { PromotionPricingService } from "../domain/promotion-pricing.service";
 
 export class SearchProductsUsecaseInput {
 	constructor(public productId: number) {}
 }
 
+export type ProductOutput = {
+	id: number;
+	name: string;
+	price: number;
+	unit: string;
+};
+export type PromotionOutput = {
+	id: number;
+	name: string;
+	value: number;
+	type: string;
+};
 export class SearchProductsUsecaseOutput {
 	constructor(
-		public id: Number,
-		public name: String,
-		public price: Number,
-		public unit: String
+		public product: ProductOutput,
+		public promotion: PromotionOutput
 	) {}
 }
 
 export class SearchProductsUsecase {
-	constructor(private readonly productRepository: ProductReadAccessor) {}
+	constructor(
+		private readonly productRead: ProductReadAccessor,
+		private readonly promotionRepo: PromotionRepository,
+		private readonly promotionPricing: PromotionPricingService
+	) {}
 
 	async execute(
 		input: SearchProductsUsecaseInput
 	): Promise<SearchProductsUsecaseOutput> {
-		const output = await this.productRepository.getProductDetailById(
+		const product = await this.productRead.getProductIncludePromotionId(
 			input.productId
 		);
-		if (!output) throw Error(`Product not found. ${input.productId}`);
+		if (!product) throw Error(`Product not found. ${input.productId}`);
 
-		return new SearchProductsUsecaseOutput(
-			output.id,
-			output.name,
-			output.price,
-			output.unit
+		const promotions = await this.promotionRepo.getByIds(
+			product.promotionDetails.map((p: any) => p.promotionId)
 		);
+
+		const bestPromotion = this.promotionPricing.getBestPromotion(
+			promotions,
+			product.price
+		);
+
+		const productOutput: ProductOutput = {
+			id: product.id,
+			name: product.name,
+			price: product.price,
+			unit: product.unit,
+		};
+
+		const promotionOutput: PromotionOutput = bestPromotion
+			? {
+					id: bestPromotion.id,
+					name: bestPromotion.name,
+					value: bestPromotion.value,
+					type: bestPromotion.promotionType,
+			  }
+			: null;
+
+		return new SearchProductsUsecaseOutput(productOutput, promotionOutput);
 	}
 }

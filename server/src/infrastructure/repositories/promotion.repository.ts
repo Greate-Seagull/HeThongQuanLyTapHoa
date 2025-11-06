@@ -14,6 +14,19 @@ export class PromotionRepository implements PromotionRepository {
 		return PromotionMapper.toDomain(result);
 	}
 
+	async getByIds(ids: []) {
+		const raws = await this.prisma.promotion.findMany({
+			where: {
+				id: {
+					in: ids,
+				},
+			},
+			select: PromotionRepository.baseQuery,
+		});
+
+		return raws.map(PromotionMapper.toDomain);
+	}
+
 	static baseQuery = {
 		id: true,
 		name: true,

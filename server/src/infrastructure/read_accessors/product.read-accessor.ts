@@ -1,9 +1,10 @@
 import { PrismaClient } from "@prisma/client";
+import { PromotionType } from "../../generated/enums";
 
 export class ProductReadAccessor {
 	constructor(private readonly prisma: PrismaClient) {}
 
-	async getProductDetailById(id: any) {
+	async getProductIncludePromotionId(id: any) {
 		return await this.prisma.product.findUnique({
 			where: { id },
 			select: {
@@ -11,6 +12,11 @@ export class ProductReadAccessor {
 				name: true,
 				price: true,
 				unit: true,
+				promotionDetails: {
+					select: {
+						promotionId: true,
+					},
+				},
 			},
 		});
 	}

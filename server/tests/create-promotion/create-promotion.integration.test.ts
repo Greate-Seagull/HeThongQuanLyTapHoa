@@ -19,6 +19,9 @@ describe("Create promotion integration test", () => {
 	});
 
 	afterAll(async () => {
+		await prisma.promotion.deleteMany({
+			where: { name: promotionInput.name },
+		});
 		await prisma.product.deleteMany({
 			where: { id: { in: [product1.id, product2.id] } },
 		});

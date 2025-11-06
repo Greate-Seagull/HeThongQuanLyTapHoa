@@ -81,6 +81,23 @@ export class Promotion {
 		this._endedAt = endedAt;
 	}
 
+	public isActive(date: Date): boolean {
+		return date >= this.startedAt && date <= this.endedAt;
+	}
+
+	public calculateDiscount(basePrice: number): number {
+		switch (this.promotionType) {
+			case PromotionType.FIXED:
+				return this.value;
+			case PromotionType.PERCENTAGE:
+				return this.value * basePrice;
+			default:
+				throw Error(
+					`Expect a valid promotion type, got ${this.promotionType}`
+				);
+		}
+	}
+
 	get id() {
 		return this._id;
 	}
