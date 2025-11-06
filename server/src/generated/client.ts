@@ -42,7 +42,17 @@ path.join(__dirname, "query_engine-windows.dll.node")
 path.join(process.cwd(), "src/generated/query_engine-windows.dll.node")
 
 /**
- * Model product
+ * Model Product
  * 
  */
-export type product = Prisma.productModel
+export type Product = Prisma.ProductModel
+/**
+ * Model Promotion
+ * 
+ */
+export type Promotion = Prisma.PromotionModel
+/**
+ * Model PromotionDetail
+ * 
+ */
+export type PromotionDetail = Prisma.PromotionDetailModel

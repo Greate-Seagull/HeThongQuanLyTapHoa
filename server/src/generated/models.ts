@@ -7,5 +7,7 @@
  *
  * 🟢 You can import this file directly.
  */
-export type * from './models/product'
+export type * from './models/Product'
+export type * from './models/Promotion'
+export type * from './models/PromotionDetail'
 export type * from './commonInputTypes'

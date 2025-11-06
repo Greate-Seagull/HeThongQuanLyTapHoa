@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated"
@@ -14,14 +8,41 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model product {
-  id     Int          @id @default(autoincrement())
-  name   String?
-  unit   product_unit @default(UNKNOWN)
-  price  Int
-  amount Int          @default(0)
+model Product {
+  id               Int               @id @default(autoincrement())
+  name             String?
+  unit             ProductUnit       @default(UNKNOWN)
+  price            Int
+  amount           Int               @default(0)
+  promotionDetails PromotionDetail[]
 }
 
-enum product_unit {
+model Promotion {
+  id               Int               @id @default(autoincrement())
+  name             String
+  description      String?
+  startedAt        DateTime
+  endedAt          DateTime
+  condition        String?
+  value            Float
+  promotionType    PromotionType
+  promotionDetails PromotionDetail[]
+}
+
+model PromotionDetail {
+  productId   Int
+  promotionId Int
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+
+  @@id([productId, promotionId])
+}
+
+enum PromotionType {
+  PERCENTAGE
+  FIXED
+}
+
+enum ProductUnit {
   UNKNOWN
 }

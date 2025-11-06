@@ -1,10 +1,23 @@
-const promotionInput = {
+export const product1 = {
+	id: 10002,
+	price: 100000,
+};
+
+export const product2 = {
+	id: 10003,
+	price: 100000,
+};
+
+let startedAt = new Date();
+let endedAt = new Date();
+endedAt.setDate(startedAt.getDate() + 14);
+
+export const promotionInput = {
 	name: "Create promotion",
-	description: "Create promotion",
-	startedAt: new Date().toISOString(),
-	endedAt: new Date(14).toISOString(),
+	startedAt: startedAt.toISOString(),
+	endedAt: endedAt.toISOString(),
 	condition: "Create promotion",
 	value: 0.5,
 	promotionType: "PERCENTAGE",
-	products: [Number],
+	productIds: [product1.id, product2.id],
 };

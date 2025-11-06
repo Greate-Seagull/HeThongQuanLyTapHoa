@@ -13,4 +13,7 @@ const promotionRepo = new PromotionRepository(prisma);
 export const searchProductsUsecase = new SearchProductsUsecase(
 	productReadAccessor
 );
-export const createPromotionUsecase = new CreatePromotionUsecase(promotionRepo);
+export const createPromotionUsecase = new CreatePromotionUsecase(
+	productReadAccessor,
+	promotionRepo
+);

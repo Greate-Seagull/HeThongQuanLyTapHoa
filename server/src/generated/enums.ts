@@ -8,8 +8,16 @@
 * 🟢 You can import this file directly.
 */
 
-export const product_unit = {
+export const PromotionType = {
+  PERCENTAGE: 'PERCENTAGE',
+  FIXED: 'FIXED'
+} as const
+
+export type PromotionType = (typeof PromotionType)[keyof typeof PromotionType]
+
+
+export const ProductUnit = {
   UNKNOWN: 'UNKNOWN'
 } as const
 
-export type product_unit = (typeof product_unit)[keyof typeof product_unit]
+export type ProductUnit = (typeof ProductUnit)[keyof typeof ProductUnit]

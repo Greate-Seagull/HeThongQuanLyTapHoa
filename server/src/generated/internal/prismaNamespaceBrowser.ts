@@ -48,7 +48,9 @@ export const AnyNull = runtime.objectEnumValues.instances.AnyNull
 
 
 export const ModelName = {
-  product: 'product'
+  Product: 'Product',
+  Promotion: 'Promotion',
+  PromotionDetail: 'PromotionDetail'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -76,6 +78,28 @@ export const ProductScalarFieldEnum = {
 } as const
 
 export type ProductScalarFieldEnum = (typeof ProductScalarFieldEnum)[keyof typeof ProductScalarFieldEnum]
+
+
+export const PromotionScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  startedAt: 'startedAt',
+  endedAt: 'endedAt',
+  condition: 'condition',
+  value: 'value',
+  promotionType: 'promotionType'
+} as const
+
+export type PromotionScalarFieldEnum = (typeof PromotionScalarFieldEnum)[keyof typeof PromotionScalarFieldEnum]
+
+
+export const PromotionDetailScalarFieldEnum = {
+  productId: 'productId',
+  promotionId: 'promotionId'
+} as const
+
+export type PromotionDetailScalarFieldEnum = (typeof PromotionDetailScalarFieldEnum)[keyof typeof PromotionDetailScalarFieldEnum]
 
 
 export const SortOrder = {

@@ -12,8 +12,8 @@ export async function controlCreatePromotion(req, res) {
 			new Date(req.body.endedAt),
 			String(req.body.condition),
 			Number(req.body.value),
-			Number(req.body.promotionId),
-			req.body.products.map(Number)
+			String(req.body.promotionType),
+			req.body.productIds.map(Number)
 		);
 		let output = await createPromotionUsecase.execute(input);
 		res.json(output);

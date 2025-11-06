@@ -1,28 +1,42 @@
-import { PromotionRepository } from "src/infrastructure/repositories/promotion.repository";
+import { Promotion, PromotionCreateProps } from "../domain/promotion";
+import { ProductReadAccessor } from "../infrastructure/read_accessors/product.read-accessor";
+import { PromotionRepository } from "../infrastructure/repositories/promotion.repository";
 
 export class CreatePromotionUsecaseInput {
 	constructor(
-		public name: String,
-		public description: String,
+		public name: string,
+		public description: string,
 		public startedAt: Date,
 		public endedAt: Date,
-		public condition: String,
-		public value: Number,
-		public promotionId: Number,
-		public products: [Number]
+		public condition: string,
+		public value: number,
+		public promotionType: string,
+		public productIds: [number]
 	) {}
 }
 
 export class CreatePromotionUsecaseOutput {
-	constructor(public promotionId: Number) {}
+	constructor(public promotionId: number) {}
 }
 
 export class CreatePromotionUsecase {
-	constructor(private readonly promotionRepo: PromotionRepository) {}
+	constructor(
+		private readonly productReadAccessor: ProductReadAccessor,
+		private readonly promotionRepo: PromotionRepository
+	) {}
 
 	async execute(
 		input: CreatePromotionUsecaseInput
 	): Promise<CreatePromotionUsecaseOutput> {
-		return null;
+		const doExist = await this.productReadAccessor.existByIds(
+			input.productIds
+		);
+		if (!doExist) throw Error(`Expect all products to be exist`);
+
+		let promotion = Promotion.create(input as PromotionCreateProps);
+
+		const savedPromotion = await this.promotionRepo.add(promotion);
+
+		return new CreatePromotionUsecaseOutput(savedPromotion.id);
 	}
 }

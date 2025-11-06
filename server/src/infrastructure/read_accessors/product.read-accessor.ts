@@ -14,4 +14,12 @@ export class ProductReadAccessor {
 			},
 		});
 	}
+
+	async existByIds(ids: number[]): Promise<boolean> {
+		const count = await this.prisma.product.count({
+			where: { id: { in: ids } },
+		});
+
+		return count === ids.length;
+	}
 }
