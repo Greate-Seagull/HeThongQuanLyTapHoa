@@ -27,7 +27,10 @@ export class ProductRepositoryPostgree implements ProductRepository {
 		return raws.map(ProductMapper.toDomain);
 	}
 
-	async save(transaction: Prisma.TransactionClient, products: Product[]) {
+	async save(
+		transaction: Prisma.TransactionClient,
+		products: Product[]
+	): Promise<Product[]> {
 		const promisedRaws = products.map((p) => {
 			return transaction.product.update({
 				where: {

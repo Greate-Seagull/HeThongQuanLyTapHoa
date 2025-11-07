@@ -17,13 +17,18 @@ export class Product {
 		return entity;
 	}
 
-	sellStocks(quantity: number) {
+	sellStock(quantity: number) {
 		if (quantity > this._amount)
 			throw Error(
 				`The bought quantity is exceed the product's quantity ${this._amount}`
 			);
 
 		this._amount -= quantity;
+	}
+
+	receiveStock(quantity: any) {
+		if (quantity <= 0) throw Error(`The received quantity is under 0`);
+		this._amount += quantity;
 	}
 
 	public get id(): number {

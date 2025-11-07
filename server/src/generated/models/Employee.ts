@@ -192,12 +192,14 @@ export type EmployeeWhereInput = {
   id?: Prisma.IntFilter<"Employee"> | number
   name?: Prisma.StringFilter<"Employee"> | string
   invoices?: Prisma.InvoiceListRelationFilter
+  goodReceipts?: Prisma.GoodReceiptListRelationFilter
 }
 
 export type EmployeeOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   invoices?: Prisma.InvoiceOrderByRelationAggregateInput
+  goodReceipts?: Prisma.GoodReceiptOrderByRelationAggregateInput
 }
 
 export type EmployeeWhereUniqueInput = Prisma.AtLeast<{
@@ -207,6 +209,7 @@ export type EmployeeWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.EmployeeWhereInput | Prisma.EmployeeWhereInput[]
   name?: Prisma.StringFilter<"Employee"> | string
   invoices?: Prisma.InvoiceListRelationFilter
+  goodReceipts?: Prisma.GoodReceiptListRelationFilter
 }, "id">
 
 export type EmployeeOrderByWithAggregationInput = {
@@ -230,23 +233,27 @@ export type EmployeeScalarWhereWithAggregatesInput = {
 export type EmployeeCreateInput = {
   name: string
   invoices?: Prisma.InvoiceCreateNestedManyWithoutEmployeeInput
+  goodReceipts?: Prisma.GoodReceiptCreateNestedManyWithoutEmployeeInput
 }
 
 export type EmployeeUncheckedCreateInput = {
   id?: number
   name: string
   invoices?: Prisma.InvoiceUncheckedCreateNestedManyWithoutEmployeeInput
+  goodReceipts?: Prisma.GoodReceiptUncheckedCreateNestedManyWithoutEmployeeInput
 }
 
 export type EmployeeUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   invoices?: Prisma.InvoiceUpdateManyWithoutEmployeeNestedInput
+  goodReceipts?: Prisma.GoodReceiptUpdateManyWithoutEmployeeNestedInput
 }
 
 export type EmployeeUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   invoices?: Prisma.InvoiceUncheckedUpdateManyWithoutEmployeeNestedInput
+  goodReceipts?: Prisma.GoodReceiptUncheckedUpdateManyWithoutEmployeeNestedInput
 }
 
 export type EmployeeCreateManyInput = {
@@ -305,13 +312,29 @@ export type EmployeeUpdateOneRequiredWithoutInvoicesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.EmployeeUpdateToOneWithWhereWithoutInvoicesInput, Prisma.EmployeeUpdateWithoutInvoicesInput>, Prisma.EmployeeUncheckedUpdateWithoutInvoicesInput>
 }
 
+export type EmployeeCreateNestedOneWithoutGoodReceiptsInput = {
+  create?: Prisma.XOR<Prisma.EmployeeCreateWithoutGoodReceiptsInput, Prisma.EmployeeUncheckedCreateWithoutGoodReceiptsInput>
+  connectOrCreate?: Prisma.EmployeeCreateOrConnectWithoutGoodReceiptsInput
+  connect?: Prisma.EmployeeWhereUniqueInput
+}
+
+export type EmployeeUpdateOneRequiredWithoutGoodReceiptsNestedInput = {
+  create?: Prisma.XOR<Prisma.EmployeeCreateWithoutGoodReceiptsInput, Prisma.EmployeeUncheckedCreateWithoutGoodReceiptsInput>
+  connectOrCreate?: Prisma.EmployeeCreateOrConnectWithoutGoodReceiptsInput
+  upsert?: Prisma.EmployeeUpsertWithoutGoodReceiptsInput
+  connect?: Prisma.EmployeeWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.EmployeeUpdateToOneWithWhereWithoutGoodReceiptsInput, Prisma.EmployeeUpdateWithoutGoodReceiptsInput>, Prisma.EmployeeUncheckedUpdateWithoutGoodReceiptsInput>
+}
+
 export type EmployeeCreateWithoutInvoicesInput = {
   name: string
+  goodReceipts?: Prisma.GoodReceiptCreateNestedManyWithoutEmployeeInput
 }
 
 export type EmployeeUncheckedCreateWithoutInvoicesInput = {
   id?: number
   name: string
+  goodReceipts?: Prisma.GoodReceiptUncheckedCreateNestedManyWithoutEmployeeInput
 }
 
 export type EmployeeCreateOrConnectWithoutInvoicesInput = {
@@ -332,11 +355,51 @@ export type EmployeeUpdateToOneWithWhereWithoutInvoicesInput = {
 
 export type EmployeeUpdateWithoutInvoicesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  goodReceipts?: Prisma.GoodReceiptUpdateManyWithoutEmployeeNestedInput
 }
 
 export type EmployeeUncheckedUpdateWithoutInvoicesInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  goodReceipts?: Prisma.GoodReceiptUncheckedUpdateManyWithoutEmployeeNestedInput
+}
+
+export type EmployeeCreateWithoutGoodReceiptsInput = {
+  name: string
+  invoices?: Prisma.InvoiceCreateNestedManyWithoutEmployeeInput
+}
+
+export type EmployeeUncheckedCreateWithoutGoodReceiptsInput = {
+  id?: number
+  name: string
+  invoices?: Prisma.InvoiceUncheckedCreateNestedManyWithoutEmployeeInput
+}
+
+export type EmployeeCreateOrConnectWithoutGoodReceiptsInput = {
+  where: Prisma.EmployeeWhereUniqueInput
+  create: Prisma.XOR<Prisma.EmployeeCreateWithoutGoodReceiptsInput, Prisma.EmployeeUncheckedCreateWithoutGoodReceiptsInput>
+}
+
+export type EmployeeUpsertWithoutGoodReceiptsInput = {
+  update: Prisma.XOR<Prisma.EmployeeUpdateWithoutGoodReceiptsInput, Prisma.EmployeeUncheckedUpdateWithoutGoodReceiptsInput>
+  create: Prisma.XOR<Prisma.EmployeeCreateWithoutGoodReceiptsInput, Prisma.EmployeeUncheckedCreateWithoutGoodReceiptsInput>
+  where?: Prisma.EmployeeWhereInput
+}
+
+export type EmployeeUpdateToOneWithWhereWithoutGoodReceiptsInput = {
+  where?: Prisma.EmployeeWhereInput
+  data: Prisma.XOR<Prisma.EmployeeUpdateWithoutGoodReceiptsInput, Prisma.EmployeeUncheckedUpdateWithoutGoodReceiptsInput>
+}
+
+export type EmployeeUpdateWithoutGoodReceiptsInput = {
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  invoices?: Prisma.InvoiceUpdateManyWithoutEmployeeNestedInput
+}
+
+export type EmployeeUncheckedUpdateWithoutGoodReceiptsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  invoices?: Prisma.InvoiceUncheckedUpdateManyWithoutEmployeeNestedInput
 }
 
 
@@ -346,10 +409,12 @@ export type EmployeeUncheckedUpdateWithoutInvoicesInput = {
 
 export type EmployeeCountOutputType = {
   invoices: number
+  goodReceipts: number
 }
 
 export type EmployeeCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   invoices?: boolean | EmployeeCountOutputTypeCountInvoicesArgs
+  goodReceipts?: boolean | EmployeeCountOutputTypeCountGoodReceiptsArgs
 }
 
 /**
@@ -369,11 +434,19 @@ export type EmployeeCountOutputTypeCountInvoicesArgs<ExtArgs extends runtime.Typ
   where?: Prisma.InvoiceWhereInput
 }
 
+/**
+ * EmployeeCountOutputType without action
+ */
+export type EmployeeCountOutputTypeCountGoodReceiptsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.GoodReceiptWhereInput
+}
+
 
 export type EmployeeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
   invoices?: boolean | Prisma.Employee$invoicesArgs<ExtArgs>
+  goodReceipts?: boolean | Prisma.Employee$goodReceiptsArgs<ExtArgs>
   _count?: boolean | Prisma.EmployeeCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["employee"]>
 
@@ -395,6 +468,7 @@ export type EmployeeSelectScalar = {
 export type EmployeeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name", ExtArgs["result"]["employee"]>
 export type EmployeeInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   invoices?: boolean | Prisma.Employee$invoicesArgs<ExtArgs>
+  goodReceipts?: boolean | Prisma.Employee$goodReceiptsArgs<ExtArgs>
   _count?: boolean | Prisma.EmployeeCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type EmployeeIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -404,6 +478,7 @@ export type $EmployeePayload<ExtArgs extends runtime.Types.Extensions.InternalAr
   name: "Employee"
   objects: {
     invoices: Prisma.$InvoicePayload<ExtArgs>[]
+    goodReceipts: Prisma.$GoodReceiptPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -803,6 +878,7 @@ readonly fields: EmployeeFieldRefs;
 export interface Prisma__EmployeeClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   invoices<T extends Prisma.Employee$invoicesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Employee$invoicesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InvoicePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  goodReceipts<T extends Prisma.Employee$goodReceiptsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Employee$goodReceiptsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$GoodReceiptPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1243,6 +1319,30 @@ export type Employee$invoicesArgs<ExtArgs extends runtime.Types.Extensions.Inter
   take?: number
   skip?: number
   distinct?: Prisma.InvoiceScalarFieldEnum | Prisma.InvoiceScalarFieldEnum[]
+}
+
+/**
+ * Employee.goodReceipts
+ */
+export type Employee$goodReceiptsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the GoodReceipt
+   */
+  select?: Prisma.GoodReceiptSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the GoodReceipt
+   */
+  omit?: Prisma.GoodReceiptOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GoodReceiptInclude<ExtArgs> | null
+  where?: Prisma.GoodReceiptWhereInput
+  orderBy?: Prisma.GoodReceiptOrderByWithRelationInput | Prisma.GoodReceiptOrderByWithRelationInput[]
+  cursor?: Prisma.GoodReceiptWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.GoodReceiptScalarFieldEnum | Prisma.GoodReceiptScalarFieldEnum[]
 }
 
 /**

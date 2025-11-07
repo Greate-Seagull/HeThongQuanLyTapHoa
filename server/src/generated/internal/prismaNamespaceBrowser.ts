@@ -54,7 +54,9 @@ export const ModelName = {
   User: 'User',
   Employee: 'Employee',
   Invoice: 'Invoice',
-  InvoiceDetail: 'InvoiceDetail'
+  InvoiceDetail: 'InvoiceDetail',
+  GoodReceipt: 'GoodReceipt',
+  GoodReceiptDetail: 'GoodReceiptDetail'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -142,6 +144,25 @@ export const InvoiceDetailScalarFieldEnum = {
 } as const
 
 export type InvoiceDetailScalarFieldEnum = (typeof InvoiceDetailScalarFieldEnum)[keyof typeof InvoiceDetailScalarFieldEnum]
+
+
+export const GoodReceiptScalarFieldEnum = {
+  id: 'id',
+  employeeId: 'employeeId',
+  createdAt: 'createdAt'
+} as const
+
+export type GoodReceiptScalarFieldEnum = (typeof GoodReceiptScalarFieldEnum)[keyof typeof GoodReceiptScalarFieldEnum]
+
+
+export const GoodReceiptDetailScalarFieldEnum = {
+  goodReceiptId: 'goodReceiptId',
+  productId: 'productId',
+  quantity: 'quantity',
+  price: 'price'
+} as const
+
+export type GoodReceiptDetailScalarFieldEnum = (typeof GoodReceiptDetailScalarFieldEnum)[keyof typeof GoodReceiptDetailScalarFieldEnum]
 
 
 export const SortOrder = {

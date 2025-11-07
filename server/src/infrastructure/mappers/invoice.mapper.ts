@@ -1,4 +1,3 @@
-import { employee } from "../../../tests/create-invoice/create-invoice.test-data";
 import { Invoice, InvoiceDetail } from "../../domain/invoice";
 
 export class InvoiceMapper {

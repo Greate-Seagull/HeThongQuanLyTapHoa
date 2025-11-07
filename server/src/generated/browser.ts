@@ -51,3 +51,13 @@ export type Invoice = Prisma.InvoiceModel
  * 
  */
 export type InvoiceDetail = Prisma.InvoiceDetailModel
+/**
+ * Model GoodReceipt
+ * 
+ */
+export type GoodReceipt = Prisma.GoodReceiptModel
+/**
+ * Model GoodReceiptDetail
+ * 
+ */
+export type GoodReceiptDetail = Prisma.GoodReceiptDetailModel

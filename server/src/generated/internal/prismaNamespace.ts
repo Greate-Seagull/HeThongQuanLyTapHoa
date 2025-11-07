@@ -395,7 +395,9 @@ export const ModelName = {
   User: 'User',
   Employee: 'Employee',
   Invoice: 'Invoice',
-  InvoiceDetail: 'InvoiceDetail'
+  InvoiceDetail: 'InvoiceDetail',
+  GoodReceipt: 'GoodReceipt',
+  GoodReceiptDetail: 'GoodReceiptDetail'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -411,7 +413,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "product" | "promotion" | "promotionDetail" | "user" | "employee" | "invoice" | "invoiceDetail"
+    modelProps: "product" | "promotion" | "promotionDetail" | "user" | "employee" | "invoice" | "invoiceDetail" | "goodReceipt" | "goodReceiptDetail"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -933,6 +935,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    GoodReceipt: {
+      payload: Prisma.$GoodReceiptPayload<ExtArgs>
+      fields: Prisma.GoodReceiptFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.GoodReceiptFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GoodReceiptPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.GoodReceiptFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GoodReceiptPayload>
+        }
+        findFirst: {
+          args: Prisma.GoodReceiptFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GoodReceiptPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.GoodReceiptFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GoodReceiptPayload>
+        }
+        findMany: {
+          args: Prisma.GoodReceiptFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GoodReceiptPayload>[]
+        }
+        create: {
+          args: Prisma.GoodReceiptCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GoodReceiptPayload>
+        }
+        createMany: {
+          args: Prisma.GoodReceiptCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.GoodReceiptCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GoodReceiptPayload>[]
+        }
+        delete: {
+          args: Prisma.GoodReceiptDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GoodReceiptPayload>
+        }
+        update: {
+          args: Prisma.GoodReceiptUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GoodReceiptPayload>
+        }
+        deleteMany: {
+          args: Prisma.GoodReceiptDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.GoodReceiptUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.GoodReceiptUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GoodReceiptPayload>[]
+        }
+        upsert: {
+          args: Prisma.GoodReceiptUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GoodReceiptPayload>
+        }
+        aggregate: {
+          args: Prisma.GoodReceiptAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateGoodReceipt>
+        }
+        groupBy: {
+          args: Prisma.GoodReceiptGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.GoodReceiptGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.GoodReceiptCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.GoodReceiptCountAggregateOutputType> | number
+        }
+      }
+    }
+    GoodReceiptDetail: {
+      payload: Prisma.$GoodReceiptDetailPayload<ExtArgs>
+      fields: Prisma.GoodReceiptDetailFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.GoodReceiptDetailFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GoodReceiptDetailPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.GoodReceiptDetailFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GoodReceiptDetailPayload>
+        }
+        findFirst: {
+          args: Prisma.GoodReceiptDetailFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GoodReceiptDetailPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.GoodReceiptDetailFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GoodReceiptDetailPayload>
+        }
+        findMany: {
+          args: Prisma.GoodReceiptDetailFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GoodReceiptDetailPayload>[]
+        }
+        create: {
+          args: Prisma.GoodReceiptDetailCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GoodReceiptDetailPayload>
+        }
+        createMany: {
+          args: Prisma.GoodReceiptDetailCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.GoodReceiptDetailCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GoodReceiptDetailPayload>[]
+        }
+        delete: {
+          args: Prisma.GoodReceiptDetailDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GoodReceiptDetailPayload>
+        }
+        update: {
+          args: Prisma.GoodReceiptDetailUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GoodReceiptDetailPayload>
+        }
+        deleteMany: {
+          args: Prisma.GoodReceiptDetailDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.GoodReceiptDetailUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.GoodReceiptDetailUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GoodReceiptDetailPayload>[]
+        }
+        upsert: {
+          args: Prisma.GoodReceiptDetailUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GoodReceiptDetailPayload>
+        }
+        aggregate: {
+          args: Prisma.GoodReceiptDetailAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateGoodReceiptDetail>
+        }
+        groupBy: {
+          args: Prisma.GoodReceiptDetailGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.GoodReceiptDetailGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.GoodReceiptDetailCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.GoodReceiptDetailCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1041,6 +1191,25 @@ export const InvoiceDetailScalarFieldEnum = {
 } as const
 
 export type InvoiceDetailScalarFieldEnum = (typeof InvoiceDetailScalarFieldEnum)[keyof typeof InvoiceDetailScalarFieldEnum]
+
+
+export const GoodReceiptScalarFieldEnum = {
+  id: 'id',
+  employeeId: 'employeeId',
+  createdAt: 'createdAt'
+} as const
+
+export type GoodReceiptScalarFieldEnum = (typeof GoodReceiptScalarFieldEnum)[keyof typeof GoodReceiptScalarFieldEnum]
+
+
+export const GoodReceiptDetailScalarFieldEnum = {
+  goodReceiptId: 'goodReceiptId',
+  productId: 'productId',
+  quantity: 'quantity',
+  price: 'price'
+} as const
+
+export type GoodReceiptDetailScalarFieldEnum = (typeof GoodReceiptDetailScalarFieldEnum)[keyof typeof GoodReceiptDetailScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1250,6 +1419,8 @@ export type GlobalOmitConfig = {
   employee?: Prisma.EmployeeOmit
   invoice?: Prisma.InvoiceOmit
   invoiceDetail?: Prisma.InvoiceDetailOmit
+  goodReceipt?: Prisma.GoodReceiptOmit
+  goodReceiptDetail?: Prisma.GoodReceiptDetailOmit
 }
 
 /* Types for Logging */

@@ -42,7 +42,7 @@ export class SalesTransactionService {
 		) {
 			for (const item of items) {
 				const product = products.get(item.productId);
-				product.sellStocks(item.quantity);
+				product.sellStock(item.quantity);
 			}
 		}
 

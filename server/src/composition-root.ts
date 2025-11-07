@@ -12,6 +12,8 @@ import { ProductRepositoryPostgree } from "./infrastructure/repositories/product
 import { InvoiceRepository } from "./infrastructure/repositories/invoice.repository";
 import { TransactionManager } from "./infrastructure/repositories/transaction";
 import { SalesTransactionService } from "./domain/sales-transaction.service";
+import { CreateGoodReceiptUsecase } from "./application/create-good-receipt.usecase";
+import { GoodReceiptRepository } from "./infrastructure/repositories/good-receipt.repository";
 
 config;
 export const prisma = new PrismaClient({
@@ -29,6 +31,7 @@ const employeeRepo = new EmployeeRepository(prisma);
 const userRepo = new UserRepository(prisma);
 const productRepo = new ProductRepositoryPostgree(prisma);
 export const invoiceRepo = new InvoiceRepository(prisma);
+const goodReceiptRepo = new GoodReceiptRepository(prisma);
 
 const promoPricing = new PromotionPricingService();
 const processSales = new SalesTransactionService();
@@ -49,5 +52,11 @@ export const createInvoiceUsecase = new CreateInvoiceUsecase(
 	promotionRepo,
 	invoiceRepo,
 	processSales,
+	transactionManager
+);
+export const createGoodReceiptUsecase = new CreateGoodReceiptUsecase(
+	employeeRepo,
+	productRepo,
+	goodReceiptRepo,
 	transactionManager
 );
