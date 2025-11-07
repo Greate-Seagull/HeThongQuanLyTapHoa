@@ -1,17 +1,44 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { ProductMapper } from "../mappers/product.mapper";
 import { ProductRepository } from "./product.repository";
+import { Product } from "../../domain/product";
 
 export class ProductRepositoryPostgree implements ProductRepository {
 	constructor(private readonly prisma: PrismaClient) {}
 
 	async getById(transaction: Prisma.TransactionClient, id: number) {
-		console.log("Enter find by Id = ", id);
 		const repository = transaction ? transaction.post : this.prisma.post;
 		const row = await repository.findUnique({
 			where: { id: id },
 			select: { id: true, price: true, amount: true },
 		});
 		return ProductMapper.toDomain(row);
+	}
+
+	async getByIds(ids: any): Promise<Product[]> {
+		const raws = await this.prisma.product.findMany({
+			where: {
+				id: {
+					in: ids,
+				},
+			},
+		});
+
+		return raws.map(ProductMapper.toDomain);
+	}
+
+	async save(transaction: Prisma.TransactionClient, products: Product[]) {
+		const promisedRaws = products.map((p) => {
+			return transaction.product.update({
+				where: {
+					id: p.id,
+				},
+				data: ProductMapper.toPersistence(p),
+			});
+		});
+
+		const savedProducts = await Promise.all(promisedRaws);
+
+		return savedProducts.map(ProductMapper.toDomain);
 	}
 }

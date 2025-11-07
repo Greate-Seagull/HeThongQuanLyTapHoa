@@ -15,6 +15,7 @@ model Product {
   price            Int
   amount           Int               @default(0)
   promotionDetails PromotionDetail[]
+  invoiceDetails   InvoiceDetail[]
 }
 
 model Promotion {
@@ -27,6 +28,7 @@ model Promotion {
   value            Float
   promotionType    PromotionType
   promotionDetails PromotionDetail[]
+  invoiceDetails   InvoiceDetail[]
 }
 
 model PromotionDetail {
@@ -36,6 +38,44 @@ model PromotionDetail {
   promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
 
   @@id([productId, promotionId])
+}
+
+model User {
+  id       Int       @id @default(autoincrement())
+  name     String
+  point    Int       @default(0)
+  invoices Invoice[]
+}
+
+model Employee {
+  id       Int       @id @default(autoincrement())
+  name     String
+  invoices Invoice[]
+}
+
+model Invoice {
+  id         Int  @id @default(autoincrement())
+  employeeId Int
+  userId     Int?
+  usedPoint  Int  @default(0)
+  total      Int
+
+  employee       Employee        @relation(fields: [employeeId], references: [id])
+  user           User?           @relation(fields: [userId], references: [id])
+  invoiceDetails InvoiceDetail[]
+}
+
+model InvoiceDetail {
+  invoiceId   Int
+  productId   Int
+  quantity    Int
+  promotionId Int?
+
+  invoice   Invoice    @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product   Product    @relation(fields: [productId], references: [id])
+  promotion Promotion? @relation(fields: [promotionId], references: [id])
+
+  @@id([invoiceId, productId])
 }
 
 enum PromotionType {

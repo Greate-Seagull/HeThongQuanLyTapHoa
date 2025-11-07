@@ -1,3 +1,5 @@
+import { Product } from "./product";
+
 export class Promotion {
 	private _id?: number;
 	private _name!: string;
@@ -23,15 +25,6 @@ export class Promotion {
 		output.applyPromotionTo(input.productIds);
 
 		return output;
-	}
-
-	private applyPromotionTo(productIds: number[]) {
-		if (productIds.length < 1)
-			throw Error(
-				`Expect promotion to have at least one product Id, got ${productIds}`
-			);
-
-		this._promotionDetails = productIds.map(PromotionDetail.create);
 	}
 
 	static rehydrate(input: PromotionRehydrateProps) {
@@ -96,6 +89,27 @@ export class Promotion {
 					`Expect a valid promotion type, got ${this.promotionType}`
 				);
 		}
+	}
+
+	private applyPromotionTo(productIds: number[]): void {
+		if (productIds.length < 1)
+			throw Error(
+				`Expect promotion to have at least one product Id, got ${productIds}`
+			);
+
+		this._promotionDetails = productIds.map(PromotionDetail.create);
+	}
+
+	public applyDiscount(product: Product): number {
+		const searchedDetails = this._promotionDetails.filter(
+			(pd) => pd.productId == product.id
+		);
+		if (searchedDetails.length != 1)
+			throw Error(
+				`The promotion ${this._id} cannot apply to the product ${product.id}`
+			);
+
+		return product.price - this.calculateDiscount(product.price);
 	}
 
 	get id() {

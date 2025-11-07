@@ -1,28 +1,58 @@
 export class Product {
 	private _id?: number;
-	private _money?: number;
-	private _amount?: number;
+	private _name!: string;
+	private _price!: number;
+	private _amount!: number;
+	private _unit!: ProductUnit;
+
+	static rehydrate(raw: ProductRehydrateProps) {
+		let entity = new Product();
+
+		entity._id = raw.id;
+		entity._name = raw.name;
+		entity._price = raw.price;
+		entity._amount = raw.amount;
+		entity._unit = raw.unit as ProductUnit;
+
+		return entity;
+	}
+
+	sellStocks(quantity: number) {
+		if (quantity > this._amount)
+			throw Error(
+				`The bought quantity is exceed the product's quantity ${this._amount}`
+			);
+
+		this._amount -= quantity;
+	}
 
 	public get id(): number {
 		return this._id;
 	}
-	public set id(value: number) {
-		this._id = value;
-	}
-	public get money(): number {
-		return this._money;
-	}
-	public set money(value: number) {
-		this._money = value;
+	public get price(): number {
+		return this._price;
 	}
 	public get amount(): number {
 		return this._amount;
 	}
-	public set amount(value: number) {
-		this._amount = value;
+	public get name() {
+		return this._name;
+	}
+	public get unit() {
+		return this._unit;
 	}
 
-	constructor() {
-		console.log("Enter product constructor");
-	}
+	private constructor() {}
+}
+
+export interface ProductRehydrateProps {
+	id: number;
+	name: string;
+	unit: string;
+	price: number;
+	amount: number;
+}
+
+export enum ProductUnit {
+	UNKNOWN = "UNKNOWN",
 }

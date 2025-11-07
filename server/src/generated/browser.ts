@@ -31,3 +31,23 @@ export type Promotion = Prisma.PromotionModel
  * 
  */
 export type PromotionDetail = Prisma.PromotionDetailModel
+/**
+ * Model User
+ * 
+ */
+export type User = Prisma.UserModel
+/**
+ * Model Employee
+ * 
+ */
+export type Employee = Prisma.EmployeeModel
+/**
+ * Model Invoice
+ * 
+ */
+export type Invoice = Prisma.InvoiceModel
+/**
+ * Model InvoiceDetail
+ * 
+ */
+export type InvoiceDetail = Prisma.InvoiceDetailModel

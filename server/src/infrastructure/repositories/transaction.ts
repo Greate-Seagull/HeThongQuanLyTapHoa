@@ -1,6 +1,6 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 
-export class PrismaTransactionManager {
+export class TransactionManager {
 	constructor(private readonly prisma: PrismaClient) {}
 
 	async transaction(

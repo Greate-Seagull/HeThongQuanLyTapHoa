@@ -10,4 +10,8 @@
 export type * from './models/Product'
 export type * from './models/Promotion'
 export type * from './models/PromotionDetail'
+export type * from './models/User'
+export type * from './models/Employee'
+export type * from './models/Invoice'
+export type * from './models/InvoiceDetail'
 export type * from './commonInputTypes'

@@ -224,6 +224,7 @@ export type ProductWhereInput = {
   price?: Prisma.IntFilter<"Product"> | number
   amount?: Prisma.IntFilter<"Product"> | number
   promotionDetails?: Prisma.PromotionDetailListRelationFilter
+  invoiceDetails?: Prisma.InvoiceDetailListRelationFilter
 }
 
 export type ProductOrderByWithRelationInput = {
@@ -233,6 +234,7 @@ export type ProductOrderByWithRelationInput = {
   price?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   promotionDetails?: Prisma.PromotionDetailOrderByRelationAggregateInput
+  invoiceDetails?: Prisma.InvoiceDetailOrderByRelationAggregateInput
 }
 
 export type ProductWhereUniqueInput = Prisma.AtLeast<{
@@ -245,6 +247,7 @@ export type ProductWhereUniqueInput = Prisma.AtLeast<{
   price?: Prisma.IntFilter<"Product"> | number
   amount?: Prisma.IntFilter<"Product"> | number
   promotionDetails?: Prisma.PromotionDetailListRelationFilter
+  invoiceDetails?: Prisma.InvoiceDetailListRelationFilter
 }, "id">
 
 export type ProductOrderByWithAggregationInput = {
@@ -277,6 +280,7 @@ export type ProductCreateInput = {
   price: number
   amount?: number
   promotionDetails?: Prisma.PromotionDetailCreateNestedManyWithoutProductInput
+  invoiceDetails?: Prisma.InvoiceDetailCreateNestedManyWithoutProductInput
 }
 
 export type ProductUncheckedCreateInput = {
@@ -286,6 +290,7 @@ export type ProductUncheckedCreateInput = {
   price: number
   amount?: number
   promotionDetails?: Prisma.PromotionDetailUncheckedCreateNestedManyWithoutProductInput
+  invoiceDetails?: Prisma.InvoiceDetailUncheckedCreateNestedManyWithoutProductInput
 }
 
 export type ProductUpdateInput = {
@@ -294,6 +299,7 @@ export type ProductUpdateInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
   promotionDetails?: Prisma.PromotionDetailUpdateManyWithoutProductNestedInput
+  invoiceDetails?: Prisma.InvoiceDetailUpdateManyWithoutProductNestedInput
 }
 
 export type ProductUncheckedUpdateInput = {
@@ -303,6 +309,7 @@ export type ProductUncheckedUpdateInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
   promotionDetails?: Prisma.PromotionDetailUncheckedUpdateManyWithoutProductNestedInput
+  invoiceDetails?: Prisma.InvoiceDetailUncheckedUpdateManyWithoutProductNestedInput
 }
 
 export type ProductCreateManyInput = {
@@ -399,11 +406,26 @@ export type ProductUpdateOneRequiredWithoutPromotionDetailsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.ProductUpdateToOneWithWhereWithoutPromotionDetailsInput, Prisma.ProductUpdateWithoutPromotionDetailsInput>, Prisma.ProductUncheckedUpdateWithoutPromotionDetailsInput>
 }
 
+export type ProductCreateNestedOneWithoutInvoiceDetailsInput = {
+  create?: Prisma.XOR<Prisma.ProductCreateWithoutInvoiceDetailsInput, Prisma.ProductUncheckedCreateWithoutInvoiceDetailsInput>
+  connectOrCreate?: Prisma.ProductCreateOrConnectWithoutInvoiceDetailsInput
+  connect?: Prisma.ProductWhereUniqueInput
+}
+
+export type ProductUpdateOneRequiredWithoutInvoiceDetailsNestedInput = {
+  create?: Prisma.XOR<Prisma.ProductCreateWithoutInvoiceDetailsInput, Prisma.ProductUncheckedCreateWithoutInvoiceDetailsInput>
+  connectOrCreate?: Prisma.ProductCreateOrConnectWithoutInvoiceDetailsInput
+  upsert?: Prisma.ProductUpsertWithoutInvoiceDetailsInput
+  connect?: Prisma.ProductWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ProductUpdateToOneWithWhereWithoutInvoiceDetailsInput, Prisma.ProductUpdateWithoutInvoiceDetailsInput>, Prisma.ProductUncheckedUpdateWithoutInvoiceDetailsInput>
+}
+
 export type ProductCreateWithoutPromotionDetailsInput = {
   name?: string | null
   unit?: $Enums.ProductUnit
   price: number
   amount?: number
+  invoiceDetails?: Prisma.InvoiceDetailCreateNestedManyWithoutProductInput
 }
 
 export type ProductUncheckedCreateWithoutPromotionDetailsInput = {
@@ -412,6 +434,7 @@ export type ProductUncheckedCreateWithoutPromotionDetailsInput = {
   unit?: $Enums.ProductUnit
   price: number
   amount?: number
+  invoiceDetails?: Prisma.InvoiceDetailUncheckedCreateNestedManyWithoutProductInput
 }
 
 export type ProductCreateOrConnectWithoutPromotionDetailsInput = {
@@ -435,6 +458,7 @@ export type ProductUpdateWithoutPromotionDetailsInput = {
   unit?: Prisma.EnumProductUnitFieldUpdateOperationsInput | $Enums.ProductUnit
   price?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
+  invoiceDetails?: Prisma.InvoiceDetailUpdateManyWithoutProductNestedInput
 }
 
 export type ProductUncheckedUpdateWithoutPromotionDetailsInput = {
@@ -443,6 +467,57 @@ export type ProductUncheckedUpdateWithoutPromotionDetailsInput = {
   unit?: Prisma.EnumProductUnitFieldUpdateOperationsInput | $Enums.ProductUnit
   price?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
+  invoiceDetails?: Prisma.InvoiceDetailUncheckedUpdateManyWithoutProductNestedInput
+}
+
+export type ProductCreateWithoutInvoiceDetailsInput = {
+  name?: string | null
+  unit?: $Enums.ProductUnit
+  price: number
+  amount?: number
+  promotionDetails?: Prisma.PromotionDetailCreateNestedManyWithoutProductInput
+}
+
+export type ProductUncheckedCreateWithoutInvoiceDetailsInput = {
+  id?: number
+  name?: string | null
+  unit?: $Enums.ProductUnit
+  price: number
+  amount?: number
+  promotionDetails?: Prisma.PromotionDetailUncheckedCreateNestedManyWithoutProductInput
+}
+
+export type ProductCreateOrConnectWithoutInvoiceDetailsInput = {
+  where: Prisma.ProductWhereUniqueInput
+  create: Prisma.XOR<Prisma.ProductCreateWithoutInvoiceDetailsInput, Prisma.ProductUncheckedCreateWithoutInvoiceDetailsInput>
+}
+
+export type ProductUpsertWithoutInvoiceDetailsInput = {
+  update: Prisma.XOR<Prisma.ProductUpdateWithoutInvoiceDetailsInput, Prisma.ProductUncheckedUpdateWithoutInvoiceDetailsInput>
+  create: Prisma.XOR<Prisma.ProductCreateWithoutInvoiceDetailsInput, Prisma.ProductUncheckedCreateWithoutInvoiceDetailsInput>
+  where?: Prisma.ProductWhereInput
+}
+
+export type ProductUpdateToOneWithWhereWithoutInvoiceDetailsInput = {
+  where?: Prisma.ProductWhereInput
+  data: Prisma.XOR<Prisma.ProductUpdateWithoutInvoiceDetailsInput, Prisma.ProductUncheckedUpdateWithoutInvoiceDetailsInput>
+}
+
+export type ProductUpdateWithoutInvoiceDetailsInput = {
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  unit?: Prisma.EnumProductUnitFieldUpdateOperationsInput | $Enums.ProductUnit
+  price?: Prisma.IntFieldUpdateOperationsInput | number
+  amount?: Prisma.IntFieldUpdateOperationsInput | number
+  promotionDetails?: Prisma.PromotionDetailUpdateManyWithoutProductNestedInput
+}
+
+export type ProductUncheckedUpdateWithoutInvoiceDetailsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  unit?: Prisma.EnumProductUnitFieldUpdateOperationsInput | $Enums.ProductUnit
+  price?: Prisma.IntFieldUpdateOperationsInput | number
+  amount?: Prisma.IntFieldUpdateOperationsInput | number
+  promotionDetails?: Prisma.PromotionDetailUncheckedUpdateManyWithoutProductNestedInput
 }
 
 
@@ -452,10 +527,12 @@ export type ProductUncheckedUpdateWithoutPromotionDetailsInput = {
 
 export type ProductCountOutputType = {
   promotionDetails: number
+  invoiceDetails: number
 }
 
 export type ProductCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   promotionDetails?: boolean | ProductCountOutputTypeCountPromotionDetailsArgs
+  invoiceDetails?: boolean | ProductCountOutputTypeCountInvoiceDetailsArgs
 }
 
 /**
@@ -475,6 +552,13 @@ export type ProductCountOutputTypeCountPromotionDetailsArgs<ExtArgs extends runt
   where?: Prisma.PromotionDetailWhereInput
 }
 
+/**
+ * ProductCountOutputType without action
+ */
+export type ProductCountOutputTypeCountInvoiceDetailsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.InvoiceDetailWhereInput
+}
+
 
 export type ProductSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -483,6 +567,7 @@ export type ProductSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   price?: boolean
   amount?: boolean
   promotionDetails?: boolean | Prisma.Product$promotionDetailsArgs<ExtArgs>
+  invoiceDetails?: boolean | Prisma.Product$invoiceDetailsArgs<ExtArgs>
   _count?: boolean | Prisma.ProductCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["product"]>
 
@@ -513,6 +598,7 @@ export type ProductSelectScalar = {
 export type ProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "unit" | "price" | "amount", ExtArgs["result"]["product"]>
 export type ProductInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   promotionDetails?: boolean | Prisma.Product$promotionDetailsArgs<ExtArgs>
+  invoiceDetails?: boolean | Prisma.Product$invoiceDetailsArgs<ExtArgs>
   _count?: boolean | Prisma.ProductCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ProductIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -522,6 +608,7 @@ export type $ProductPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
   name: "Product"
   objects: {
     promotionDetails: Prisma.$PromotionDetailPayload<ExtArgs>[]
+    invoiceDetails: Prisma.$InvoiceDetailPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -924,6 +1011,7 @@ readonly fields: ProductFieldRefs;
 export interface Prisma__ProductClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   promotionDetails<T extends Prisma.Product$promotionDetailsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Product$promotionDetailsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PromotionDetailPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  invoiceDetails<T extends Prisma.Product$invoiceDetailsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Product$invoiceDetailsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InvoiceDetailPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1367,6 +1455,30 @@ export type Product$promotionDetailsArgs<ExtArgs extends runtime.Types.Extension
   take?: number
   skip?: number
   distinct?: Prisma.PromotionDetailScalarFieldEnum | Prisma.PromotionDetailScalarFieldEnum[]
+}
+
+/**
+ * Product.invoiceDetails
+ */
+export type Product$invoiceDetailsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the InvoiceDetail
+   */
+  select?: Prisma.InvoiceDetailSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the InvoiceDetail
+   */
+  omit?: Prisma.InvoiceDetailOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.InvoiceDetailInclude<ExtArgs> | null
+  where?: Prisma.InvoiceDetailWhereInput
+  orderBy?: Prisma.InvoiceDetailOrderByWithRelationInput | Prisma.InvoiceDetailOrderByWithRelationInput[]
+  cursor?: Prisma.InvoiceDetailWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.InvoiceDetailScalarFieldEnum | Prisma.InvoiceDetailScalarFieldEnum[]
 }
 
 /**

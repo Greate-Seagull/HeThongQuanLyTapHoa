@@ -5,14 +5,33 @@ import { ProductReadAccessor } from "./infrastructure/read_accessors/product.rea
 import { CreatePromotionUsecase } from "./application/create-promotion.usecase";
 import { PromotionRepository } from "./infrastructure/repositories/promotion.repository";
 import { PromotionPricingService } from "./domain/promotion-pricing.service";
+import { EmployeeRepository } from "./infrastructure/repositories/employee.repository";
+import { CreateInvoiceUsecase } from "./application/create-invoice.usecase";
+import { UserRepository } from "./infrastructure/repositories/user.repository";
+import { ProductRepositoryPostgree } from "./infrastructure/repositories/product.repository.postgree";
+import { InvoiceRepository } from "./infrastructure/repositories/invoice.repository";
+import { TransactionManager } from "./infrastructure/repositories/transaction";
+import { SalesTransactionService } from "./domain/sales-transaction.service";
 
 config;
-export const prisma = new PrismaClient();
+export const prisma = new PrismaClient({
+	log: [
+		{ level: "query", emit: "event" },
+		{ level: "error", emit: "stdout" },
+	],
+});
+
+const transactionManager = new TransactionManager(prisma);
 
 const productReadAccessor = new ProductReadAccessor(prisma);
 const promotionRepo = new PromotionRepository(prisma);
+const employeeRepo = new EmployeeRepository(prisma);
+const userRepo = new UserRepository(prisma);
+const productRepo = new ProductRepositoryPostgree(prisma);
+export const invoiceRepo = new InvoiceRepository(prisma);
 
 const promoPricing = new PromotionPricingService();
+const processSales = new SalesTransactionService();
 
 export const searchProductsUsecase = new SearchProductsUsecase(
 	productReadAccessor,
@@ -22,4 +41,13 @@ export const searchProductsUsecase = new SearchProductsUsecase(
 export const createPromotionUsecase = new CreatePromotionUsecase(
 	productReadAccessor,
 	promotionRepo
+);
+export const createInvoiceUsecase = new CreateInvoiceUsecase(
+	employeeRepo,
+	userRepo,
+	productRepo,
+	promotionRepo,
+	invoiceRepo,
+	processSales,
+	transactionManager
 );

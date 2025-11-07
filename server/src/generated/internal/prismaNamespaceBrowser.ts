@@ -50,7 +50,11 @@ export const AnyNull = runtime.objectEnumValues.instances.AnyNull
 export const ModelName = {
   Product: 'Product',
   Promotion: 'Promotion',
-  PromotionDetail: 'PromotionDetail'
+  PromotionDetail: 'PromotionDetail',
+  User: 'User',
+  Employee: 'Employee',
+  Invoice: 'Invoice',
+  InvoiceDetail: 'InvoiceDetail'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -100,6 +104,44 @@ export const PromotionDetailScalarFieldEnum = {
 } as const
 
 export type PromotionDetailScalarFieldEnum = (typeof PromotionDetailScalarFieldEnum)[keyof typeof PromotionDetailScalarFieldEnum]
+
+
+export const UserScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  point: 'point'
+} as const
+
+export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const EmployeeScalarFieldEnum = {
+  id: 'id',
+  name: 'name'
+} as const
+
+export type EmployeeScalarFieldEnum = (typeof EmployeeScalarFieldEnum)[keyof typeof EmployeeScalarFieldEnum]
+
+
+export const InvoiceScalarFieldEnum = {
+  id: 'id',
+  employeeId: 'employeeId',
+  userId: 'userId',
+  usedPoint: 'usedPoint',
+  total: 'total'
+} as const
+
+export type InvoiceScalarFieldEnum = (typeof InvoiceScalarFieldEnum)[keyof typeof InvoiceScalarFieldEnum]
+
+
+export const InvoiceDetailScalarFieldEnum = {
+  invoiceId: 'invoiceId',
+  productId: 'productId',
+  quantity: 'quantity',
+  promotionId: 'promotionId'
+} as const
+
+export type InvoiceDetailScalarFieldEnum = (typeof InvoiceDetailScalarFieldEnum)[keyof typeof InvoiceDetailScalarFieldEnum]
 
 
 export const SortOrder = {
