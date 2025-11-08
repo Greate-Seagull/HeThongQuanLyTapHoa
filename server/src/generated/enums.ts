@@ -21,3 +21,11 @@ export const ProductUnit = {
 } as const
 
 export type ProductUnit = (typeof ProductUnit)[keyof typeof ProductUnit]
+
+
+export const ProductStatus = {
+  GOOD: 'GOOD',
+  EXPIRED: 'EXPIRED'
+} as const
+
+export type ProductStatus = (typeof ProductStatus)[keyof typeof ProductStatus]

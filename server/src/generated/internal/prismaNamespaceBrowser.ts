@@ -56,7 +56,13 @@ export const ModelName = {
   Invoice: 'Invoice',
   InvoiceDetail: 'InvoiceDetail',
   GoodReceipt: 'GoodReceipt',
-  GoodReceiptDetail: 'GoodReceiptDetail'
+  GoodReceiptDetail: 'GoodReceiptDetail',
+  Shelf: 'Shelf',
+  Rack: 'Rack',
+  Slot: 'Slot',
+  SlotDetail: 'SlotDetail',
+  Stocktaking: 'Stocktaking',
+  StocktakingDetail: 'StocktakingDetail'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -81,7 +87,8 @@ export const ProductScalarFieldEnum = {
   unit: 'unit',
   price: 'price',
   barcode: 'barcode',
-  amount: 'amount'
+  amount: 'amount',
+  status: 'status'
 } as const
 
 export type ProductScalarFieldEnum = (typeof ProductScalarFieldEnum)[keyof typeof ProductScalarFieldEnum]
@@ -164,6 +171,61 @@ export const GoodReceiptDetailScalarFieldEnum = {
 } as const
 
 export type GoodReceiptDetailScalarFieldEnum = (typeof GoodReceiptDetailScalarFieldEnum)[keyof typeof GoodReceiptDetailScalarFieldEnum]
+
+
+export const ShelfScalarFieldEnum = {
+  id: 'id',
+  name: 'name'
+} as const
+
+export type ShelfScalarFieldEnum = (typeof ShelfScalarFieldEnum)[keyof typeof ShelfScalarFieldEnum]
+
+
+export const RackScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  shelfId: 'shelfId'
+} as const
+
+export type RackScalarFieldEnum = (typeof RackScalarFieldEnum)[keyof typeof RackScalarFieldEnum]
+
+
+export const SlotScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  rackId: 'rackId'
+} as const
+
+export type SlotScalarFieldEnum = (typeof SlotScalarFieldEnum)[keyof typeof SlotScalarFieldEnum]
+
+
+export const SlotDetailScalarFieldEnum = {
+  slotId: 'slotId',
+  productId: 'productId'
+} as const
+
+export type SlotDetailScalarFieldEnum = (typeof SlotDetailScalarFieldEnum)[keyof typeof SlotDetailScalarFieldEnum]
+
+
+export const StocktakingScalarFieldEnum = {
+  id: 'id',
+  employeeId: 'employeeId',
+  createdAt: 'createdAt'
+} as const
+
+export type StocktakingScalarFieldEnum = (typeof StocktakingScalarFieldEnum)[keyof typeof StocktakingScalarFieldEnum]
+
+
+export const StocktakingDetailScalarFieldEnum = {
+  id: 'id',
+  stocktakingId: 'stocktakingId',
+  productId: 'productId',
+  slotId: 'slotId',
+  status: 'status',
+  quantity: 'quantity'
+} as const
+
+export type StocktakingDetailScalarFieldEnum = (typeof StocktakingDetailScalarFieldEnum)[keyof typeof StocktakingDetailScalarFieldEnum]
 
 
 export const SortOrder = {

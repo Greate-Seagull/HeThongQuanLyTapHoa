@@ -61,3 +61,33 @@ export type GoodReceipt = Prisma.GoodReceiptModel
  * 
  */
 export type GoodReceiptDetail = Prisma.GoodReceiptDetailModel
+/**
+ * Model Shelf
+ * 
+ */
+export type Shelf = Prisma.ShelfModel
+/**
+ * Model Rack
+ * 
+ */
+export type Rack = Prisma.RackModel
+/**
+ * Model Slot
+ * 
+ */
+export type Slot = Prisma.SlotModel
+/**
+ * Model SlotDetail
+ * 
+ */
+export type SlotDetail = Prisma.SlotDetailModel
+/**
+ * Model Stocktaking
+ * 
+ */
+export type Stocktaking = Prisma.StocktakingModel
+/**
+ * Model StocktakingDetail
+ * 
+ */
+export type StocktakingDetail = Prisma.StocktakingDetailModel

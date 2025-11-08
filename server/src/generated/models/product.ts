@@ -46,6 +46,7 @@ export type ProductMinAggregateOutputType = {
   price: number | null
   barcode: number | null
   amount: number | null
+  status: $Enums.ProductStatus | null
 }
 
 export type ProductMaxAggregateOutputType = {
@@ -55,6 +56,7 @@ export type ProductMaxAggregateOutputType = {
   price: number | null
   barcode: number | null
   amount: number | null
+  status: $Enums.ProductStatus | null
 }
 
 export type ProductCountAggregateOutputType = {
@@ -64,6 +66,7 @@ export type ProductCountAggregateOutputType = {
   price: number
   barcode: number
   amount: number
+  status: number
   _all: number
 }
 
@@ -89,6 +92,7 @@ export type ProductMinAggregateInputType = {
   price?: true
   barcode?: true
   amount?: true
+  status?: true
 }
 
 export type ProductMaxAggregateInputType = {
@@ -98,6 +102,7 @@ export type ProductMaxAggregateInputType = {
   price?: true
   barcode?: true
   amount?: true
+  status?: true
 }
 
 export type ProductCountAggregateInputType = {
@@ -107,6 +112,7 @@ export type ProductCountAggregateInputType = {
   price?: true
   barcode?: true
   amount?: true
+  status?: true
   _all?: true
 }
 
@@ -203,6 +209,7 @@ export type ProductGroupByOutputType = {
   price: number
   barcode: number
   amount: number
+  status: $Enums.ProductStatus
   _count: ProductCountAggregateOutputType | null
   _avg: ProductAvgAggregateOutputType | null
   _sum: ProductSumAggregateOutputType | null
@@ -235,9 +242,12 @@ export type ProductWhereInput = {
   price?: Prisma.IntFilter<"Product"> | number
   barcode?: Prisma.IntFilter<"Product"> | number
   amount?: Prisma.IntFilter<"Product"> | number
+  status?: Prisma.EnumProductStatusFilter<"Product"> | $Enums.ProductStatus
   promotionDetails?: Prisma.PromotionDetailListRelationFilter
   invoiceDetails?: Prisma.InvoiceDetailListRelationFilter
   goodReceiptDetails?: Prisma.GoodReceiptDetailListRelationFilter
+  slotDetails?: Prisma.SlotDetailListRelationFilter
+  stocktakingDetails?: Prisma.StocktakingDetailListRelationFilter
 }
 
 export type ProductOrderByWithRelationInput = {
@@ -247,9 +257,12 @@ export type ProductOrderByWithRelationInput = {
   price?: Prisma.SortOrder
   barcode?: Prisma.SortOrder
   amount?: Prisma.SortOrder
+  status?: Prisma.SortOrder
   promotionDetails?: Prisma.PromotionDetailOrderByRelationAggregateInput
   invoiceDetails?: Prisma.InvoiceDetailOrderByRelationAggregateInput
   goodReceiptDetails?: Prisma.GoodReceiptDetailOrderByRelationAggregateInput
+  slotDetails?: Prisma.SlotDetailOrderByRelationAggregateInput
+  stocktakingDetails?: Prisma.StocktakingDetailOrderByRelationAggregateInput
 }
 
 export type ProductWhereUniqueInput = Prisma.AtLeast<{
@@ -262,9 +275,12 @@ export type ProductWhereUniqueInput = Prisma.AtLeast<{
   unit?: Prisma.EnumProductUnitFilter<"Product"> | $Enums.ProductUnit
   price?: Prisma.IntFilter<"Product"> | number
   amount?: Prisma.IntFilter<"Product"> | number
+  status?: Prisma.EnumProductStatusFilter<"Product"> | $Enums.ProductStatus
   promotionDetails?: Prisma.PromotionDetailListRelationFilter
   invoiceDetails?: Prisma.InvoiceDetailListRelationFilter
   goodReceiptDetails?: Prisma.GoodReceiptDetailListRelationFilter
+  slotDetails?: Prisma.SlotDetailListRelationFilter
+  stocktakingDetails?: Prisma.StocktakingDetailListRelationFilter
 }, "id" | "barcode">
 
 export type ProductOrderByWithAggregationInput = {
@@ -274,6 +290,7 @@ export type ProductOrderByWithAggregationInput = {
   price?: Prisma.SortOrder
   barcode?: Prisma.SortOrder
   amount?: Prisma.SortOrder
+  status?: Prisma.SortOrder
   _count?: Prisma.ProductCountOrderByAggregateInput
   _avg?: Prisma.ProductAvgOrderByAggregateInput
   _max?: Prisma.ProductMaxOrderByAggregateInput
@@ -291,6 +308,7 @@ export type ProductScalarWhereWithAggregatesInput = {
   price?: Prisma.IntWithAggregatesFilter<"Product"> | number
   barcode?: Prisma.IntWithAggregatesFilter<"Product"> | number
   amount?: Prisma.IntWithAggregatesFilter<"Product"> | number
+  status?: Prisma.EnumProductStatusWithAggregatesFilter<"Product"> | $Enums.ProductStatus
 }
 
 export type ProductCreateInput = {
@@ -299,9 +317,12 @@ export type ProductCreateInput = {
   price: number
   barcode: number
   amount?: number
+  status?: $Enums.ProductStatus
   promotionDetails?: Prisma.PromotionDetailCreateNestedManyWithoutProductInput
   invoiceDetails?: Prisma.InvoiceDetailCreateNestedManyWithoutProductInput
   goodReceiptDetails?: Prisma.GoodReceiptDetailCreateNestedManyWithoutProductInput
+  slotDetails?: Prisma.SlotDetailCreateNestedManyWithoutProductInput
+  stocktakingDetails?: Prisma.StocktakingDetailCreateNestedManyWithoutProductInput
 }
 
 export type ProductUncheckedCreateInput = {
@@ -311,9 +332,12 @@ export type ProductUncheckedCreateInput = {
   price: number
   barcode: number
   amount?: number
+  status?: $Enums.ProductStatus
   promotionDetails?: Prisma.PromotionDetailUncheckedCreateNestedManyWithoutProductInput
   invoiceDetails?: Prisma.InvoiceDetailUncheckedCreateNestedManyWithoutProductInput
   goodReceiptDetails?: Prisma.GoodReceiptDetailUncheckedCreateNestedManyWithoutProductInput
+  slotDetails?: Prisma.SlotDetailUncheckedCreateNestedManyWithoutProductInput
+  stocktakingDetails?: Prisma.StocktakingDetailUncheckedCreateNestedManyWithoutProductInput
 }
 
 export type ProductUpdateInput = {
@@ -322,9 +346,12 @@ export type ProductUpdateInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   barcode?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
   promotionDetails?: Prisma.PromotionDetailUpdateManyWithoutProductNestedInput
   invoiceDetails?: Prisma.InvoiceDetailUpdateManyWithoutProductNestedInput
   goodReceiptDetails?: Prisma.GoodReceiptDetailUpdateManyWithoutProductNestedInput
+  slotDetails?: Prisma.SlotDetailUpdateManyWithoutProductNestedInput
+  stocktakingDetails?: Prisma.StocktakingDetailUpdateManyWithoutProductNestedInput
 }
 
 export type ProductUncheckedUpdateInput = {
@@ -334,9 +361,12 @@ export type ProductUncheckedUpdateInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   barcode?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
   promotionDetails?: Prisma.PromotionDetailUncheckedUpdateManyWithoutProductNestedInput
   invoiceDetails?: Prisma.InvoiceDetailUncheckedUpdateManyWithoutProductNestedInput
   goodReceiptDetails?: Prisma.GoodReceiptDetailUncheckedUpdateManyWithoutProductNestedInput
+  slotDetails?: Prisma.SlotDetailUncheckedUpdateManyWithoutProductNestedInput
+  stocktakingDetails?: Prisma.StocktakingDetailUncheckedUpdateManyWithoutProductNestedInput
 }
 
 export type ProductCreateManyInput = {
@@ -346,6 +376,7 @@ export type ProductCreateManyInput = {
   price: number
   barcode: number
   amount?: number
+  status?: $Enums.ProductStatus
 }
 
 export type ProductUpdateManyMutationInput = {
@@ -354,6 +385,7 @@ export type ProductUpdateManyMutationInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   barcode?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
 }
 
 export type ProductUncheckedUpdateManyInput = {
@@ -363,6 +395,7 @@ export type ProductUncheckedUpdateManyInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   barcode?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
 }
 
 export type ProductCountOrderByAggregateInput = {
@@ -372,6 +405,7 @@ export type ProductCountOrderByAggregateInput = {
   price?: Prisma.SortOrder
   barcode?: Prisma.SortOrder
   amount?: Prisma.SortOrder
+  status?: Prisma.SortOrder
 }
 
 export type ProductAvgOrderByAggregateInput = {
@@ -388,6 +422,7 @@ export type ProductMaxOrderByAggregateInput = {
   price?: Prisma.SortOrder
   barcode?: Prisma.SortOrder
   amount?: Prisma.SortOrder
+  status?: Prisma.SortOrder
 }
 
 export type ProductMinOrderByAggregateInput = {
@@ -397,6 +432,7 @@ export type ProductMinOrderByAggregateInput = {
   price?: Prisma.SortOrder
   barcode?: Prisma.SortOrder
   amount?: Prisma.SortOrder
+  status?: Prisma.SortOrder
 }
 
 export type ProductSumOrderByAggregateInput = {
@@ -425,6 +461,10 @@ export type IntFieldUpdateOperationsInput = {
   decrement?: number
   multiply?: number
   divide?: number
+}
+
+export type EnumProductStatusFieldUpdateOperationsInput = {
+  set?: $Enums.ProductStatus
 }
 
 export type ProductCreateNestedOneWithoutPromotionDetailsInput = {
@@ -469,14 +509,45 @@ export type ProductUpdateOneRequiredWithoutGoodReceiptDetailsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.ProductUpdateToOneWithWhereWithoutGoodReceiptDetailsInput, Prisma.ProductUpdateWithoutGoodReceiptDetailsInput>, Prisma.ProductUncheckedUpdateWithoutGoodReceiptDetailsInput>
 }
 
+export type ProductCreateNestedOneWithoutSlotDetailsInput = {
+  create?: Prisma.XOR<Prisma.ProductCreateWithoutSlotDetailsInput, Prisma.ProductUncheckedCreateWithoutSlotDetailsInput>
+  connectOrCreate?: Prisma.ProductCreateOrConnectWithoutSlotDetailsInput
+  connect?: Prisma.ProductWhereUniqueInput
+}
+
+export type ProductUpdateOneRequiredWithoutSlotDetailsNestedInput = {
+  create?: Prisma.XOR<Prisma.ProductCreateWithoutSlotDetailsInput, Prisma.ProductUncheckedCreateWithoutSlotDetailsInput>
+  connectOrCreate?: Prisma.ProductCreateOrConnectWithoutSlotDetailsInput
+  upsert?: Prisma.ProductUpsertWithoutSlotDetailsInput
+  connect?: Prisma.ProductWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ProductUpdateToOneWithWhereWithoutSlotDetailsInput, Prisma.ProductUpdateWithoutSlotDetailsInput>, Prisma.ProductUncheckedUpdateWithoutSlotDetailsInput>
+}
+
+export type ProductCreateNestedOneWithoutStocktakingDetailsInput = {
+  create?: Prisma.XOR<Prisma.ProductCreateWithoutStocktakingDetailsInput, Prisma.ProductUncheckedCreateWithoutStocktakingDetailsInput>
+  connectOrCreate?: Prisma.ProductCreateOrConnectWithoutStocktakingDetailsInput
+  connect?: Prisma.ProductWhereUniqueInput
+}
+
+export type ProductUpdateOneRequiredWithoutStocktakingDetailsNestedInput = {
+  create?: Prisma.XOR<Prisma.ProductCreateWithoutStocktakingDetailsInput, Prisma.ProductUncheckedCreateWithoutStocktakingDetailsInput>
+  connectOrCreate?: Prisma.ProductCreateOrConnectWithoutStocktakingDetailsInput
+  upsert?: Prisma.ProductUpsertWithoutStocktakingDetailsInput
+  connect?: Prisma.ProductWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ProductUpdateToOneWithWhereWithoutStocktakingDetailsInput, Prisma.ProductUpdateWithoutStocktakingDetailsInput>, Prisma.ProductUncheckedUpdateWithoutStocktakingDetailsInput>
+}
+
 export type ProductCreateWithoutPromotionDetailsInput = {
   name?: string | null
   unit?: $Enums.ProductUnit
   price: number
   barcode: number
   amount?: number
+  status?: $Enums.ProductStatus
   invoiceDetails?: Prisma.InvoiceDetailCreateNestedManyWithoutProductInput
   goodReceiptDetails?: Prisma.GoodReceiptDetailCreateNestedManyWithoutProductInput
+  slotDetails?: Prisma.SlotDetailCreateNestedManyWithoutProductInput
+  stocktakingDetails?: Prisma.StocktakingDetailCreateNestedManyWithoutProductInput
 }
 
 export type ProductUncheckedCreateWithoutPromotionDetailsInput = {
@@ -486,8 +557,11 @@ export type ProductUncheckedCreateWithoutPromotionDetailsInput = {
   price: number
   barcode: number
   amount?: number
+  status?: $Enums.ProductStatus
   invoiceDetails?: Prisma.InvoiceDetailUncheckedCreateNestedManyWithoutProductInput
   goodReceiptDetails?: Prisma.GoodReceiptDetailUncheckedCreateNestedManyWithoutProductInput
+  slotDetails?: Prisma.SlotDetailUncheckedCreateNestedManyWithoutProductInput
+  stocktakingDetails?: Prisma.StocktakingDetailUncheckedCreateNestedManyWithoutProductInput
 }
 
 export type ProductCreateOrConnectWithoutPromotionDetailsInput = {
@@ -512,8 +586,11 @@ export type ProductUpdateWithoutPromotionDetailsInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   barcode?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
   invoiceDetails?: Prisma.InvoiceDetailUpdateManyWithoutProductNestedInput
   goodReceiptDetails?: Prisma.GoodReceiptDetailUpdateManyWithoutProductNestedInput
+  slotDetails?: Prisma.SlotDetailUpdateManyWithoutProductNestedInput
+  stocktakingDetails?: Prisma.StocktakingDetailUpdateManyWithoutProductNestedInput
 }
 
 export type ProductUncheckedUpdateWithoutPromotionDetailsInput = {
@@ -523,8 +600,11 @@ export type ProductUncheckedUpdateWithoutPromotionDetailsInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   barcode?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
   invoiceDetails?: Prisma.InvoiceDetailUncheckedUpdateManyWithoutProductNestedInput
   goodReceiptDetails?: Prisma.GoodReceiptDetailUncheckedUpdateManyWithoutProductNestedInput
+  slotDetails?: Prisma.SlotDetailUncheckedUpdateManyWithoutProductNestedInput
+  stocktakingDetails?: Prisma.StocktakingDetailUncheckedUpdateManyWithoutProductNestedInput
 }
 
 export type ProductCreateWithoutInvoiceDetailsInput = {
@@ -533,8 +613,11 @@ export type ProductCreateWithoutInvoiceDetailsInput = {
   price: number
   barcode: number
   amount?: number
+  status?: $Enums.ProductStatus
   promotionDetails?: Prisma.PromotionDetailCreateNestedManyWithoutProductInput
   goodReceiptDetails?: Prisma.GoodReceiptDetailCreateNestedManyWithoutProductInput
+  slotDetails?: Prisma.SlotDetailCreateNestedManyWithoutProductInput
+  stocktakingDetails?: Prisma.StocktakingDetailCreateNestedManyWithoutProductInput
 }
 
 export type ProductUncheckedCreateWithoutInvoiceDetailsInput = {
@@ -544,8 +627,11 @@ export type ProductUncheckedCreateWithoutInvoiceDetailsInput = {
   price: number
   barcode: number
   amount?: number
+  status?: $Enums.ProductStatus
   promotionDetails?: Prisma.PromotionDetailUncheckedCreateNestedManyWithoutProductInput
   goodReceiptDetails?: Prisma.GoodReceiptDetailUncheckedCreateNestedManyWithoutProductInput
+  slotDetails?: Prisma.SlotDetailUncheckedCreateNestedManyWithoutProductInput
+  stocktakingDetails?: Prisma.StocktakingDetailUncheckedCreateNestedManyWithoutProductInput
 }
 
 export type ProductCreateOrConnectWithoutInvoiceDetailsInput = {
@@ -570,8 +656,11 @@ export type ProductUpdateWithoutInvoiceDetailsInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   barcode?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
   promotionDetails?: Prisma.PromotionDetailUpdateManyWithoutProductNestedInput
   goodReceiptDetails?: Prisma.GoodReceiptDetailUpdateManyWithoutProductNestedInput
+  slotDetails?: Prisma.SlotDetailUpdateManyWithoutProductNestedInput
+  stocktakingDetails?: Prisma.StocktakingDetailUpdateManyWithoutProductNestedInput
 }
 
 export type ProductUncheckedUpdateWithoutInvoiceDetailsInput = {
@@ -581,8 +670,11 @@ export type ProductUncheckedUpdateWithoutInvoiceDetailsInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   barcode?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
   promotionDetails?: Prisma.PromotionDetailUncheckedUpdateManyWithoutProductNestedInput
   goodReceiptDetails?: Prisma.GoodReceiptDetailUncheckedUpdateManyWithoutProductNestedInput
+  slotDetails?: Prisma.SlotDetailUncheckedUpdateManyWithoutProductNestedInput
+  stocktakingDetails?: Prisma.StocktakingDetailUncheckedUpdateManyWithoutProductNestedInput
 }
 
 export type ProductCreateWithoutGoodReceiptDetailsInput = {
@@ -591,8 +683,11 @@ export type ProductCreateWithoutGoodReceiptDetailsInput = {
   price: number
   barcode: number
   amount?: number
+  status?: $Enums.ProductStatus
   promotionDetails?: Prisma.PromotionDetailCreateNestedManyWithoutProductInput
   invoiceDetails?: Prisma.InvoiceDetailCreateNestedManyWithoutProductInput
+  slotDetails?: Prisma.SlotDetailCreateNestedManyWithoutProductInput
+  stocktakingDetails?: Prisma.StocktakingDetailCreateNestedManyWithoutProductInput
 }
 
 export type ProductUncheckedCreateWithoutGoodReceiptDetailsInput = {
@@ -602,8 +697,11 @@ export type ProductUncheckedCreateWithoutGoodReceiptDetailsInput = {
   price: number
   barcode: number
   amount?: number
+  status?: $Enums.ProductStatus
   promotionDetails?: Prisma.PromotionDetailUncheckedCreateNestedManyWithoutProductInput
   invoiceDetails?: Prisma.InvoiceDetailUncheckedCreateNestedManyWithoutProductInput
+  slotDetails?: Prisma.SlotDetailUncheckedCreateNestedManyWithoutProductInput
+  stocktakingDetails?: Prisma.StocktakingDetailUncheckedCreateNestedManyWithoutProductInput
 }
 
 export type ProductCreateOrConnectWithoutGoodReceiptDetailsInput = {
@@ -628,8 +726,11 @@ export type ProductUpdateWithoutGoodReceiptDetailsInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   barcode?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
   promotionDetails?: Prisma.PromotionDetailUpdateManyWithoutProductNestedInput
   invoiceDetails?: Prisma.InvoiceDetailUpdateManyWithoutProductNestedInput
+  slotDetails?: Prisma.SlotDetailUpdateManyWithoutProductNestedInput
+  stocktakingDetails?: Prisma.StocktakingDetailUpdateManyWithoutProductNestedInput
 }
 
 export type ProductUncheckedUpdateWithoutGoodReceiptDetailsInput = {
@@ -639,8 +740,151 @@ export type ProductUncheckedUpdateWithoutGoodReceiptDetailsInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   barcode?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
   promotionDetails?: Prisma.PromotionDetailUncheckedUpdateManyWithoutProductNestedInput
   invoiceDetails?: Prisma.InvoiceDetailUncheckedUpdateManyWithoutProductNestedInput
+  slotDetails?: Prisma.SlotDetailUncheckedUpdateManyWithoutProductNestedInput
+  stocktakingDetails?: Prisma.StocktakingDetailUncheckedUpdateManyWithoutProductNestedInput
+}
+
+export type ProductCreateWithoutSlotDetailsInput = {
+  name?: string | null
+  unit?: $Enums.ProductUnit
+  price: number
+  barcode: number
+  amount?: number
+  status?: $Enums.ProductStatus
+  promotionDetails?: Prisma.PromotionDetailCreateNestedManyWithoutProductInput
+  invoiceDetails?: Prisma.InvoiceDetailCreateNestedManyWithoutProductInput
+  goodReceiptDetails?: Prisma.GoodReceiptDetailCreateNestedManyWithoutProductInput
+  stocktakingDetails?: Prisma.StocktakingDetailCreateNestedManyWithoutProductInput
+}
+
+export type ProductUncheckedCreateWithoutSlotDetailsInput = {
+  id?: number
+  name?: string | null
+  unit?: $Enums.ProductUnit
+  price: number
+  barcode: number
+  amount?: number
+  status?: $Enums.ProductStatus
+  promotionDetails?: Prisma.PromotionDetailUncheckedCreateNestedManyWithoutProductInput
+  invoiceDetails?: Prisma.InvoiceDetailUncheckedCreateNestedManyWithoutProductInput
+  goodReceiptDetails?: Prisma.GoodReceiptDetailUncheckedCreateNestedManyWithoutProductInput
+  stocktakingDetails?: Prisma.StocktakingDetailUncheckedCreateNestedManyWithoutProductInput
+}
+
+export type ProductCreateOrConnectWithoutSlotDetailsInput = {
+  where: Prisma.ProductWhereUniqueInput
+  create: Prisma.XOR<Prisma.ProductCreateWithoutSlotDetailsInput, Prisma.ProductUncheckedCreateWithoutSlotDetailsInput>
+}
+
+export type ProductUpsertWithoutSlotDetailsInput = {
+  update: Prisma.XOR<Prisma.ProductUpdateWithoutSlotDetailsInput, Prisma.ProductUncheckedUpdateWithoutSlotDetailsInput>
+  create: Prisma.XOR<Prisma.ProductCreateWithoutSlotDetailsInput, Prisma.ProductUncheckedCreateWithoutSlotDetailsInput>
+  where?: Prisma.ProductWhereInput
+}
+
+export type ProductUpdateToOneWithWhereWithoutSlotDetailsInput = {
+  where?: Prisma.ProductWhereInput
+  data: Prisma.XOR<Prisma.ProductUpdateWithoutSlotDetailsInput, Prisma.ProductUncheckedUpdateWithoutSlotDetailsInput>
+}
+
+export type ProductUpdateWithoutSlotDetailsInput = {
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  unit?: Prisma.EnumProductUnitFieldUpdateOperationsInput | $Enums.ProductUnit
+  price?: Prisma.IntFieldUpdateOperationsInput | number
+  barcode?: Prisma.IntFieldUpdateOperationsInput | number
+  amount?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
+  promotionDetails?: Prisma.PromotionDetailUpdateManyWithoutProductNestedInput
+  invoiceDetails?: Prisma.InvoiceDetailUpdateManyWithoutProductNestedInput
+  goodReceiptDetails?: Prisma.GoodReceiptDetailUpdateManyWithoutProductNestedInput
+  stocktakingDetails?: Prisma.StocktakingDetailUpdateManyWithoutProductNestedInput
+}
+
+export type ProductUncheckedUpdateWithoutSlotDetailsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  unit?: Prisma.EnumProductUnitFieldUpdateOperationsInput | $Enums.ProductUnit
+  price?: Prisma.IntFieldUpdateOperationsInput | number
+  barcode?: Prisma.IntFieldUpdateOperationsInput | number
+  amount?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
+  promotionDetails?: Prisma.PromotionDetailUncheckedUpdateManyWithoutProductNestedInput
+  invoiceDetails?: Prisma.InvoiceDetailUncheckedUpdateManyWithoutProductNestedInput
+  goodReceiptDetails?: Prisma.GoodReceiptDetailUncheckedUpdateManyWithoutProductNestedInput
+  stocktakingDetails?: Prisma.StocktakingDetailUncheckedUpdateManyWithoutProductNestedInput
+}
+
+export type ProductCreateWithoutStocktakingDetailsInput = {
+  name?: string | null
+  unit?: $Enums.ProductUnit
+  price: number
+  barcode: number
+  amount?: number
+  status?: $Enums.ProductStatus
+  promotionDetails?: Prisma.PromotionDetailCreateNestedManyWithoutProductInput
+  invoiceDetails?: Prisma.InvoiceDetailCreateNestedManyWithoutProductInput
+  goodReceiptDetails?: Prisma.GoodReceiptDetailCreateNestedManyWithoutProductInput
+  slotDetails?: Prisma.SlotDetailCreateNestedManyWithoutProductInput
+}
+
+export type ProductUncheckedCreateWithoutStocktakingDetailsInput = {
+  id?: number
+  name?: string | null
+  unit?: $Enums.ProductUnit
+  price: number
+  barcode: number
+  amount?: number
+  status?: $Enums.ProductStatus
+  promotionDetails?: Prisma.PromotionDetailUncheckedCreateNestedManyWithoutProductInput
+  invoiceDetails?: Prisma.InvoiceDetailUncheckedCreateNestedManyWithoutProductInput
+  goodReceiptDetails?: Prisma.GoodReceiptDetailUncheckedCreateNestedManyWithoutProductInput
+  slotDetails?: Prisma.SlotDetailUncheckedCreateNestedManyWithoutProductInput
+}
+
+export type ProductCreateOrConnectWithoutStocktakingDetailsInput = {
+  where: Prisma.ProductWhereUniqueInput
+  create: Prisma.XOR<Prisma.ProductCreateWithoutStocktakingDetailsInput, Prisma.ProductUncheckedCreateWithoutStocktakingDetailsInput>
+}
+
+export type ProductUpsertWithoutStocktakingDetailsInput = {
+  update: Prisma.XOR<Prisma.ProductUpdateWithoutStocktakingDetailsInput, Prisma.ProductUncheckedUpdateWithoutStocktakingDetailsInput>
+  create: Prisma.XOR<Prisma.ProductCreateWithoutStocktakingDetailsInput, Prisma.ProductUncheckedCreateWithoutStocktakingDetailsInput>
+  where?: Prisma.ProductWhereInput
+}
+
+export type ProductUpdateToOneWithWhereWithoutStocktakingDetailsInput = {
+  where?: Prisma.ProductWhereInput
+  data: Prisma.XOR<Prisma.ProductUpdateWithoutStocktakingDetailsInput, Prisma.ProductUncheckedUpdateWithoutStocktakingDetailsInput>
+}
+
+export type ProductUpdateWithoutStocktakingDetailsInput = {
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  unit?: Prisma.EnumProductUnitFieldUpdateOperationsInput | $Enums.ProductUnit
+  price?: Prisma.IntFieldUpdateOperationsInput | number
+  barcode?: Prisma.IntFieldUpdateOperationsInput | number
+  amount?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
+  promotionDetails?: Prisma.PromotionDetailUpdateManyWithoutProductNestedInput
+  invoiceDetails?: Prisma.InvoiceDetailUpdateManyWithoutProductNestedInput
+  goodReceiptDetails?: Prisma.GoodReceiptDetailUpdateManyWithoutProductNestedInput
+  slotDetails?: Prisma.SlotDetailUpdateManyWithoutProductNestedInput
+}
+
+export type ProductUncheckedUpdateWithoutStocktakingDetailsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  unit?: Prisma.EnumProductUnitFieldUpdateOperationsInput | $Enums.ProductUnit
+  price?: Prisma.IntFieldUpdateOperationsInput | number
+  barcode?: Prisma.IntFieldUpdateOperationsInput | number
+  amount?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
+  promotionDetails?: Prisma.PromotionDetailUncheckedUpdateManyWithoutProductNestedInput
+  invoiceDetails?: Prisma.InvoiceDetailUncheckedUpdateManyWithoutProductNestedInput
+  goodReceiptDetails?: Prisma.GoodReceiptDetailUncheckedUpdateManyWithoutProductNestedInput
+  slotDetails?: Prisma.SlotDetailUncheckedUpdateManyWithoutProductNestedInput
 }
 
 
@@ -652,12 +896,16 @@ export type ProductCountOutputType = {
   promotionDetails: number
   invoiceDetails: number
   goodReceiptDetails: number
+  slotDetails: number
+  stocktakingDetails: number
 }
 
 export type ProductCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   promotionDetails?: boolean | ProductCountOutputTypeCountPromotionDetailsArgs
   invoiceDetails?: boolean | ProductCountOutputTypeCountInvoiceDetailsArgs
   goodReceiptDetails?: boolean | ProductCountOutputTypeCountGoodReceiptDetailsArgs
+  slotDetails?: boolean | ProductCountOutputTypeCountSlotDetailsArgs
+  stocktakingDetails?: boolean | ProductCountOutputTypeCountStocktakingDetailsArgs
 }
 
 /**
@@ -691,6 +939,20 @@ export type ProductCountOutputTypeCountGoodReceiptDetailsArgs<ExtArgs extends ru
   where?: Prisma.GoodReceiptDetailWhereInput
 }
 
+/**
+ * ProductCountOutputType without action
+ */
+export type ProductCountOutputTypeCountSlotDetailsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.SlotDetailWhereInput
+}
+
+/**
+ * ProductCountOutputType without action
+ */
+export type ProductCountOutputTypeCountStocktakingDetailsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.StocktakingDetailWhereInput
+}
+
 
 export type ProductSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -699,9 +961,12 @@ export type ProductSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   price?: boolean
   barcode?: boolean
   amount?: boolean
+  status?: boolean
   promotionDetails?: boolean | Prisma.Product$promotionDetailsArgs<ExtArgs>
   invoiceDetails?: boolean | Prisma.Product$invoiceDetailsArgs<ExtArgs>
   goodReceiptDetails?: boolean | Prisma.Product$goodReceiptDetailsArgs<ExtArgs>
+  slotDetails?: boolean | Prisma.Product$slotDetailsArgs<ExtArgs>
+  stocktakingDetails?: boolean | Prisma.Product$stocktakingDetailsArgs<ExtArgs>
   _count?: boolean | Prisma.ProductCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["product"]>
 
@@ -712,6 +977,7 @@ export type ProductSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   price?: boolean
   barcode?: boolean
   amount?: boolean
+  status?: boolean
 }, ExtArgs["result"]["product"]>
 
 export type ProductSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -721,6 +987,7 @@ export type ProductSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   price?: boolean
   barcode?: boolean
   amount?: boolean
+  status?: boolean
 }, ExtArgs["result"]["product"]>
 
 export type ProductSelectScalar = {
@@ -730,13 +997,16 @@ export type ProductSelectScalar = {
   price?: boolean
   barcode?: boolean
   amount?: boolean
+  status?: boolean
 }
 
-export type ProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "unit" | "price" | "barcode" | "amount", ExtArgs["result"]["product"]>
+export type ProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "unit" | "price" | "barcode" | "amount" | "status", ExtArgs["result"]["product"]>
 export type ProductInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   promotionDetails?: boolean | Prisma.Product$promotionDetailsArgs<ExtArgs>
   invoiceDetails?: boolean | Prisma.Product$invoiceDetailsArgs<ExtArgs>
   goodReceiptDetails?: boolean | Prisma.Product$goodReceiptDetailsArgs<ExtArgs>
+  slotDetails?: boolean | Prisma.Product$slotDetailsArgs<ExtArgs>
+  stocktakingDetails?: boolean | Prisma.Product$stocktakingDetailsArgs<ExtArgs>
   _count?: boolean | Prisma.ProductCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ProductIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -748,6 +1018,8 @@ export type $ProductPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     promotionDetails: Prisma.$PromotionDetailPayload<ExtArgs>[]
     invoiceDetails: Prisma.$InvoiceDetailPayload<ExtArgs>[]
     goodReceiptDetails: Prisma.$GoodReceiptDetailPayload<ExtArgs>[]
+    slotDetails: Prisma.$SlotDetailPayload<ExtArgs>[]
+    stocktakingDetails: Prisma.$StocktakingDetailPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -756,6 +1028,7 @@ export type $ProductPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     price: number
     barcode: number
     amount: number
+    status: $Enums.ProductStatus
   }, ExtArgs["result"]["product"]>
   composites: {}
 }
@@ -1153,6 +1426,8 @@ export interface Prisma__ProductClient<T, Null = never, ExtArgs extends runtime.
   promotionDetails<T extends Prisma.Product$promotionDetailsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Product$promotionDetailsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PromotionDetailPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   invoiceDetails<T extends Prisma.Product$invoiceDetailsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Product$invoiceDetailsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InvoiceDetailPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   goodReceiptDetails<T extends Prisma.Product$goodReceiptDetailsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Product$goodReceiptDetailsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$GoodReceiptDetailPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  slotDetails<T extends Prisma.Product$slotDetailsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Product$slotDetailsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SlotDetailPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  stocktakingDetails<T extends Prisma.Product$stocktakingDetailsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Product$stocktakingDetailsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StocktakingDetailPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1188,6 +1463,7 @@ export interface ProductFieldRefs {
   readonly price: Prisma.FieldRef<"Product", 'Int'>
   readonly barcode: Prisma.FieldRef<"Product", 'Int'>
   readonly amount: Prisma.FieldRef<"Product", 'Int'>
+  readonly status: Prisma.FieldRef<"Product", 'ProductStatus'>
 }
     
 
@@ -1645,6 +1921,54 @@ export type Product$goodReceiptDetailsArgs<ExtArgs extends runtime.Types.Extensi
   take?: number
   skip?: number
   distinct?: Prisma.GoodReceiptDetailScalarFieldEnum | Prisma.GoodReceiptDetailScalarFieldEnum[]
+}
+
+/**
+ * Product.slotDetails
+ */
+export type Product$slotDetailsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the SlotDetail
+   */
+  select?: Prisma.SlotDetailSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the SlotDetail
+   */
+  omit?: Prisma.SlotDetailOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SlotDetailInclude<ExtArgs> | null
+  where?: Prisma.SlotDetailWhereInput
+  orderBy?: Prisma.SlotDetailOrderByWithRelationInput | Prisma.SlotDetailOrderByWithRelationInput[]
+  cursor?: Prisma.SlotDetailWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.SlotDetailScalarFieldEnum | Prisma.SlotDetailScalarFieldEnum[]
+}
+
+/**
+ * Product.stocktakingDetails
+ */
+export type Product$stocktakingDetailsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the StocktakingDetail
+   */
+  select?: Prisma.StocktakingDetailSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the StocktakingDetail
+   */
+  omit?: Prisma.StocktakingDetailOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StocktakingDetailInclude<ExtArgs> | null
+  where?: Prisma.StocktakingDetailWhereInput
+  orderBy?: Prisma.StocktakingDetailOrderByWithRelationInput | Prisma.StocktakingDetailOrderByWithRelationInput[]
+  cursor?: Prisma.StocktakingDetailWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.StocktakingDetailScalarFieldEnum | Prisma.StocktakingDetailScalarFieldEnum[]
 }
 
 /**

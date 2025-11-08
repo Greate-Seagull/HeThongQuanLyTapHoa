@@ -113,3 +113,8 @@ export interface ProductRehydrateProps {
 export enum ProductUnit {
 	UNKNOWN = "UNKNOWN",
 }
+
+export enum ProductStatus {
+	GOOD = "GOOD",
+	EXPIRED = "EXPIRED",
+}

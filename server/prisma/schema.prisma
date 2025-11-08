@@ -15,9 +15,12 @@ model Product {
   price              Int
   barcode            Int                 @unique
   amount             Int                 @default(0)
+  status             ProductStatus       @default(GOOD)
   promotionDetails   PromotionDetail[]
   invoiceDetails     InvoiceDetail[]
   goodReceiptDetails GoodReceiptDetail[]
+  slotDetails        SlotDetail[]
+  stocktakingDetails StocktakingDetail[]
 }
 
 model Promotion {
@@ -54,6 +57,7 @@ model Employee {
   name         String
   invoices     Invoice[]
   goodReceipts GoodReceipt[]
+  stocktakings Stocktaking[]
 }
 
 model Invoice {
@@ -102,6 +106,63 @@ model GoodReceiptDetail {
   @@id([goodReceiptId, productId])
 }
 
+model Shelf {
+  id    Int    @id @default(autoincrement())
+  name  String
+  racks Rack[]
+}
+
+model Rack {
+  id      Int    @id @default(autoincrement())
+  name    String
+  shelfId Int
+
+  shelf Shelf  @relation(fields: [shelfId], references: [id], onDelete: Cascade)
+  slots Slot[]
+}
+
+model Slot {
+  id     Int    @id @default(autoincrement())
+  name   String
+  rackId Int
+
+  rack               Rack                @relation(fields: [rackId], references: [id], onDelete: Cascade)
+  slotDetails        SlotDetail[]
+  stocktakingDetails StocktakingDetail[]
+}
+
+model SlotDetail {
+  slotId    Int
+  productId Int
+
+  slot    Slot    @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([slotId, productId])
+}
+
+model Stocktaking {
+  id         Int      @id @default(autoincrement())
+  employeeId Int
+  createdAt  DateTime @default(now())
+
+  employee           Employee            @relation(fields: [employeeId], references: [id])
+  stocktakingDetails StocktakingDetail[]
+}
+
+model StocktakingDetail {
+  id            Int           @id @default(autoincrement())
+  stocktakingId Int
+  productId     Int
+  slotId        Int
+  status        ProductStatus
+  quantity      Int
+
+  stocktaking Stocktaking @relation(fields: [stocktakingId], references: [id], onDelete: Cascade)
+  product     Product     @relation(fields: [productId], references: [id])
+  slot        Slot        @relation(fields: [slotId], references: [id])
+}
+
 enum PromotionType {
   PERCENTAGE
   FIXED
@@ -109,4 +170,9 @@ enum PromotionType {
 
 enum ProductUnit {
   UNKNOWN
+}
+
+enum ProductStatus {
+  GOOD
+  EXPIRED
 }

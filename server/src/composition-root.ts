@@ -16,6 +16,10 @@ import { CreateGoodReceiptUsecase } from "./application/create-good-receipt.usec
 import { GoodReceiptRepository } from "./infrastructure/repositories/good-receipt.repository";
 import { UpdateProdutsUsecase } from "./application/update-products.usecase";
 import { GetProductsUsecase } from "./application/get-products.usecase";
+import { CreateStocktakingUsecase } from "./application/create-stocktaking.usecase";
+import { EmployeeReadAccess } from "./infrastructure/read_accessors/employee.read-accessor";
+import { ShelfReadAccessor } from "./infrastructure/read_accessors/shelf.read-accessor";
+import { StocktakingRepository } from "./infrastructure/repositories/stocktaking.repository";
 
 config;
 export const prisma = new PrismaClient({
@@ -34,6 +38,9 @@ const userRepo = new UserRepository(prisma);
 const productRepo = new ProductRepositoryPostgree(prisma);
 export const invoiceRepo = new InvoiceRepository(prisma);
 const goodReceiptRepo = new GoodReceiptRepository(prisma);
+const employeeReadAccessor = new EmployeeReadAccess(prisma);
+const shelfReadAccessor = new ShelfReadAccessor(prisma);
+const stocktakingRepo = new StocktakingRepository(prisma);
 
 const promoPricing = new PromotionPricingService();
 const processSales = new SalesTransactionService();
@@ -67,3 +74,9 @@ export const updateProductsUsecase = new UpdateProdutsUsecase(
 	transactionManager
 );
 export const getProductsUsecase = new GetProductsUsecase(productReadAccessor);
+export const createStocktakingUsecase = new CreateStocktakingUsecase(
+	employeeReadAccessor,
+	productReadAccessor,
+	shelfReadAccessor,
+	stocktakingRepo
+);

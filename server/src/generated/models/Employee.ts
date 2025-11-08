@@ -193,6 +193,7 @@ export type EmployeeWhereInput = {
   name?: Prisma.StringFilter<"Employee"> | string
   invoices?: Prisma.InvoiceListRelationFilter
   goodReceipts?: Prisma.GoodReceiptListRelationFilter
+  stocktakings?: Prisma.StocktakingListRelationFilter
 }
 
 export type EmployeeOrderByWithRelationInput = {
@@ -200,6 +201,7 @@ export type EmployeeOrderByWithRelationInput = {
   name?: Prisma.SortOrder
   invoices?: Prisma.InvoiceOrderByRelationAggregateInput
   goodReceipts?: Prisma.GoodReceiptOrderByRelationAggregateInput
+  stocktakings?: Prisma.StocktakingOrderByRelationAggregateInput
 }
 
 export type EmployeeWhereUniqueInput = Prisma.AtLeast<{
@@ -210,6 +212,7 @@ export type EmployeeWhereUniqueInput = Prisma.AtLeast<{
   name?: Prisma.StringFilter<"Employee"> | string
   invoices?: Prisma.InvoiceListRelationFilter
   goodReceipts?: Prisma.GoodReceiptListRelationFilter
+  stocktakings?: Prisma.StocktakingListRelationFilter
 }, "id">
 
 export type EmployeeOrderByWithAggregationInput = {
@@ -234,6 +237,7 @@ export type EmployeeCreateInput = {
   name: string
   invoices?: Prisma.InvoiceCreateNestedManyWithoutEmployeeInput
   goodReceipts?: Prisma.GoodReceiptCreateNestedManyWithoutEmployeeInput
+  stocktakings?: Prisma.StocktakingCreateNestedManyWithoutEmployeeInput
 }
 
 export type EmployeeUncheckedCreateInput = {
@@ -241,12 +245,14 @@ export type EmployeeUncheckedCreateInput = {
   name: string
   invoices?: Prisma.InvoiceUncheckedCreateNestedManyWithoutEmployeeInput
   goodReceipts?: Prisma.GoodReceiptUncheckedCreateNestedManyWithoutEmployeeInput
+  stocktakings?: Prisma.StocktakingUncheckedCreateNestedManyWithoutEmployeeInput
 }
 
 export type EmployeeUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   invoices?: Prisma.InvoiceUpdateManyWithoutEmployeeNestedInput
   goodReceipts?: Prisma.GoodReceiptUpdateManyWithoutEmployeeNestedInput
+  stocktakings?: Prisma.StocktakingUpdateManyWithoutEmployeeNestedInput
 }
 
 export type EmployeeUncheckedUpdateInput = {
@@ -254,6 +260,7 @@ export type EmployeeUncheckedUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   invoices?: Prisma.InvoiceUncheckedUpdateManyWithoutEmployeeNestedInput
   goodReceipts?: Prisma.GoodReceiptUncheckedUpdateManyWithoutEmployeeNestedInput
+  stocktakings?: Prisma.StocktakingUncheckedUpdateManyWithoutEmployeeNestedInput
 }
 
 export type EmployeeCreateManyInput = {
@@ -326,15 +333,31 @@ export type EmployeeUpdateOneRequiredWithoutGoodReceiptsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.EmployeeUpdateToOneWithWhereWithoutGoodReceiptsInput, Prisma.EmployeeUpdateWithoutGoodReceiptsInput>, Prisma.EmployeeUncheckedUpdateWithoutGoodReceiptsInput>
 }
 
+export type EmployeeCreateNestedOneWithoutStocktakingsInput = {
+  create?: Prisma.XOR<Prisma.EmployeeCreateWithoutStocktakingsInput, Prisma.EmployeeUncheckedCreateWithoutStocktakingsInput>
+  connectOrCreate?: Prisma.EmployeeCreateOrConnectWithoutStocktakingsInput
+  connect?: Prisma.EmployeeWhereUniqueInput
+}
+
+export type EmployeeUpdateOneRequiredWithoutStocktakingsNestedInput = {
+  create?: Prisma.XOR<Prisma.EmployeeCreateWithoutStocktakingsInput, Prisma.EmployeeUncheckedCreateWithoutStocktakingsInput>
+  connectOrCreate?: Prisma.EmployeeCreateOrConnectWithoutStocktakingsInput
+  upsert?: Prisma.EmployeeUpsertWithoutStocktakingsInput
+  connect?: Prisma.EmployeeWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.EmployeeUpdateToOneWithWhereWithoutStocktakingsInput, Prisma.EmployeeUpdateWithoutStocktakingsInput>, Prisma.EmployeeUncheckedUpdateWithoutStocktakingsInput>
+}
+
 export type EmployeeCreateWithoutInvoicesInput = {
   name: string
   goodReceipts?: Prisma.GoodReceiptCreateNestedManyWithoutEmployeeInput
+  stocktakings?: Prisma.StocktakingCreateNestedManyWithoutEmployeeInput
 }
 
 export type EmployeeUncheckedCreateWithoutInvoicesInput = {
   id?: number
   name: string
   goodReceipts?: Prisma.GoodReceiptUncheckedCreateNestedManyWithoutEmployeeInput
+  stocktakings?: Prisma.StocktakingUncheckedCreateNestedManyWithoutEmployeeInput
 }
 
 export type EmployeeCreateOrConnectWithoutInvoicesInput = {
@@ -356,23 +379,27 @@ export type EmployeeUpdateToOneWithWhereWithoutInvoicesInput = {
 export type EmployeeUpdateWithoutInvoicesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   goodReceipts?: Prisma.GoodReceiptUpdateManyWithoutEmployeeNestedInput
+  stocktakings?: Prisma.StocktakingUpdateManyWithoutEmployeeNestedInput
 }
 
 export type EmployeeUncheckedUpdateWithoutInvoicesInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   goodReceipts?: Prisma.GoodReceiptUncheckedUpdateManyWithoutEmployeeNestedInput
+  stocktakings?: Prisma.StocktakingUncheckedUpdateManyWithoutEmployeeNestedInput
 }
 
 export type EmployeeCreateWithoutGoodReceiptsInput = {
   name: string
   invoices?: Prisma.InvoiceCreateNestedManyWithoutEmployeeInput
+  stocktakings?: Prisma.StocktakingCreateNestedManyWithoutEmployeeInput
 }
 
 export type EmployeeUncheckedCreateWithoutGoodReceiptsInput = {
   id?: number
   name: string
   invoices?: Prisma.InvoiceUncheckedCreateNestedManyWithoutEmployeeInput
+  stocktakings?: Prisma.StocktakingUncheckedCreateNestedManyWithoutEmployeeInput
 }
 
 export type EmployeeCreateOrConnectWithoutGoodReceiptsInput = {
@@ -394,12 +421,56 @@ export type EmployeeUpdateToOneWithWhereWithoutGoodReceiptsInput = {
 export type EmployeeUpdateWithoutGoodReceiptsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   invoices?: Prisma.InvoiceUpdateManyWithoutEmployeeNestedInput
+  stocktakings?: Prisma.StocktakingUpdateManyWithoutEmployeeNestedInput
 }
 
 export type EmployeeUncheckedUpdateWithoutGoodReceiptsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   invoices?: Prisma.InvoiceUncheckedUpdateManyWithoutEmployeeNestedInput
+  stocktakings?: Prisma.StocktakingUncheckedUpdateManyWithoutEmployeeNestedInput
+}
+
+export type EmployeeCreateWithoutStocktakingsInput = {
+  name: string
+  invoices?: Prisma.InvoiceCreateNestedManyWithoutEmployeeInput
+  goodReceipts?: Prisma.GoodReceiptCreateNestedManyWithoutEmployeeInput
+}
+
+export type EmployeeUncheckedCreateWithoutStocktakingsInput = {
+  id?: number
+  name: string
+  invoices?: Prisma.InvoiceUncheckedCreateNestedManyWithoutEmployeeInput
+  goodReceipts?: Prisma.GoodReceiptUncheckedCreateNestedManyWithoutEmployeeInput
+}
+
+export type EmployeeCreateOrConnectWithoutStocktakingsInput = {
+  where: Prisma.EmployeeWhereUniqueInput
+  create: Prisma.XOR<Prisma.EmployeeCreateWithoutStocktakingsInput, Prisma.EmployeeUncheckedCreateWithoutStocktakingsInput>
+}
+
+export type EmployeeUpsertWithoutStocktakingsInput = {
+  update: Prisma.XOR<Prisma.EmployeeUpdateWithoutStocktakingsInput, Prisma.EmployeeUncheckedUpdateWithoutStocktakingsInput>
+  create: Prisma.XOR<Prisma.EmployeeCreateWithoutStocktakingsInput, Prisma.EmployeeUncheckedCreateWithoutStocktakingsInput>
+  where?: Prisma.EmployeeWhereInput
+}
+
+export type EmployeeUpdateToOneWithWhereWithoutStocktakingsInput = {
+  where?: Prisma.EmployeeWhereInput
+  data: Prisma.XOR<Prisma.EmployeeUpdateWithoutStocktakingsInput, Prisma.EmployeeUncheckedUpdateWithoutStocktakingsInput>
+}
+
+export type EmployeeUpdateWithoutStocktakingsInput = {
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  invoices?: Prisma.InvoiceUpdateManyWithoutEmployeeNestedInput
+  goodReceipts?: Prisma.GoodReceiptUpdateManyWithoutEmployeeNestedInput
+}
+
+export type EmployeeUncheckedUpdateWithoutStocktakingsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  invoices?: Prisma.InvoiceUncheckedUpdateManyWithoutEmployeeNestedInput
+  goodReceipts?: Prisma.GoodReceiptUncheckedUpdateManyWithoutEmployeeNestedInput
 }
 
 
@@ -410,11 +481,13 @@ export type EmployeeUncheckedUpdateWithoutGoodReceiptsInput = {
 export type EmployeeCountOutputType = {
   invoices: number
   goodReceipts: number
+  stocktakings: number
 }
 
 export type EmployeeCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   invoices?: boolean | EmployeeCountOutputTypeCountInvoicesArgs
   goodReceipts?: boolean | EmployeeCountOutputTypeCountGoodReceiptsArgs
+  stocktakings?: boolean | EmployeeCountOutputTypeCountStocktakingsArgs
 }
 
 /**
@@ -441,12 +514,20 @@ export type EmployeeCountOutputTypeCountGoodReceiptsArgs<ExtArgs extends runtime
   where?: Prisma.GoodReceiptWhereInput
 }
 
+/**
+ * EmployeeCountOutputType without action
+ */
+export type EmployeeCountOutputTypeCountStocktakingsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.StocktakingWhereInput
+}
+
 
 export type EmployeeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
   invoices?: boolean | Prisma.Employee$invoicesArgs<ExtArgs>
   goodReceipts?: boolean | Prisma.Employee$goodReceiptsArgs<ExtArgs>
+  stocktakings?: boolean | Prisma.Employee$stocktakingsArgs<ExtArgs>
   _count?: boolean | Prisma.EmployeeCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["employee"]>
 
@@ -469,6 +550,7 @@ export type EmployeeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs =
 export type EmployeeInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   invoices?: boolean | Prisma.Employee$invoicesArgs<ExtArgs>
   goodReceipts?: boolean | Prisma.Employee$goodReceiptsArgs<ExtArgs>
+  stocktakings?: boolean | Prisma.Employee$stocktakingsArgs<ExtArgs>
   _count?: boolean | Prisma.EmployeeCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type EmployeeIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -479,6 +561,7 @@ export type $EmployeePayload<ExtArgs extends runtime.Types.Extensions.InternalAr
   objects: {
     invoices: Prisma.$InvoicePayload<ExtArgs>[]
     goodReceipts: Prisma.$GoodReceiptPayload<ExtArgs>[]
+    stocktakings: Prisma.$StocktakingPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -879,6 +962,7 @@ export interface Prisma__EmployeeClient<T, Null = never, ExtArgs extends runtime
   readonly [Symbol.toStringTag]: "PrismaPromise"
   invoices<T extends Prisma.Employee$invoicesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Employee$invoicesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InvoicePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   goodReceipts<T extends Prisma.Employee$goodReceiptsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Employee$goodReceiptsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$GoodReceiptPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  stocktakings<T extends Prisma.Employee$stocktakingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Employee$stocktakingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StocktakingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1343,6 +1427,30 @@ export type Employee$goodReceiptsArgs<ExtArgs extends runtime.Types.Extensions.I
   take?: number
   skip?: number
   distinct?: Prisma.GoodReceiptScalarFieldEnum | Prisma.GoodReceiptScalarFieldEnum[]
+}
+
+/**
+ * Employee.stocktakings
+ */
+export type Employee$stocktakingsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Stocktaking
+   */
+  select?: Prisma.StocktakingSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Stocktaking
+   */
+  omit?: Prisma.StocktakingOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StocktakingInclude<ExtArgs> | null
+  where?: Prisma.StocktakingWhereInput
+  orderBy?: Prisma.StocktakingOrderByWithRelationInput | Prisma.StocktakingOrderByWithRelationInput[]
+  cursor?: Prisma.StocktakingWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.StocktakingScalarFieldEnum | Prisma.StocktakingScalarFieldEnum[]
 }
 
 /**

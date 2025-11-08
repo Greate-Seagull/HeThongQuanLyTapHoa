@@ -1,5 +1,4 @@
 import { PrismaClient } from "@prisma/client";
-import { PromotionType } from "../../generated/enums";
 
 export class ProductReadAccessor {
 	constructor(private readonly prisma: PrismaClient) {}
@@ -39,5 +38,17 @@ export class ProductReadAccessor {
 				barcode: true,
 			},
 		});
+	}
+
+	async getIdsByBarcodes(barcodes: number[]) {
+		const count = await this.prisma.product.findMany({
+			where: { barcode: { in: barcodes } },
+			select: {
+				id: true,
+				barcode: true,
+			},
+		});
+
+		return count;
 	}
 }
