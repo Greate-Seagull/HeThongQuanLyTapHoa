@@ -14,6 +14,7 @@ import { TransactionManager } from "./infrastructure/repositories/transaction";
 import { SalesTransactionService } from "./domain/sales-transaction.service";
 import { CreateGoodReceiptUsecase } from "./application/create-good-receipt.usecase";
 import { GoodReceiptRepository } from "./infrastructure/repositories/good-receipt.repository";
+import { UpdateProdutsUsecase } from "./application/update-products.usecase";
 
 config;
 export const prisma = new PrismaClient({
@@ -58,5 +59,9 @@ export const createGoodReceiptUsecase = new CreateGoodReceiptUsecase(
 	employeeRepo,
 	productRepo,
 	goodReceiptRepo,
+	transactionManager
+);
+export const updateProductsUsecase = new UpdateProdutsUsecase(
+	productRepo,
 	transactionManager
 );

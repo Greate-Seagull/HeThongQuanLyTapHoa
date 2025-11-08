@@ -1,9 +1,56 @@
+import e from "express";
+
 export class Product {
 	private _id?: number;
 	private _name!: string;
 	private _price!: number;
-	private _amount!: number;
 	private _unit!: ProductUnit;
+	private _barcode!: number;
+	private _amount!: number;
+
+	static create({
+		name,
+		price,
+		unit,
+		barcode,
+	}: {
+		name: string;
+		price: number;
+		unit: string;
+		barcode: number;
+	}) {
+		let e = new Product();
+
+		e.updateName(name);
+		e.updatePrice(price);
+		e.updateUnit(unit);
+		e.updateBarcode(barcode);
+		e._amount = 0;
+
+		return e;
+	}
+
+	updateBarcode(barcode: number) {
+		if (barcode <= 0) throw Error(`Expect the barcode to be positive`);
+		this._barcode = barcode;
+	}
+
+	updateUnit(unit: string) {
+		const types = Object.keys(ProductUnit);
+		if (!types.includes(unit))
+			throw Error(`Expect a valid unit in [${types}], got ${unit}`);
+
+		this._unit = unit as ProductUnit;
+	}
+
+	updatePrice(price: number) {
+		if (price <= 0) throw Error(`Expect the price to be positive`);
+		this._price = price;
+	}
+
+	updateName(name: string) {
+		this._name = name;
+	}
 
 	static rehydrate(raw: ProductRehydrateProps) {
 		let entity = new Product();
@@ -11,8 +58,9 @@ export class Product {
 		entity._id = raw.id;
 		entity._name = raw.name;
 		entity._price = raw.price;
-		entity._amount = raw.amount;
 		entity._unit = raw.unit as ProductUnit;
+		entity._barcode = raw.barcode;
+		entity._amount = raw.amount;
 
 		return entity;
 	}
@@ -46,6 +94,9 @@ export class Product {
 	public get unit() {
 		return this._unit;
 	}
+	public get barcode() {
+		return this._barcode;
+	}
 
 	private constructor() {}
 }
@@ -55,6 +106,7 @@ export interface ProductRehydrateProps {
 	name: string;
 	unit: string;
 	price: number;
+	barcode: number;
 	amount: number;
 }
 

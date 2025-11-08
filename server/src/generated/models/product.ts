@@ -28,12 +28,14 @@ export type AggregateProduct = {
 export type ProductAvgAggregateOutputType = {
   id: number | null
   price: number | null
+  barcode: number | null
   amount: number | null
 }
 
 export type ProductSumAggregateOutputType = {
   id: number | null
   price: number | null
+  barcode: number | null
   amount: number | null
 }
 
@@ -42,6 +44,7 @@ export type ProductMinAggregateOutputType = {
   name: string | null
   unit: $Enums.ProductUnit | null
   price: number | null
+  barcode: number | null
   amount: number | null
 }
 
@@ -50,6 +53,7 @@ export type ProductMaxAggregateOutputType = {
   name: string | null
   unit: $Enums.ProductUnit | null
   price: number | null
+  barcode: number | null
   amount: number | null
 }
 
@@ -58,6 +62,7 @@ export type ProductCountAggregateOutputType = {
   name: number
   unit: number
   price: number
+  barcode: number
   amount: number
   _all: number
 }
@@ -66,12 +71,14 @@ export type ProductCountAggregateOutputType = {
 export type ProductAvgAggregateInputType = {
   id?: true
   price?: true
+  barcode?: true
   amount?: true
 }
 
 export type ProductSumAggregateInputType = {
   id?: true
   price?: true
+  barcode?: true
   amount?: true
 }
 
@@ -80,6 +87,7 @@ export type ProductMinAggregateInputType = {
   name?: true
   unit?: true
   price?: true
+  barcode?: true
   amount?: true
 }
 
@@ -88,6 +96,7 @@ export type ProductMaxAggregateInputType = {
   name?: true
   unit?: true
   price?: true
+  barcode?: true
   amount?: true
 }
 
@@ -96,6 +105,7 @@ export type ProductCountAggregateInputType = {
   name?: true
   unit?: true
   price?: true
+  barcode?: true
   amount?: true
   _all?: true
 }
@@ -191,6 +201,7 @@ export type ProductGroupByOutputType = {
   name: string | null
   unit: $Enums.ProductUnit
   price: number
+  barcode: number
   amount: number
   _count: ProductCountAggregateOutputType | null
   _avg: ProductAvgAggregateOutputType | null
@@ -222,6 +233,7 @@ export type ProductWhereInput = {
   name?: Prisma.StringNullableFilter<"Product"> | string | null
   unit?: Prisma.EnumProductUnitFilter<"Product"> | $Enums.ProductUnit
   price?: Prisma.IntFilter<"Product"> | number
+  barcode?: Prisma.IntFilter<"Product"> | number
   amount?: Prisma.IntFilter<"Product"> | number
   promotionDetails?: Prisma.PromotionDetailListRelationFilter
   invoiceDetails?: Prisma.InvoiceDetailListRelationFilter
@@ -233,6 +245,7 @@ export type ProductOrderByWithRelationInput = {
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   unit?: Prisma.SortOrder
   price?: Prisma.SortOrder
+  barcode?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   promotionDetails?: Prisma.PromotionDetailOrderByRelationAggregateInput
   invoiceDetails?: Prisma.InvoiceDetailOrderByRelationAggregateInput
@@ -241,6 +254,7 @@ export type ProductOrderByWithRelationInput = {
 
 export type ProductWhereUniqueInput = Prisma.AtLeast<{
   id?: number
+  barcode?: number
   AND?: Prisma.ProductWhereInput | Prisma.ProductWhereInput[]
   OR?: Prisma.ProductWhereInput[]
   NOT?: Prisma.ProductWhereInput | Prisma.ProductWhereInput[]
@@ -251,13 +265,14 @@ export type ProductWhereUniqueInput = Prisma.AtLeast<{
   promotionDetails?: Prisma.PromotionDetailListRelationFilter
   invoiceDetails?: Prisma.InvoiceDetailListRelationFilter
   goodReceiptDetails?: Prisma.GoodReceiptDetailListRelationFilter
-}, "id">
+}, "id" | "barcode">
 
 export type ProductOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   unit?: Prisma.SortOrder
   price?: Prisma.SortOrder
+  barcode?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   _count?: Prisma.ProductCountOrderByAggregateInput
   _avg?: Prisma.ProductAvgOrderByAggregateInput
@@ -274,6 +289,7 @@ export type ProductScalarWhereWithAggregatesInput = {
   name?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
   unit?: Prisma.EnumProductUnitWithAggregatesFilter<"Product"> | $Enums.ProductUnit
   price?: Prisma.IntWithAggregatesFilter<"Product"> | number
+  barcode?: Prisma.IntWithAggregatesFilter<"Product"> | number
   amount?: Prisma.IntWithAggregatesFilter<"Product"> | number
 }
 
@@ -281,6 +297,7 @@ export type ProductCreateInput = {
   name?: string | null
   unit?: $Enums.ProductUnit
   price: number
+  barcode: number
   amount?: number
   promotionDetails?: Prisma.PromotionDetailCreateNestedManyWithoutProductInput
   invoiceDetails?: Prisma.InvoiceDetailCreateNestedManyWithoutProductInput
@@ -292,6 +309,7 @@ export type ProductUncheckedCreateInput = {
   name?: string | null
   unit?: $Enums.ProductUnit
   price: number
+  barcode: number
   amount?: number
   promotionDetails?: Prisma.PromotionDetailUncheckedCreateNestedManyWithoutProductInput
   invoiceDetails?: Prisma.InvoiceDetailUncheckedCreateNestedManyWithoutProductInput
@@ -302,6 +320,7 @@ export type ProductUpdateInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unit?: Prisma.EnumProductUnitFieldUpdateOperationsInput | $Enums.ProductUnit
   price?: Prisma.IntFieldUpdateOperationsInput | number
+  barcode?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
   promotionDetails?: Prisma.PromotionDetailUpdateManyWithoutProductNestedInput
   invoiceDetails?: Prisma.InvoiceDetailUpdateManyWithoutProductNestedInput
@@ -313,6 +332,7 @@ export type ProductUncheckedUpdateInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unit?: Prisma.EnumProductUnitFieldUpdateOperationsInput | $Enums.ProductUnit
   price?: Prisma.IntFieldUpdateOperationsInput | number
+  barcode?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
   promotionDetails?: Prisma.PromotionDetailUncheckedUpdateManyWithoutProductNestedInput
   invoiceDetails?: Prisma.InvoiceDetailUncheckedUpdateManyWithoutProductNestedInput
@@ -324,6 +344,7 @@ export type ProductCreateManyInput = {
   name?: string | null
   unit?: $Enums.ProductUnit
   price: number
+  barcode: number
   amount?: number
 }
 
@@ -331,6 +352,7 @@ export type ProductUpdateManyMutationInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unit?: Prisma.EnumProductUnitFieldUpdateOperationsInput | $Enums.ProductUnit
   price?: Prisma.IntFieldUpdateOperationsInput | number
+  barcode?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
@@ -339,6 +361,7 @@ export type ProductUncheckedUpdateManyInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unit?: Prisma.EnumProductUnitFieldUpdateOperationsInput | $Enums.ProductUnit
   price?: Prisma.IntFieldUpdateOperationsInput | number
+  barcode?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
@@ -347,12 +370,14 @@ export type ProductCountOrderByAggregateInput = {
   name?: Prisma.SortOrder
   unit?: Prisma.SortOrder
   price?: Prisma.SortOrder
+  barcode?: Prisma.SortOrder
   amount?: Prisma.SortOrder
 }
 
 export type ProductAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
   price?: Prisma.SortOrder
+  barcode?: Prisma.SortOrder
   amount?: Prisma.SortOrder
 }
 
@@ -361,6 +386,7 @@ export type ProductMaxOrderByAggregateInput = {
   name?: Prisma.SortOrder
   unit?: Prisma.SortOrder
   price?: Prisma.SortOrder
+  barcode?: Prisma.SortOrder
   amount?: Prisma.SortOrder
 }
 
@@ -369,12 +395,14 @@ export type ProductMinOrderByAggregateInput = {
   name?: Prisma.SortOrder
   unit?: Prisma.SortOrder
   price?: Prisma.SortOrder
+  barcode?: Prisma.SortOrder
   amount?: Prisma.SortOrder
 }
 
 export type ProductSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   price?: Prisma.SortOrder
+  barcode?: Prisma.SortOrder
   amount?: Prisma.SortOrder
 }
 
@@ -445,6 +473,7 @@ export type ProductCreateWithoutPromotionDetailsInput = {
   name?: string | null
   unit?: $Enums.ProductUnit
   price: number
+  barcode: number
   amount?: number
   invoiceDetails?: Prisma.InvoiceDetailCreateNestedManyWithoutProductInput
   goodReceiptDetails?: Prisma.GoodReceiptDetailCreateNestedManyWithoutProductInput
@@ -455,6 +484,7 @@ export type ProductUncheckedCreateWithoutPromotionDetailsInput = {
   name?: string | null
   unit?: $Enums.ProductUnit
   price: number
+  barcode: number
   amount?: number
   invoiceDetails?: Prisma.InvoiceDetailUncheckedCreateNestedManyWithoutProductInput
   goodReceiptDetails?: Prisma.GoodReceiptDetailUncheckedCreateNestedManyWithoutProductInput
@@ -480,6 +510,7 @@ export type ProductUpdateWithoutPromotionDetailsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unit?: Prisma.EnumProductUnitFieldUpdateOperationsInput | $Enums.ProductUnit
   price?: Prisma.IntFieldUpdateOperationsInput | number
+  barcode?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
   invoiceDetails?: Prisma.InvoiceDetailUpdateManyWithoutProductNestedInput
   goodReceiptDetails?: Prisma.GoodReceiptDetailUpdateManyWithoutProductNestedInput
@@ -490,6 +521,7 @@ export type ProductUncheckedUpdateWithoutPromotionDetailsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unit?: Prisma.EnumProductUnitFieldUpdateOperationsInput | $Enums.ProductUnit
   price?: Prisma.IntFieldUpdateOperationsInput | number
+  barcode?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
   invoiceDetails?: Prisma.InvoiceDetailUncheckedUpdateManyWithoutProductNestedInput
   goodReceiptDetails?: Prisma.GoodReceiptDetailUncheckedUpdateManyWithoutProductNestedInput
@@ -499,6 +531,7 @@ export type ProductCreateWithoutInvoiceDetailsInput = {
   name?: string | null
   unit?: $Enums.ProductUnit
   price: number
+  barcode: number
   amount?: number
   promotionDetails?: Prisma.PromotionDetailCreateNestedManyWithoutProductInput
   goodReceiptDetails?: Prisma.GoodReceiptDetailCreateNestedManyWithoutProductInput
@@ -509,6 +542,7 @@ export type ProductUncheckedCreateWithoutInvoiceDetailsInput = {
   name?: string | null
   unit?: $Enums.ProductUnit
   price: number
+  barcode: number
   amount?: number
   promotionDetails?: Prisma.PromotionDetailUncheckedCreateNestedManyWithoutProductInput
   goodReceiptDetails?: Prisma.GoodReceiptDetailUncheckedCreateNestedManyWithoutProductInput
@@ -534,6 +568,7 @@ export type ProductUpdateWithoutInvoiceDetailsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unit?: Prisma.EnumProductUnitFieldUpdateOperationsInput | $Enums.ProductUnit
   price?: Prisma.IntFieldUpdateOperationsInput | number
+  barcode?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
   promotionDetails?: Prisma.PromotionDetailUpdateManyWithoutProductNestedInput
   goodReceiptDetails?: Prisma.GoodReceiptDetailUpdateManyWithoutProductNestedInput
@@ -544,6 +579,7 @@ export type ProductUncheckedUpdateWithoutInvoiceDetailsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unit?: Prisma.EnumProductUnitFieldUpdateOperationsInput | $Enums.ProductUnit
   price?: Prisma.IntFieldUpdateOperationsInput | number
+  barcode?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
   promotionDetails?: Prisma.PromotionDetailUncheckedUpdateManyWithoutProductNestedInput
   goodReceiptDetails?: Prisma.GoodReceiptDetailUncheckedUpdateManyWithoutProductNestedInput
@@ -553,6 +589,7 @@ export type ProductCreateWithoutGoodReceiptDetailsInput = {
   name?: string | null
   unit?: $Enums.ProductUnit
   price: number
+  barcode: number
   amount?: number
   promotionDetails?: Prisma.PromotionDetailCreateNestedManyWithoutProductInput
   invoiceDetails?: Prisma.InvoiceDetailCreateNestedManyWithoutProductInput
@@ -563,6 +600,7 @@ export type ProductUncheckedCreateWithoutGoodReceiptDetailsInput = {
   name?: string | null
   unit?: $Enums.ProductUnit
   price: number
+  barcode: number
   amount?: number
   promotionDetails?: Prisma.PromotionDetailUncheckedCreateNestedManyWithoutProductInput
   invoiceDetails?: Prisma.InvoiceDetailUncheckedCreateNestedManyWithoutProductInput
@@ -588,6 +626,7 @@ export type ProductUpdateWithoutGoodReceiptDetailsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unit?: Prisma.EnumProductUnitFieldUpdateOperationsInput | $Enums.ProductUnit
   price?: Prisma.IntFieldUpdateOperationsInput | number
+  barcode?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
   promotionDetails?: Prisma.PromotionDetailUpdateManyWithoutProductNestedInput
   invoiceDetails?: Prisma.InvoiceDetailUpdateManyWithoutProductNestedInput
@@ -598,6 +637,7 @@ export type ProductUncheckedUpdateWithoutGoodReceiptDetailsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unit?: Prisma.EnumProductUnitFieldUpdateOperationsInput | $Enums.ProductUnit
   price?: Prisma.IntFieldUpdateOperationsInput | number
+  barcode?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
   promotionDetails?: Prisma.PromotionDetailUncheckedUpdateManyWithoutProductNestedInput
   invoiceDetails?: Prisma.InvoiceDetailUncheckedUpdateManyWithoutProductNestedInput
@@ -657,6 +697,7 @@ export type ProductSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   name?: boolean
   unit?: boolean
   price?: boolean
+  barcode?: boolean
   amount?: boolean
   promotionDetails?: boolean | Prisma.Product$promotionDetailsArgs<ExtArgs>
   invoiceDetails?: boolean | Prisma.Product$invoiceDetailsArgs<ExtArgs>
@@ -669,6 +710,7 @@ export type ProductSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   name?: boolean
   unit?: boolean
   price?: boolean
+  barcode?: boolean
   amount?: boolean
 }, ExtArgs["result"]["product"]>
 
@@ -677,6 +719,7 @@ export type ProductSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   name?: boolean
   unit?: boolean
   price?: boolean
+  barcode?: boolean
   amount?: boolean
 }, ExtArgs["result"]["product"]>
 
@@ -685,10 +728,11 @@ export type ProductSelectScalar = {
   name?: boolean
   unit?: boolean
   price?: boolean
+  barcode?: boolean
   amount?: boolean
 }
 
-export type ProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "unit" | "price" | "amount", ExtArgs["result"]["product"]>
+export type ProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "unit" | "price" | "barcode" | "amount", ExtArgs["result"]["product"]>
 export type ProductInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   promotionDetails?: boolean | Prisma.Product$promotionDetailsArgs<ExtArgs>
   invoiceDetails?: boolean | Prisma.Product$invoiceDetailsArgs<ExtArgs>
@@ -710,6 +754,7 @@ export type $ProductPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     name: string | null
     unit: $Enums.ProductUnit
     price: number
+    barcode: number
     amount: number
   }, ExtArgs["result"]["product"]>
   composites: {}
@@ -1141,6 +1186,7 @@ export interface ProductFieldRefs {
   readonly name: Prisma.FieldRef<"Product", 'String'>
   readonly unit: Prisma.FieldRef<"Product", 'ProductUnit'>
   readonly price: Prisma.FieldRef<"Product", 'Int'>
+  readonly barcode: Prisma.FieldRef<"Product", 'Int'>
   readonly amount: Prisma.FieldRef<"Product", 'Int'>
 }
     

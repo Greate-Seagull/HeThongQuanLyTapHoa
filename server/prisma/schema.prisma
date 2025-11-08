@@ -13,6 +13,7 @@ model Product {
   name               String?
   unit               ProductUnit         @default(UNKNOWN)
   price              Int
+  barcode            Int                 @unique
   amount             Int                 @default(0)
   promotionDetails   PromotionDetail[]
   invoiceDetails     InvoiceDetail[]

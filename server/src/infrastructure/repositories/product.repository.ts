@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { Product } from "src/domain/product.js";
 
 export interface ProductRepository {
+	add(tx: any, insertProducts: Product[]): Promise<Product[]>;
 	save(
 		transaction: Prisma.TransactionClient,
 		products: Product[]

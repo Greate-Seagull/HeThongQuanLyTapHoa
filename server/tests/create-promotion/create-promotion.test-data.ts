@@ -1,11 +1,13 @@
 export const product1 = {
 	id: 10002,
 	price: 100000,
+	barcode: 123456,
 };
 
 export const product2 = {
 	id: 10003,
 	price: 100000,
+	barcode: 123457,
 };
 
 let startedAt = new Date();

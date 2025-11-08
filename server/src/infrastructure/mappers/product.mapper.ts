@@ -5,8 +5,9 @@ export class ProductMapper {
 		return {
 			name: entity.name,
 			price: entity.price,
-			amount: entity.amount,
 			unit: entity.unit,
+			barcode: entity.barcode,
+			amount: entity.amount,
 		};
 	}
 

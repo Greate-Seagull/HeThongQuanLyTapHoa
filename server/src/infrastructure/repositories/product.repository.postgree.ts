@@ -44,4 +44,15 @@ export class ProductRepositoryPostgree implements ProductRepository {
 
 		return savedProducts.map(ProductMapper.toDomain);
 	}
+
+	async add(
+		transaction: Prisma.TransactionClient,
+		insertProducts: Product[]
+	): Promise<Product[]> {
+		const raws = await transaction.product.createMany({
+			data: insertProducts.map(ProductMapper.toPersistence),
+		});
+
+		return raws; //{count: number}
+	}
 }

@@ -1,5 +1,8 @@
 import { SearchProductsUsecaseInput } from "../../application/search-products.usecase";
-import { searchProductsUsecase } from "../../composition-root";
+import {
+	searchProductsUsecase,
+	updateProductsUsecase,
+} from "../../composition-root";
 
 export async function controlSearchProduct(req, res) {
 	try {
@@ -15,5 +18,20 @@ export async function controlSearchProduct(req, res) {
 	} catch (e: any) {
 		console.error(e.message);
 		res.json({ message: e.message });
+	}
+}
+
+export async function controlUpdateProducts(req, res) {
+	try {
+		console.log(`Call PUT /products/bulk`);
+
+		let input = req.body;
+		let output = await updateProductsUsecase.execute(input);
+		res.json(output);
+
+		console.log(`Return PUT /products/bulk`);
+	} catch (e: any) {
+		console.error(e.message);
+		res.status(400).json({ message: e.message });
 	}
 }

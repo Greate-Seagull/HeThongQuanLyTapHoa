@@ -13,6 +13,7 @@ export const product1 = {
 	id: 10000,
 	name: "create invoice 1",
 	price: 100000,
+	barcode: 123456,
 	amount: 10,
 };
 
@@ -20,6 +21,7 @@ export const product2 = {
 	id: 10001,
 	name: "create invoice 2",
 	price: 80000,
+	barcode: 123457,
 	amount: 8,
 };
 

@@ -7,6 +7,7 @@ export const product1 = {
 	id: 10000,
 	name: "create good receipt",
 	price: 100000,
+	barcode: 123456,
 };
 
 export const send = {
