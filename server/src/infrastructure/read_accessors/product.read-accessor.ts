@@ -28,4 +28,16 @@ export class ProductReadAccessor {
 
 		return count === ids.length;
 	}
+
+	async getProducts() {
+		return await this.prisma.product.findMany({
+			select: {
+				id: true,
+				name: true,
+				price: true,
+				unit: true,
+				barcode: true,
+			},
+		});
+	}
 }

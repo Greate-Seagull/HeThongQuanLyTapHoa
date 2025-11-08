@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Get products integration test Normal case Should return correct product 1 1`] = `
+{
+  "barcode": 123456,
+  "id": 10000,
+  "name": "update products 1",
+  "price": 100000,
+  "unit": "UNKNOWN",
+}
+`;
+
+exports[`Get products integration test Normal case Should return correct product 2 1`] = `
+{
+  "barcode": 234567,
+  "id": 10001,
+  "name": "update products 2",
+  "price": 100000,
+  "unit": "UNKNOWN",
+}
+`;
