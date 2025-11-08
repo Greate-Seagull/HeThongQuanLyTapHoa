@@ -1,4 +1,13 @@
 export default function (plop) {
+    plop.setGenerator("composition-root", {
+        actions: [
+            {
+                type: "add",
+                path: "src/composition-root.ts",
+                templateFile: "templates/composition-root.template.hbs",
+            }
+        ]
+    })
     plop.setGenerator("object-driven", {
         description: "this is a skeleton plopfile",
         prompts: [
