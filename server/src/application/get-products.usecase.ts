@@ -1,4 +1,4 @@
-import { ProductReadAccessor } from "../infrastructure/read_accessors/product.read-accessor";
+import { ProductReadAccessor } from "../infrastructure/read-accessors/product.read-accessor";
 
 export interface GetProductsUsecaseOutput {
 	products: any[];

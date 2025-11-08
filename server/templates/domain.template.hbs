@@ -1,0 +1,23 @@
+export class {{titleCase name}} {
+	private constructor() {}
+
+	static create(input: {{titleCase name}}CreateInput): {{titleCase name}} {
+		let entity = new {{titleCase name}}();
+
+		return entity;
+	}
+
+	static rehydrate(raw: {{titleCase name}}RehydrateInput): {{titleCase name}} {
+		let entity = new {{titleCase name}}();
+
+		return entity;
+	}
+}
+
+export interface {{titleCase name}}CreateInput {
+
+}
+
+export interface {{titleCase name}}RehydrateInput {
+
+}

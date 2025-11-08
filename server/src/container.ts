@@ -4,7 +4,7 @@ import { PrismaClient } from "./generated/client";
 import { TYPES } from "./types";
 
 import { TransactionManager } from "./infrastructure/repositories/transaction";
-import { ProductReadAccessor } from "./infrastructure/read_accessors/product.read-accessor";
+import { ProductReadAccessor } from "./infrastructure/read-accessors/product.read-accessor";
 import { PromotionRepository } from "./infrastructure/repositories/promotion.repository";
 import { CreateInvoiceUsecase } from "./application/create-invoice.usecase";
 import { CreatePromotionUsecase } from "./application/create-promotion.usecase";

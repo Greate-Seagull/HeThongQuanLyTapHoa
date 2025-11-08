@@ -1,7 +1,6 @@
 import { config } from "./config/config";
 import { SearchProductsUsecase } from "./application/search-products.usecase";
 import { PrismaClient } from "./generated/client";
-import { ProductReadAccessor } from "./infrastructure/read_accessors/product.read-accessor";
 import { CreatePromotionUsecase } from "./application/create-promotion.usecase";
 import { PromotionRepository } from "./infrastructure/repositories/promotion.repository";
 import { PromotionPricingService } from "./domain/promotion-pricing.service";
@@ -17,9 +16,10 @@ import { GoodReceiptRepository } from "./infrastructure/repositories/good-receip
 import { UpdateProdutsUsecase } from "./application/update-products.usecase";
 import { GetProductsUsecase } from "./application/get-products.usecase";
 import { CreateStocktakingUsecase } from "./application/create-stocktaking.usecase";
-import { EmployeeReadAccess } from "./infrastructure/read_accessors/employee.read-accessor";
-import { ShelfReadAccessor } from "./infrastructure/read_accessors/shelf.read-accessor";
 import { StocktakingRepository } from "./infrastructure/repositories/stocktaking.repository";
+import { EmployeeReadAccess } from "./infrastructure/read-accessors/employee.read-accessor";
+import { ShelfReadAccessor } from "./infrastructure/read-accessors/shelf.read-accessor";
+import { ProductReadAccessor } from "./infrastructure/read-accessors/product.read-accessor";
 
 config;
 export const prisma = new PrismaClient({
@@ -30,7 +30,10 @@ export const prisma = new PrismaClient({
 });
 
 const transactionManager = new TransactionManager(prisma);
-
+//Repositories
+//Read accessors
+//Usecases
+//---------------------------------------------------------
 const productReadAccessor = new ProductReadAccessor(prisma);
 const promotionRepo = new PromotionRepository(prisma);
 const employeeRepo = new EmployeeRepository(prisma);

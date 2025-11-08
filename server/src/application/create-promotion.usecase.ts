@@ -1,5 +1,5 @@
 import { Promotion, PromotionCreateProps } from "../domain/promotion";
-import { ProductReadAccessor } from "../infrastructure/read_accessors/product.read-accessor";
+import { ProductReadAccessor } from "../infrastructure/read-accessors/product.read-accessor";
 import { PromotionRepository } from "../infrastructure/repositories/promotion.repository";
 
 export class CreatePromotionUsecaseInput {

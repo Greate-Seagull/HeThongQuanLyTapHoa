@@ -1,7 +1,7 @@
 import { Stocktaking } from "../domain/stocktaking";
-import { EmployeeReadAccess as EmployeeReadAccessor } from "../infrastructure/read_accessors/employee.read-accessor";
-import { ProductReadAccessor } from "../infrastructure/read_accessors/product.read-accessor";
-import { ShelfReadAccessor } from "../infrastructure/read_accessors/shelf.read-accessor";
+import { EmployeeReadAccess as EmployeeReadAccessor } from "../infrastructure/read-accessors/employee.read-accessor";
+import { ProductReadAccessor } from "../infrastructure/read-accessors/product.read-accessor";
+import { ShelfReadAccessor } from "../infrastructure/read-accessors/shelf.read-accessor";
 import { StocktakingRepository } from "../infrastructure/repositories/stocktaking.repository";
 
 export interface CreateStocktakingUsecaseInput {
