@@ -1,7 +1,7 @@
-import { ItemInput } from "../application/create-invoice.usecase";
-import { Product } from "./product";
-import { Promotion } from "./promotion";
-import { User } from "./user";
+import { ItemInput } from "../../application/create-invoice.usecase";
+import { Product } from "../product";
+import { Promotion } from "../promotion";
+import { User } from "../user";
 
 export class SalesTransactionService {
 	processSale(input: ProcessInvoiceInput) {

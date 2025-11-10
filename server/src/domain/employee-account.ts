@@ -33,6 +33,14 @@ export class EmployeeAccount {
 		return entity;
 	}
 
+	validate(passwordHash: string) {
+		return this._passwordHash === passwordHash;
+	}
+
+	signIn() {
+		this._loggedAt = new Date();
+	}
+
 	get id(): number {
 		return this._id;
 	}

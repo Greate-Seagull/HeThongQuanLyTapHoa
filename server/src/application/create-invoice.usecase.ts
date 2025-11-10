@@ -1,7 +1,7 @@
 import { Invoice } from "../domain/invoice";
 import { Product } from "../domain/product";
 import { Promotion } from "../domain/promotion";
-import { SalesTransactionService } from "../domain/sales-transaction.service";
+import { SalesTransactionService } from "../domain/services/sales-transaction.service";
 import { EmployeeRepository } from "../infrastructure/repositories/employee.repository";
 import { InvoiceRepository } from "../infrastructure/repositories/invoice.repository";
 import { ProductRepository } from "../infrastructure/repositories/product.repository";
@@ -17,7 +17,7 @@ export type ItemInput = {
 
 export class CreateInvoiceUsecaseInput {
 	constructor(
-		public employeedId: number,
+		public authId: number,
 		public userId: number,
 		public usedPoint: number = 0,
 		public items: ItemInput[]
@@ -67,8 +67,8 @@ export class CreateInvoiceUsecase {
 	) {}
 
 	async execute(input: any): Promise<CreateInvoiceUsecaseOutput> {
-		const employee = await this.employeeRepo.getById(input.employeeId);
-		if (!employee) throw Error(`Employee not found, ${input.employeeId}`);
+		const employee = await this.employeeRepo.getById(input.authId);
+		if (!employee) throw Error(`Employee not found, ${input.authId}`);
 
 		const user = await this.userRepo.getById(input.userId);
 

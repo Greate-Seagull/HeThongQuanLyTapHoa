@@ -1,6 +1,6 @@
 import e from "express";
 import { EmployeeAccountReadAccessor } from "../infrastructure/read-accessors/employee-account.read-accessor";
-import { PasswordService } from "../utils/encrypt";
+import { PasswordService } from "../domain/services/encrypt.service";
 import { EmployeeRepository } from "../infrastructure/repositories/employee.repository";
 import { EmployeeAccountRepository } from "../infrastructure/repositories/employee-account.repository";
 import { TransactionManager } from "../infrastructure/repositories/transaction";
@@ -54,8 +54,6 @@ export class CreateAccountUsecase {
 			);
 			return { savedUser: savedEmployee, savedAccount };
 		});
-
-		console.log(save);
 
 		return { message: "Success" };
 	}

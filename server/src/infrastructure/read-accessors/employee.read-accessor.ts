@@ -10,4 +10,11 @@ export class EmployeeReadAccess {
 
 		return count === 1;
 	}
+
+	async getPositionById(employeeId: number) {
+		return await this.prisma.employee.findUnique({
+			where: { id: employeeId },
+			select: { id: true, position: true },
+		});
+	}
 }

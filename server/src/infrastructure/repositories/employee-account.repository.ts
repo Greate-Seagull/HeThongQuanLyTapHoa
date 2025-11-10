@@ -14,6 +14,31 @@ export class EmployeeAccountRepository implements EmployeeAccountRepository {
 		return EmployeeAccountMapper.toDomain(raw);
 	}
 
+	async getByUsername(username: string) {
+		const raw = await this.prisma.employeeAccount.findUnique({
+			where: {
+				username,
+			},
+			select: EmployeeAccountRepository.baseQuery,
+		});
+
+		return EmployeeAccountMapper.toDomain(raw);
+	}
+
+	async save(
+		transaction: Prisma.TransactionClient,
+		account: EmployeeAccount
+	) {
+		const repo = transaction ? transaction : this.prisma;
+		const raw = await repo.employeeAccount.update({
+			where: { id: account.id },
+			data: EmployeeAccountMapper.toPersistence(account),
+			select: EmployeeAccountRepository.baseQuery,
+		});
+
+		return EmployeeAccountMapper.toDomain(raw);
+	}
+
 	static baseQuery = {
 		id: true,
 		employeeId: true,

@@ -1,5 +1,8 @@
 import { AccountRepository } from "../infrastructure/repositories/account.repository";
-import { PasswordService, TokenService } from "../utils/encrypt";
+import {
+	PasswordService,
+	TokenService,
+} from "../domain/services/encrypt.service";
 
 export interface SignInUsecaseInput {
 	phoneNumber: string;
@@ -31,7 +34,10 @@ export class SignInUsecase {
 		account.signIn();
 		const savedAccount = await this.accountRepo.save(null, account);
 
-		const token = this.tokenService.generateJWT(account.id);
+		const token = this.tokenService.generateJwt({
+			id: account.id,
+			position: null,
+		});
 
 		return { token: token };
 	}

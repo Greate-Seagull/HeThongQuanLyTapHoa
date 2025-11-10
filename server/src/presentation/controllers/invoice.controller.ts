@@ -10,6 +10,6 @@ export async function controllCreateInvoice(req, res) {
 
 		console.log("Return POST /invoices");
 	} catch (e: any) {
-		res.json({ message: e.message });
+		res.status(400).json({ message: e.message });
 	}
 }

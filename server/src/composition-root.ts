@@ -3,14 +3,14 @@ import { SearchProductsUsecase } from "./application/search-products.usecase";
 import { PrismaClient } from "./generated/client";
 import { CreatePromotionUsecase } from "./application/create-promotion.usecase";
 import { PromotionRepository } from "./infrastructure/repositories/promotion.repository";
-import { PromotionPricingService } from "./domain/promotion-pricing.service";
+import { PromotionPricingService } from "./domain/services/promotion-pricing.service";
 import { EmployeeRepository } from "./infrastructure/repositories/employee.repository";
 import { CreateInvoiceUsecase } from "./application/create-invoice.usecase";
 import { UserRepository } from "./infrastructure/repositories/user.repository";
 import { ProductRepositoryPostgree } from "./infrastructure/repositories/product.repository.postgree";
 import { InvoiceRepository } from "./infrastructure/repositories/invoice.repository";
 import { TransactionManager } from "./infrastructure/repositories/transaction";
-import { SalesTransactionService } from "./domain/sales-transaction.service";
+import { SalesTransactionService } from "./domain/services/sales-transaction.service";
 import { CreateGoodReceiptUsecase } from "./application/create-good-receipt.usecase";
 import { GoodReceiptRepository } from "./infrastructure/repositories/good-receipt.repository";
 import { UpdateProdutsUsecase } from "./application/update-products.usecase";
@@ -23,11 +23,16 @@ import { ProductReadAccessor } from "./infrastructure/read-accessors/product.rea
 import { AccountRepository } from "./infrastructure/repositories/account.repository";
 import { AccountReadAccessor } from "./infrastructure/read-accessors/account.read-accessor";
 import { SignUpUsecase } from "./application/sign-up.usecase";
-import { Expiry, PasswordService, TokenService } from "./utils/encrypt";
+import {
+	Expiry,
+	PasswordService,
+	TokenService,
+} from "./domain/services/encrypt.service";
 import { SignInUsecase } from "./application/sign-in.usecase";
 import { EmployeeAccountRepository } from "./infrastructure/repositories/employee-account.repository";
 import { EmployeeAccountReadAccessor } from "./infrastructure/read-accessors/employee-account.read-accessor";
 import { CreateAccountUsecase } from "./application/create-account.usecase";
+import { UseAccountUsecase } from "./application/use-account.usecase";
 
 config;
 export const prisma = new PrismaClient({
@@ -44,6 +49,7 @@ export const employeeAccountRepo = new EmployeeAccountRepository(prisma);
 const userRepo = new UserRepository(prisma);
 export const accountRepo = new AccountRepository(prisma);
 //Read accessors
+const employeeReadAccessor = new EmployeeReadAccess(prisma);
 export const employeeAccountRead = new EmployeeAccountReadAccessor(prisma);
 export const accountRead = new AccountReadAccessor(prisma);
 //Domain services
@@ -53,6 +59,12 @@ export const tokenService = new TokenService(
 	config.jwt.expiry as Expiry
 );
 //Usecases
+export const useAccountUsecase = new UseAccountUsecase(
+	employeeAccountRepo,
+	employeeReadAccessor,
+	passwordService,
+	tokenService
+);
 export const createAccountUsecase = new CreateAccountUsecase(
 	employeeAccountRead,
 	passwordService,
@@ -79,7 +91,6 @@ const promotionRepo = new PromotionRepository(prisma);
 const productRepo = new ProductRepositoryPostgree(prisma);
 export const invoiceRepo = new InvoiceRepository(prisma);
 const goodReceiptRepo = new GoodReceiptRepository(prisma);
-const employeeReadAccessor = new EmployeeReadAccess(prisma);
 const shelfReadAccessor = new ShelfReadAccessor(prisma);
 const stocktakingRepo = new StocktakingRepository(prisma);
 

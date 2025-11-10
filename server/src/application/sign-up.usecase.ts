@@ -4,7 +4,10 @@ import { AccountReadAccessor } from "../infrastructure/read-accessors/account.re
 import { AccountRepository } from "../infrastructure/repositories/account.repository";
 import { TransactionManager } from "../infrastructure/repositories/transaction";
 import { UserRepository } from "../infrastructure/repositories/user.repository";
-import { PasswordService, TokenService } from "../utils/encrypt";
+import {
+	PasswordService,
+	TokenService,
+} from "../domain/services/encrypt.service";
 
 export interface SignUpUsecaseInput {
 	name: string;
@@ -49,7 +52,10 @@ export class SignUpUsecase {
 			return { savedUser, savedAccount };
 		});
 
-		const token = this.tokenService.generateJWT(save.savedAccount.id);
+		const token = this.tokenService.generateJwt({
+			id: save.savedAccount.id,
+			position: null,
+		});
 
 		return { token };
 	}

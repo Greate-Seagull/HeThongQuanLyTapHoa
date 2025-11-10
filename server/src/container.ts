@@ -9,8 +9,8 @@ import { PromotionRepository } from "./infrastructure/repositories/promotion.rep
 import { CreateInvoiceUsecase } from "./application/create-invoice.usecase";
 import { CreatePromotionUsecase } from "./application/create-promotion.usecase";
 import { SearchProductsUsecase } from "./application/search-products.usecase";
-import { PromotionPricingService } from "./domain/promotion-pricing.service";
-import { SalesTransactionService } from "./domain/sales-transaction.service";
+import { PromotionPricingService } from "./domain/services/promotion-pricing.service";
+import { SalesTransactionService } from "./domain/services/sales-transaction.service";
 import { EmployeeRepository } from "./infrastructure/repositories/employee.repository";
 import { InvoiceRepository } from "./infrastructure/repositories/invoice.repository";
 import { ProductRepositoryPostgree } from "./infrastructure/repositories/product.repository.postgree";

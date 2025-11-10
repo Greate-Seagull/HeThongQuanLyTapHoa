@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt, { SignOptions } from "jsonwebtoken";
+import { z } from "zod";
 
 export class PasswordService {
 	constructor(private readonly saltRound: number) {}
@@ -14,6 +15,13 @@ export class PasswordService {
 }
 
 export type Expiry = `${number}${"s" | "m" | "h" | "d"}`;
+export const authenticationTokenSchema = z.object({
+	id: z.number(),
+	position: z.string(),
+});
+export type AuthenticationTokenPayload = z.infer<
+	typeof authenticationTokenSchema
+>;
 
 export class TokenService {
 	constructor(
@@ -21,9 +29,12 @@ export class TokenService {
 		private readonly expiry: Expiry
 	) {}
 
-	generateJWT(id: number) {
-		const payload = { id };
+	generateJwt(payload: AuthenticationTokenPayload) {
 		const options: SignOptions = { expiresIn: this.expiry };
 		return jwt.sign(payload, this.secret, options);
+	}
+
+	verifyJwt(token: string) {
+		return jwt.verify(token, this.secret);
 	}
 }
