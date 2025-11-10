@@ -1,7 +1,9 @@
 import { Account } from "../../domain/account";
 
 export class AccountMapper {
-	static toDomain(raw: any) {
+	static toDomain(raw: any): Account {
+		if (!raw) return raw;
+
 		return Account.rehydrate(raw);
 	}
 

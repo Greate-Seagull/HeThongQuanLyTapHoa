@@ -122,57 +122,57 @@ export default function (plop) {
             }
         ],
         actions: [
-            // // create test
-            // {
-            //     type: "add",
-            //     path: "tests/{{kebabCase name}}/{{kebabCase name}}.integration.test.ts",
-            //     templateFile: "templates/integration.test.template.hbs",
-            // },
-            // // create test data
-            // {
-            //     type: "add",
-            //     path: "tests/{{kebabCase name}}/{{kebabCase name}}.test-data.ts",
-            //     templateFile: "templates/test-data.template.hbs",
-            // },
-            // // create usecase
-            // {
-            //     type: "add",
-            //     path: "src/application/{{kebabCase name}}.usecase.ts",
-            //     templateFile: "templates/usecase.template.hbs",
-            // },
-            // // add usecase to composition root
-            // {
-            //     type: "modify",
-            //     path: "src/composition-root.ts",
-            //     pattern: /(import .*;)(\r?\n)(?=\s*[^import])/m,
-            //     template: '$1$2import { {{titleCase name}}Usecase } from "./application/{{kebabCase name}}.usecase";$2'
-            // },
-            // {
-            //     type: "modify",
-            //     path: "src/composition-root.ts",
-            //     pattern: /^[ \t]*\/\/Usecases.*$/m,
-            //     template: '$&\nexport const {{camelCase name}}Usecase = new {{titleCase name}}Usecase();'
-            // },
-            // // add usecase to controller
-            // {
-            //     type: "modify",
-            //     path: "src/presentation/controllers/{{kebabCase domain}}.controller.ts",
-            //     pattern: /^/m,
-            //     template: 'import { {{camelCase name}}Usecase } from "../../composition-root";\n'
-            // },
-            // {
-            //     type: "modify",
-            //     path: "src/presentation/controllers/{{kebabCase domain}}.controller.ts",
-            //     pattern: /^[ \t]*\/\/Handlers.*$/m,
-            //     templateFile: "templates/controller-method.template.hbs"
-            // },
-            // // add controller method to router
-            // {
-            //     type: "modify",
-            //     path: "src/presentation/routes/{{kebabCase domain}}.route.ts",
-            //     pattern: /^/m,
-            //     template: 'import { control{{titleCase name}} } from "../controllers/{{kebabCase domain}}.controller";\n'
-            // },
+            // create test
+            {
+                type: "add",
+                path: "tests/{{kebabCase name}}/{{kebabCase name}}.integration.test.ts",
+                templateFile: "templates/integration.test.template.hbs",
+            },
+            // create test data
+            {
+                type: "add",
+                path: "tests/{{kebabCase name}}/{{kebabCase name}}.test-data.ts",
+                templateFile: "templates/test-data.template.hbs",
+            },
+            // create usecase
+            {
+                type: "add",
+                path: "src/application/{{kebabCase name}}.usecase.ts",
+                templateFile: "templates/usecase.template.hbs",
+            },
+            // add usecase to composition root
+            {
+                type: "modify",
+                path: "src/composition-root.ts",
+                pattern: /(import .*;)(\r?\n)(?=\s*[^import])/m,
+                template: '$1$2import { {{titleCase name}}Usecase } from "./application/{{kebabCase name}}.usecase";$2'
+            },
+            {
+                type: "modify",
+                path: "src/composition-root.ts",
+                pattern: /^[ \t]*\/\/Usecases.*$/m,
+                template: '$&\nexport const {{camelCase name}}Usecase = new {{titleCase name}}Usecase();'
+            },
+            // add usecase to controller
+            {
+                type: "modify",
+                path: "src/presentation/controllers/{{kebabCase domain}}.controller.ts",
+                pattern: /^/m,
+                template: 'import { {{camelCase name}}Usecase } from "../../composition-root";\n'
+            },
+            {
+                type: "modify",
+                path: "src/presentation/controllers/{{kebabCase domain}}.controller.ts",
+                pattern: /^[ \t]*\/\/Handlers.*$/m,
+                templateFile: "templates/controller-method.template.hbs"
+            },
+            // add controller method to router
+            {
+                type: "modify",
+                path: "src/presentation/routes/{{kebabCase domain}}.route.ts",
+                pattern: /^/m,
+                template: 'import { control{{titleCase name}} } from "../controllers/{{kebabCase domain}}.controller";\n'
+            },
             {
                 type: "modify",
                 path: "src/presentation/routes/{{kebabCase domain}}.route.ts",

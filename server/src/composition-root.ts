@@ -24,6 +24,7 @@ import { AccountRepository } from "./infrastructure/repositories/account.reposit
 import { AccountReadAccessor } from "./infrastructure/read-accessors/account.read-accessor";
 import { SignUpUsecase } from "./application/sign-up.usecase";
 import { Expiry, PasswordService, TokenService } from "./utils/encrypt";
+import { SignInUsecase } from "./application/sign-in.usecase";
 
 config;
 export const prisma = new PrismaClient({
@@ -46,6 +47,11 @@ export const tokenService = new TokenService(
 	config.jwt.expiry as Expiry
 );
 //Usecases
+export const signInUsecase = new SignInUsecase(
+	accountRepo,
+	passwordService,
+	tokenService
+);
 export const signUpUsecase = new SignUpUsecase(
 	accountRead,
 	userRepo,

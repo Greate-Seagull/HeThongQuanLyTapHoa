@@ -33,6 +33,18 @@ export class Account {
 		return entity;
 	}
 
+	signIn() {
+		this._loggedAt = new Date();
+	}
+
+	validate(passwordHash: string) {
+		return this._passwordHash === passwordHash;
+	}
+
+	get id(): number {
+		return this._id;
+	}
+
 	get userId(): number {
 		return this._userId;
 	}
