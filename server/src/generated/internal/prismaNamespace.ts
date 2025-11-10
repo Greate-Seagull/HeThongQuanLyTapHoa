@@ -395,6 +395,7 @@ export const ModelName = {
   User: 'User',
   Account: 'Account',
   Employee: 'Employee',
+  EmployeeAccount: 'EmployeeAccount',
   Invoice: 'Invoice',
   InvoiceDetail: 'InvoiceDetail',
   GoodReceipt: 'GoodReceipt',
@@ -420,7 +421,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "product" | "promotion" | "promotionDetail" | "user" | "account" | "employee" | "invoice" | "invoiceDetail" | "goodReceipt" | "goodReceiptDetail" | "shelf" | "rack" | "slot" | "slotDetail" | "stocktaking" | "stocktakingDetail"
+    modelProps: "product" | "promotion" | "promotionDetail" | "user" | "account" | "employee" | "employeeAccount" | "invoice" | "invoiceDetail" | "goodReceipt" | "goodReceiptDetail" | "shelf" | "rack" | "slot" | "slotDetail" | "stocktaking" | "stocktakingDetail"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -865,6 +866,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.EmployeeCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.EmployeeCountAggregateOutputType> | number
+        }
+      }
+    }
+    EmployeeAccount: {
+      payload: Prisma.$EmployeeAccountPayload<ExtArgs>
+      fields: Prisma.EmployeeAccountFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.EmployeeAccountFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EmployeeAccountPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.EmployeeAccountFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EmployeeAccountPayload>
+        }
+        findFirst: {
+          args: Prisma.EmployeeAccountFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EmployeeAccountPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.EmployeeAccountFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EmployeeAccountPayload>
+        }
+        findMany: {
+          args: Prisma.EmployeeAccountFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EmployeeAccountPayload>[]
+        }
+        create: {
+          args: Prisma.EmployeeAccountCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EmployeeAccountPayload>
+        }
+        createMany: {
+          args: Prisma.EmployeeAccountCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.EmployeeAccountCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EmployeeAccountPayload>[]
+        }
+        delete: {
+          args: Prisma.EmployeeAccountDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EmployeeAccountPayload>
+        }
+        update: {
+          args: Prisma.EmployeeAccountUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EmployeeAccountPayload>
+        }
+        deleteMany: {
+          args: Prisma.EmployeeAccountDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.EmployeeAccountUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.EmployeeAccountUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EmployeeAccountPayload>[]
+        }
+        upsert: {
+          args: Prisma.EmployeeAccountUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EmployeeAccountPayload>
+        }
+        aggregate: {
+          args: Prisma.EmployeeAccountAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateEmployeeAccount>
+        }
+        groupBy: {
+          args: Prisma.EmployeeAccountGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.EmployeeAccountGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.EmployeeAccountCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.EmployeeAccountCountAggregateOutputType> | number
         }
       }
     }
@@ -1705,10 +1780,23 @@ export type AccountScalarFieldEnum = (typeof AccountScalarFieldEnum)[keyof typeo
 
 export const EmployeeScalarFieldEnum = {
   id: 'id',
-  name: 'name'
+  name: 'name',
+  position: 'position'
 } as const
 
 export type EmployeeScalarFieldEnum = (typeof EmployeeScalarFieldEnum)[keyof typeof EmployeeScalarFieldEnum]
+
+
+export const EmployeeAccountScalarFieldEnum = {
+  id: 'id',
+  employeeId: 'employeeId',
+  username: 'username',
+  passwordHash: 'passwordHash',
+  salt: 'salt',
+  loggedAt: 'loggedAt'
+} as const
+
+export type EmployeeAccountScalarFieldEnum = (typeof EmployeeAccountScalarFieldEnum)[keyof typeof EmployeeAccountScalarFieldEnum]
 
 
 export const InvoiceScalarFieldEnum = {
@@ -1933,6 +2021,20 @@ export type EnumPromotionTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$Pr
 export type ListEnumPromotionTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PromotionType[]'>
     
 
+
+/**
+ * Reference to a field of type 'EmployeePosition'
+ */
+export type EnumEmployeePositionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EmployeePosition'>
+    
+
+
+/**
+ * Reference to a field of type 'EmployeePosition[]'
+ */
+export type ListEnumEmployeePositionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EmployeePosition[]'>
+    
+
 /**
  * Batch Payload for updateMany & deleteMany & createMany
  */
@@ -2026,6 +2128,7 @@ export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   account?: Prisma.AccountOmit
   employee?: Prisma.EmployeeOmit
+  employeeAccount?: Prisma.EmployeeAccountOmit
   invoice?: Prisma.InvoiceOmit
   invoiceDetail?: Prisma.InvoiceDetailOmit
   goodReceipt?: Prisma.GoodReceiptOmit

@@ -36,16 +36,19 @@ export type EmployeeSumAggregateOutputType = {
 export type EmployeeMinAggregateOutputType = {
   id: number | null
   name: string | null
+  position: $Enums.EmployeePosition | null
 }
 
 export type EmployeeMaxAggregateOutputType = {
   id: number | null
   name: string | null
+  position: $Enums.EmployeePosition | null
 }
 
 export type EmployeeCountAggregateOutputType = {
   id: number
   name: number
+  position: number
   _all: number
 }
 
@@ -61,16 +64,19 @@ export type EmployeeSumAggregateInputType = {
 export type EmployeeMinAggregateInputType = {
   id?: true
   name?: true
+  position?: true
 }
 
 export type EmployeeMaxAggregateInputType = {
   id?: true
   name?: true
+  position?: true
 }
 
 export type EmployeeCountAggregateInputType = {
   id?: true
   name?: true
+  position?: true
   _all?: true
 }
 
@@ -163,6 +169,7 @@ export type EmployeeGroupByArgs<ExtArgs extends runtime.Types.Extensions.Interna
 export type EmployeeGroupByOutputType = {
   id: number
   name: string
+  position: $Enums.EmployeePosition
   _count: EmployeeCountAggregateOutputType | null
   _avg: EmployeeAvgAggregateOutputType | null
   _sum: EmployeeSumAggregateOutputType | null
@@ -191,17 +198,21 @@ export type EmployeeWhereInput = {
   NOT?: Prisma.EmployeeWhereInput | Prisma.EmployeeWhereInput[]
   id?: Prisma.IntFilter<"Employee"> | number
   name?: Prisma.StringFilter<"Employee"> | string
+  position?: Prisma.EnumEmployeePositionFilter<"Employee"> | $Enums.EmployeePosition
   invoices?: Prisma.InvoiceListRelationFilter
   goodReceipts?: Prisma.GoodReceiptListRelationFilter
   stocktakings?: Prisma.StocktakingListRelationFilter
+  employeeAccounts?: Prisma.EmployeeAccountListRelationFilter
 }
 
 export type EmployeeOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  position?: Prisma.SortOrder
   invoices?: Prisma.InvoiceOrderByRelationAggregateInput
   goodReceipts?: Prisma.GoodReceiptOrderByRelationAggregateInput
   stocktakings?: Prisma.StocktakingOrderByRelationAggregateInput
+  employeeAccounts?: Prisma.EmployeeAccountOrderByRelationAggregateInput
 }
 
 export type EmployeeWhereUniqueInput = Prisma.AtLeast<{
@@ -210,14 +221,17 @@ export type EmployeeWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.EmployeeWhereInput[]
   NOT?: Prisma.EmployeeWhereInput | Prisma.EmployeeWhereInput[]
   name?: Prisma.StringFilter<"Employee"> | string
+  position?: Prisma.EnumEmployeePositionFilter<"Employee"> | $Enums.EmployeePosition
   invoices?: Prisma.InvoiceListRelationFilter
   goodReceipts?: Prisma.GoodReceiptListRelationFilter
   stocktakings?: Prisma.StocktakingListRelationFilter
+  employeeAccounts?: Prisma.EmployeeAccountListRelationFilter
 }, "id">
 
 export type EmployeeOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  position?: Prisma.SortOrder
   _count?: Prisma.EmployeeCountOrderByAggregateInput
   _avg?: Prisma.EmployeeAvgOrderByAggregateInput
   _max?: Prisma.EmployeeMaxOrderByAggregateInput
@@ -231,55 +245,68 @@ export type EmployeeScalarWhereWithAggregatesInput = {
   NOT?: Prisma.EmployeeScalarWhereWithAggregatesInput | Prisma.EmployeeScalarWhereWithAggregatesInput[]
   id?: Prisma.IntWithAggregatesFilter<"Employee"> | number
   name?: Prisma.StringWithAggregatesFilter<"Employee"> | string
+  position?: Prisma.EnumEmployeePositionWithAggregatesFilter<"Employee"> | $Enums.EmployeePosition
 }
 
 export type EmployeeCreateInput = {
   name: string
+  position: $Enums.EmployeePosition
   invoices?: Prisma.InvoiceCreateNestedManyWithoutEmployeeInput
   goodReceipts?: Prisma.GoodReceiptCreateNestedManyWithoutEmployeeInput
   stocktakings?: Prisma.StocktakingCreateNestedManyWithoutEmployeeInput
+  employeeAccounts?: Prisma.EmployeeAccountCreateNestedManyWithoutEmployeeInput
 }
 
 export type EmployeeUncheckedCreateInput = {
   id?: number
   name: string
+  position: $Enums.EmployeePosition
   invoices?: Prisma.InvoiceUncheckedCreateNestedManyWithoutEmployeeInput
   goodReceipts?: Prisma.GoodReceiptUncheckedCreateNestedManyWithoutEmployeeInput
   stocktakings?: Prisma.StocktakingUncheckedCreateNestedManyWithoutEmployeeInput
+  employeeAccounts?: Prisma.EmployeeAccountUncheckedCreateNestedManyWithoutEmployeeInput
 }
 
 export type EmployeeUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  position?: Prisma.EnumEmployeePositionFieldUpdateOperationsInput | $Enums.EmployeePosition
   invoices?: Prisma.InvoiceUpdateManyWithoutEmployeeNestedInput
   goodReceipts?: Prisma.GoodReceiptUpdateManyWithoutEmployeeNestedInput
   stocktakings?: Prisma.StocktakingUpdateManyWithoutEmployeeNestedInput
+  employeeAccounts?: Prisma.EmployeeAccountUpdateManyWithoutEmployeeNestedInput
 }
 
 export type EmployeeUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  position?: Prisma.EnumEmployeePositionFieldUpdateOperationsInput | $Enums.EmployeePosition
   invoices?: Prisma.InvoiceUncheckedUpdateManyWithoutEmployeeNestedInput
   goodReceipts?: Prisma.GoodReceiptUncheckedUpdateManyWithoutEmployeeNestedInput
   stocktakings?: Prisma.StocktakingUncheckedUpdateManyWithoutEmployeeNestedInput
+  employeeAccounts?: Prisma.EmployeeAccountUncheckedUpdateManyWithoutEmployeeNestedInput
 }
 
 export type EmployeeCreateManyInput = {
   id?: number
   name: string
+  position: $Enums.EmployeePosition
 }
 
 export type EmployeeUpdateManyMutationInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  position?: Prisma.EnumEmployeePositionFieldUpdateOperationsInput | $Enums.EmployeePosition
 }
 
 export type EmployeeUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  position?: Prisma.EnumEmployeePositionFieldUpdateOperationsInput | $Enums.EmployeePosition
 }
 
 export type EmployeeCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  position?: Prisma.SortOrder
 }
 
 export type EmployeeAvgOrderByAggregateInput = {
@@ -289,11 +316,13 @@ export type EmployeeAvgOrderByAggregateInput = {
 export type EmployeeMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  position?: Prisma.SortOrder
 }
 
 export type EmployeeMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  position?: Prisma.SortOrder
 }
 
 export type EmployeeSumOrderByAggregateInput = {
@@ -303,6 +332,24 @@ export type EmployeeSumOrderByAggregateInput = {
 export type EmployeeScalarRelationFilter = {
   is?: Prisma.EmployeeWhereInput
   isNot?: Prisma.EmployeeWhereInput
+}
+
+export type EnumEmployeePositionFieldUpdateOperationsInput = {
+  set?: $Enums.EmployeePosition
+}
+
+export type EmployeeCreateNestedOneWithoutEmployeeAccountsInput = {
+  create?: Prisma.XOR<Prisma.EmployeeCreateWithoutEmployeeAccountsInput, Prisma.EmployeeUncheckedCreateWithoutEmployeeAccountsInput>
+  connectOrCreate?: Prisma.EmployeeCreateOrConnectWithoutEmployeeAccountsInput
+  connect?: Prisma.EmployeeWhereUniqueInput
+}
+
+export type EmployeeUpdateOneRequiredWithoutEmployeeAccountsNestedInput = {
+  create?: Prisma.XOR<Prisma.EmployeeCreateWithoutEmployeeAccountsInput, Prisma.EmployeeUncheckedCreateWithoutEmployeeAccountsInput>
+  connectOrCreate?: Prisma.EmployeeCreateOrConnectWithoutEmployeeAccountsInput
+  upsert?: Prisma.EmployeeUpsertWithoutEmployeeAccountsInput
+  connect?: Prisma.EmployeeWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.EmployeeUpdateToOneWithWhereWithoutEmployeeAccountsInput, Prisma.EmployeeUpdateWithoutEmployeeAccountsInput>, Prisma.EmployeeUncheckedUpdateWithoutEmployeeAccountsInput>
 }
 
 export type EmployeeCreateNestedOneWithoutInvoicesInput = {
@@ -347,17 +394,71 @@ export type EmployeeUpdateOneRequiredWithoutStocktakingsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.EmployeeUpdateToOneWithWhereWithoutStocktakingsInput, Prisma.EmployeeUpdateWithoutStocktakingsInput>, Prisma.EmployeeUncheckedUpdateWithoutStocktakingsInput>
 }
 
-export type EmployeeCreateWithoutInvoicesInput = {
+export type EmployeeCreateWithoutEmployeeAccountsInput = {
   name: string
+  position: $Enums.EmployeePosition
+  invoices?: Prisma.InvoiceCreateNestedManyWithoutEmployeeInput
   goodReceipts?: Prisma.GoodReceiptCreateNestedManyWithoutEmployeeInput
   stocktakings?: Prisma.StocktakingCreateNestedManyWithoutEmployeeInput
+}
+
+export type EmployeeUncheckedCreateWithoutEmployeeAccountsInput = {
+  id?: number
+  name: string
+  position: $Enums.EmployeePosition
+  invoices?: Prisma.InvoiceUncheckedCreateNestedManyWithoutEmployeeInput
+  goodReceipts?: Prisma.GoodReceiptUncheckedCreateNestedManyWithoutEmployeeInput
+  stocktakings?: Prisma.StocktakingUncheckedCreateNestedManyWithoutEmployeeInput
+}
+
+export type EmployeeCreateOrConnectWithoutEmployeeAccountsInput = {
+  where: Prisma.EmployeeWhereUniqueInput
+  create: Prisma.XOR<Prisma.EmployeeCreateWithoutEmployeeAccountsInput, Prisma.EmployeeUncheckedCreateWithoutEmployeeAccountsInput>
+}
+
+export type EmployeeUpsertWithoutEmployeeAccountsInput = {
+  update: Prisma.XOR<Prisma.EmployeeUpdateWithoutEmployeeAccountsInput, Prisma.EmployeeUncheckedUpdateWithoutEmployeeAccountsInput>
+  create: Prisma.XOR<Prisma.EmployeeCreateWithoutEmployeeAccountsInput, Prisma.EmployeeUncheckedCreateWithoutEmployeeAccountsInput>
+  where?: Prisma.EmployeeWhereInput
+}
+
+export type EmployeeUpdateToOneWithWhereWithoutEmployeeAccountsInput = {
+  where?: Prisma.EmployeeWhereInput
+  data: Prisma.XOR<Prisma.EmployeeUpdateWithoutEmployeeAccountsInput, Prisma.EmployeeUncheckedUpdateWithoutEmployeeAccountsInput>
+}
+
+export type EmployeeUpdateWithoutEmployeeAccountsInput = {
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  position?: Prisma.EnumEmployeePositionFieldUpdateOperationsInput | $Enums.EmployeePosition
+  invoices?: Prisma.InvoiceUpdateManyWithoutEmployeeNestedInput
+  goodReceipts?: Prisma.GoodReceiptUpdateManyWithoutEmployeeNestedInput
+  stocktakings?: Prisma.StocktakingUpdateManyWithoutEmployeeNestedInput
+}
+
+export type EmployeeUncheckedUpdateWithoutEmployeeAccountsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  position?: Prisma.EnumEmployeePositionFieldUpdateOperationsInput | $Enums.EmployeePosition
+  invoices?: Prisma.InvoiceUncheckedUpdateManyWithoutEmployeeNestedInput
+  goodReceipts?: Prisma.GoodReceiptUncheckedUpdateManyWithoutEmployeeNestedInput
+  stocktakings?: Prisma.StocktakingUncheckedUpdateManyWithoutEmployeeNestedInput
+}
+
+export type EmployeeCreateWithoutInvoicesInput = {
+  name: string
+  position: $Enums.EmployeePosition
+  goodReceipts?: Prisma.GoodReceiptCreateNestedManyWithoutEmployeeInput
+  stocktakings?: Prisma.StocktakingCreateNestedManyWithoutEmployeeInput
+  employeeAccounts?: Prisma.EmployeeAccountCreateNestedManyWithoutEmployeeInput
 }
 
 export type EmployeeUncheckedCreateWithoutInvoicesInput = {
   id?: number
   name: string
+  position: $Enums.EmployeePosition
   goodReceipts?: Prisma.GoodReceiptUncheckedCreateNestedManyWithoutEmployeeInput
   stocktakings?: Prisma.StocktakingUncheckedCreateNestedManyWithoutEmployeeInput
+  employeeAccounts?: Prisma.EmployeeAccountUncheckedCreateNestedManyWithoutEmployeeInput
 }
 
 export type EmployeeCreateOrConnectWithoutInvoicesInput = {
@@ -378,28 +479,36 @@ export type EmployeeUpdateToOneWithWhereWithoutInvoicesInput = {
 
 export type EmployeeUpdateWithoutInvoicesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  position?: Prisma.EnumEmployeePositionFieldUpdateOperationsInput | $Enums.EmployeePosition
   goodReceipts?: Prisma.GoodReceiptUpdateManyWithoutEmployeeNestedInput
   stocktakings?: Prisma.StocktakingUpdateManyWithoutEmployeeNestedInput
+  employeeAccounts?: Prisma.EmployeeAccountUpdateManyWithoutEmployeeNestedInput
 }
 
 export type EmployeeUncheckedUpdateWithoutInvoicesInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  position?: Prisma.EnumEmployeePositionFieldUpdateOperationsInput | $Enums.EmployeePosition
   goodReceipts?: Prisma.GoodReceiptUncheckedUpdateManyWithoutEmployeeNestedInput
   stocktakings?: Prisma.StocktakingUncheckedUpdateManyWithoutEmployeeNestedInput
+  employeeAccounts?: Prisma.EmployeeAccountUncheckedUpdateManyWithoutEmployeeNestedInput
 }
 
 export type EmployeeCreateWithoutGoodReceiptsInput = {
   name: string
+  position: $Enums.EmployeePosition
   invoices?: Prisma.InvoiceCreateNestedManyWithoutEmployeeInput
   stocktakings?: Prisma.StocktakingCreateNestedManyWithoutEmployeeInput
+  employeeAccounts?: Prisma.EmployeeAccountCreateNestedManyWithoutEmployeeInput
 }
 
 export type EmployeeUncheckedCreateWithoutGoodReceiptsInput = {
   id?: number
   name: string
+  position: $Enums.EmployeePosition
   invoices?: Prisma.InvoiceUncheckedCreateNestedManyWithoutEmployeeInput
   stocktakings?: Prisma.StocktakingUncheckedCreateNestedManyWithoutEmployeeInput
+  employeeAccounts?: Prisma.EmployeeAccountUncheckedCreateNestedManyWithoutEmployeeInput
 }
 
 export type EmployeeCreateOrConnectWithoutGoodReceiptsInput = {
@@ -420,28 +529,36 @@ export type EmployeeUpdateToOneWithWhereWithoutGoodReceiptsInput = {
 
 export type EmployeeUpdateWithoutGoodReceiptsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  position?: Prisma.EnumEmployeePositionFieldUpdateOperationsInput | $Enums.EmployeePosition
   invoices?: Prisma.InvoiceUpdateManyWithoutEmployeeNestedInput
   stocktakings?: Prisma.StocktakingUpdateManyWithoutEmployeeNestedInput
+  employeeAccounts?: Prisma.EmployeeAccountUpdateManyWithoutEmployeeNestedInput
 }
 
 export type EmployeeUncheckedUpdateWithoutGoodReceiptsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  position?: Prisma.EnumEmployeePositionFieldUpdateOperationsInput | $Enums.EmployeePosition
   invoices?: Prisma.InvoiceUncheckedUpdateManyWithoutEmployeeNestedInput
   stocktakings?: Prisma.StocktakingUncheckedUpdateManyWithoutEmployeeNestedInput
+  employeeAccounts?: Prisma.EmployeeAccountUncheckedUpdateManyWithoutEmployeeNestedInput
 }
 
 export type EmployeeCreateWithoutStocktakingsInput = {
   name: string
+  position: $Enums.EmployeePosition
   invoices?: Prisma.InvoiceCreateNestedManyWithoutEmployeeInput
   goodReceipts?: Prisma.GoodReceiptCreateNestedManyWithoutEmployeeInput
+  employeeAccounts?: Prisma.EmployeeAccountCreateNestedManyWithoutEmployeeInput
 }
 
 export type EmployeeUncheckedCreateWithoutStocktakingsInput = {
   id?: number
   name: string
+  position: $Enums.EmployeePosition
   invoices?: Prisma.InvoiceUncheckedCreateNestedManyWithoutEmployeeInput
   goodReceipts?: Prisma.GoodReceiptUncheckedCreateNestedManyWithoutEmployeeInput
+  employeeAccounts?: Prisma.EmployeeAccountUncheckedCreateNestedManyWithoutEmployeeInput
 }
 
 export type EmployeeCreateOrConnectWithoutStocktakingsInput = {
@@ -462,15 +579,19 @@ export type EmployeeUpdateToOneWithWhereWithoutStocktakingsInput = {
 
 export type EmployeeUpdateWithoutStocktakingsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  position?: Prisma.EnumEmployeePositionFieldUpdateOperationsInput | $Enums.EmployeePosition
   invoices?: Prisma.InvoiceUpdateManyWithoutEmployeeNestedInput
   goodReceipts?: Prisma.GoodReceiptUpdateManyWithoutEmployeeNestedInput
+  employeeAccounts?: Prisma.EmployeeAccountUpdateManyWithoutEmployeeNestedInput
 }
 
 export type EmployeeUncheckedUpdateWithoutStocktakingsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  position?: Prisma.EnumEmployeePositionFieldUpdateOperationsInput | $Enums.EmployeePosition
   invoices?: Prisma.InvoiceUncheckedUpdateManyWithoutEmployeeNestedInput
   goodReceipts?: Prisma.GoodReceiptUncheckedUpdateManyWithoutEmployeeNestedInput
+  employeeAccounts?: Prisma.EmployeeAccountUncheckedUpdateManyWithoutEmployeeNestedInput
 }
 
 
@@ -482,12 +603,14 @@ export type EmployeeCountOutputType = {
   invoices: number
   goodReceipts: number
   stocktakings: number
+  employeeAccounts: number
 }
 
 export type EmployeeCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   invoices?: boolean | EmployeeCountOutputTypeCountInvoicesArgs
   goodReceipts?: boolean | EmployeeCountOutputTypeCountGoodReceiptsArgs
   stocktakings?: boolean | EmployeeCountOutputTypeCountStocktakingsArgs
+  employeeAccounts?: boolean | EmployeeCountOutputTypeCountEmployeeAccountsArgs
 }
 
 /**
@@ -521,36 +644,49 @@ export type EmployeeCountOutputTypeCountStocktakingsArgs<ExtArgs extends runtime
   where?: Prisma.StocktakingWhereInput
 }
 
+/**
+ * EmployeeCountOutputType without action
+ */
+export type EmployeeCountOutputTypeCountEmployeeAccountsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.EmployeeAccountWhereInput
+}
+
 
 export type EmployeeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
+  position?: boolean
   invoices?: boolean | Prisma.Employee$invoicesArgs<ExtArgs>
   goodReceipts?: boolean | Prisma.Employee$goodReceiptsArgs<ExtArgs>
   stocktakings?: boolean | Prisma.Employee$stocktakingsArgs<ExtArgs>
+  employeeAccounts?: boolean | Prisma.Employee$employeeAccountsArgs<ExtArgs>
   _count?: boolean | Prisma.EmployeeCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["employee"]>
 
 export type EmployeeSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
+  position?: boolean
 }, ExtArgs["result"]["employee"]>
 
 export type EmployeeSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
+  position?: boolean
 }, ExtArgs["result"]["employee"]>
 
 export type EmployeeSelectScalar = {
   id?: boolean
   name?: boolean
+  position?: boolean
 }
 
-export type EmployeeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name", ExtArgs["result"]["employee"]>
+export type EmployeeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "position", ExtArgs["result"]["employee"]>
 export type EmployeeInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   invoices?: boolean | Prisma.Employee$invoicesArgs<ExtArgs>
   goodReceipts?: boolean | Prisma.Employee$goodReceiptsArgs<ExtArgs>
   stocktakings?: boolean | Prisma.Employee$stocktakingsArgs<ExtArgs>
+  employeeAccounts?: boolean | Prisma.Employee$employeeAccountsArgs<ExtArgs>
   _count?: boolean | Prisma.EmployeeCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type EmployeeIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -562,10 +698,12 @@ export type $EmployeePayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     invoices: Prisma.$InvoicePayload<ExtArgs>[]
     goodReceipts: Prisma.$GoodReceiptPayload<ExtArgs>[]
     stocktakings: Prisma.$StocktakingPayload<ExtArgs>[]
+    employeeAccounts: Prisma.$EmployeeAccountPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
     name: string
+    position: $Enums.EmployeePosition
   }, ExtArgs["result"]["employee"]>
   composites: {}
 }
@@ -963,6 +1101,7 @@ export interface Prisma__EmployeeClient<T, Null = never, ExtArgs extends runtime
   invoices<T extends Prisma.Employee$invoicesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Employee$invoicesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InvoicePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   goodReceipts<T extends Prisma.Employee$goodReceiptsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Employee$goodReceiptsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$GoodReceiptPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   stocktakings<T extends Prisma.Employee$stocktakingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Employee$stocktakingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StocktakingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  employeeAccounts<T extends Prisma.Employee$employeeAccountsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Employee$employeeAccountsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$EmployeeAccountPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -994,6 +1133,7 @@ export interface Prisma__EmployeeClient<T, Null = never, ExtArgs extends runtime
 export interface EmployeeFieldRefs {
   readonly id: Prisma.FieldRef<"Employee", 'Int'>
   readonly name: Prisma.FieldRef<"Employee", 'String'>
+  readonly position: Prisma.FieldRef<"Employee", 'EmployeePosition'>
 }
     
 
@@ -1451,6 +1591,30 @@ export type Employee$stocktakingsArgs<ExtArgs extends runtime.Types.Extensions.I
   take?: number
   skip?: number
   distinct?: Prisma.StocktakingScalarFieldEnum | Prisma.StocktakingScalarFieldEnum[]
+}
+
+/**
+ * Employee.employeeAccounts
+ */
+export type Employee$employeeAccountsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the EmployeeAccount
+   */
+  select?: Prisma.EmployeeAccountSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the EmployeeAccount
+   */
+  omit?: Prisma.EmployeeAccountOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.EmployeeAccountInclude<ExtArgs> | null
+  where?: Prisma.EmployeeAccountWhereInput
+  orderBy?: Prisma.EmployeeAccountOrderByWithRelationInput | Prisma.EmployeeAccountOrderByWithRelationInput[]
+  cursor?: Prisma.EmployeeAccountWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.EmployeeAccountScalarFieldEnum | Prisma.EmployeeAccountScalarFieldEnum[]
 }
 
 /**

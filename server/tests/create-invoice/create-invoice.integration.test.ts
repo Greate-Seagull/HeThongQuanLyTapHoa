@@ -20,7 +20,7 @@ describe("Create invoice integration test", () => {
 
 	beforeAll(async () => {
 		await Promise.all([
-			prisma.employee.create({ data: employee }),
+			prisma.employee.create({ data: employee as any }),
 			prisma.user.create({ data: user }),
 			prisma.product.createMany({ data: [product1, product2] }),
 		]);

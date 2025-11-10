@@ -1,6 +1,7 @@
 export const employee = {
 	id: 10000,
 	name: "create invoice",
+	position: "SALES",
 };
 
 export const user = {

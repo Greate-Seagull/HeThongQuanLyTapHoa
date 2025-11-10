@@ -12,7 +12,7 @@ describe("Create good receipt integration test", () => {
 
 	beforeAll(async () => {
 		await Promise.all([
-			prisma.employee.create({ data: employee }),
+			prisma.employee.create({ data: employee as any }),
 			prisma.product.create({ data: product1 }),
 		]);
 	});

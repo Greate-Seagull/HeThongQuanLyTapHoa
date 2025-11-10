@@ -25,6 +25,9 @@ import { AccountReadAccessor } from "./infrastructure/read-accessors/account.rea
 import { SignUpUsecase } from "./application/sign-up.usecase";
 import { Expiry, PasswordService, TokenService } from "./utils/encrypt";
 import { SignInUsecase } from "./application/sign-in.usecase";
+import { EmployeeAccountRepository } from "./infrastructure/repositories/employee-account.repository";
+import { EmployeeAccountReadAccessor } from "./infrastructure/read-accessors/employee-account.read-accessor";
+import { CreateAccountUsecase } from "./application/create-account.usecase";
 
 config;
 export const prisma = new PrismaClient({
@@ -36,9 +39,12 @@ export const prisma = new PrismaClient({
 
 const transactionManager = new TransactionManager(prisma);
 //Repositories
+const employeeRepo = new EmployeeRepository(prisma);
+export const employeeAccountRepo = new EmployeeAccountRepository(prisma);
 const userRepo = new UserRepository(prisma);
 export const accountRepo = new AccountRepository(prisma);
 //Read accessors
+export const employeeAccountRead = new EmployeeAccountReadAccessor(prisma);
 export const accountRead = new AccountReadAccessor(prisma);
 //Domain services
 export const passwordService = new PasswordService(config.bcrypt.saltRound);
@@ -47,6 +53,13 @@ export const tokenService = new TokenService(
 	config.jwt.expiry as Expiry
 );
 //Usecases
+export const createAccountUsecase = new CreateAccountUsecase(
+	employeeAccountRead,
+	passwordService,
+	employeeAccountRepo,
+	employeeRepo,
+	transactionManager
+);
 export const signInUsecase = new SignInUsecase(
 	accountRepo,
 	passwordService,
@@ -63,7 +76,6 @@ export const signUpUsecase = new SignUpUsecase(
 //---------------------------------------------------------
 const productReadAccessor = new ProductReadAccessor(prisma);
 const promotionRepo = new PromotionRepository(prisma);
-const employeeRepo = new EmployeeRepository(prisma);
 const productRepo = new ProductRepositoryPostgree(prisma);
 export const invoiceRepo = new InvoiceRepository(prisma);
 const goodReceiptRepo = new GoodReceiptRepository(prisma);

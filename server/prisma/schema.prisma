@@ -65,11 +65,25 @@ model Account {
 }
 
 model Employee {
-  id           Int           @id @default(autoincrement())
-  name         String
-  invoices     Invoice[]
-  goodReceipts GoodReceipt[]
-  stocktakings Stocktaking[]
+  id       Int              @id @default(autoincrement())
+  name     String
+  position EmployeePosition
+
+  invoices         Invoice[]
+  goodReceipts     GoodReceipt[]
+  stocktakings     Stocktaking[]
+  employeeAccounts EmployeeAccount[]
+}
+
+model EmployeeAccount {
+  id           Int      @id @default(autoincrement())
+  employeeId   Int
+  username     String   @unique
+  passwordHash String
+  salt         String
+  loggedAt     DateTime @default(now())
+
+  employee Employee @relation(fields: [employeeId], references: [id])
 }
 
 model Invoice {
@@ -187,4 +201,10 @@ enum ProductUnit {
 enum ProductStatus {
   GOOD
   EXPIRED
+}
+
+enum EmployeePosition {
+  SALES
+  INVENTORY
+  RECEIVING
 }

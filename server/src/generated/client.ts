@@ -72,6 +72,11 @@ export type Account = Prisma.AccountModel
  */
 export type Employee = Prisma.EmployeeModel
 /**
+ * Model EmployeeAccount
+ * 
+ */
+export type EmployeeAccount = Prisma.EmployeeAccountModel
+/**
  * Model Invoice
  * 
  */

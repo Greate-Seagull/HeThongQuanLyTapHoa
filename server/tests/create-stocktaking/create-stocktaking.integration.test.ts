@@ -20,7 +20,7 @@ describe("Create stocktaking integration test", () => {
 		await Promise.all([
 			prisma.shelf.create({ data: shelf }),
 			prisma.product.createMany({ data: [product1, product2] }),
-			prisma.employee.create({ data: employee }),
+			prisma.employee.create({ data: employee as any }),
 		]);
 	});
 
