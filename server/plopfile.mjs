@@ -8,6 +8,7 @@ export default function (plop) {
             }
         ]
     })
+
     plop.setGenerator("object-driven", {
         description: "this is a skeleton plopfile",
         prompts: [
@@ -121,62 +122,62 @@ export default function (plop) {
             }
         ],
         actions: [
-            // create test
-            {
-                type: "add",
-                path: "tests/{{kebabCase name}}/{{kebabCase name}}.integration.test.ts",
-                templateFile: "templates/integration.test.template.hbs",
-            },
-            // create test data
-            {
-                type: "add",
-                path: "tests/{{kebabCase name}}/{{kebabCase name}}.test-data.ts",
-                templateFile: "templates/test-data.template.hbs",
-            },
-            // create usecase
-            {
-                type: "add",
-                path: "src/application/{{kebabCase name}}.usecase.ts",
-                templateFile: "templates/usecase.template.hbs",
-            },
-            // add usecase to composition root
-            {
-                type: "modify",
-                path: "src/composition-root.ts",
-                pattern: /(import .*;)(\r?\n)(?=\s*[^import])/m,
-                template: '$1$2import { {{titleCase name}}Usecase } from "./application/{{kebabCase name}}.usecase";$2'
-            },
-            {
-                type: "modify",
-                path: "src/composition-root.ts",
-                pattern: /^[ \t]*\/\/Usecases.*$/m,
-                template: '$&\nexport const {{camelCase name}}Usecase = new {{titleCase name}}Usecase();'
-            },
-            // add usecase to controller
-            {
-                type: "modify",
-                path: "src/presentation/controllers/{{kebabCase domain}}.controller.ts",
-                pattern: /^/m,
-                template: 'import { {{camelCase name}}Usecase } from "../../composition-root";\n'
-            },
-            {
-                type: "modify",
-                path: "src/presentation/controllers/{{kebabCase domain}}.controller.ts",
-                pattern: /^[ \t]*\/\/Handlers.*$/m,
-                templateFile: "templates/controller-method.template.hbs"
-            },
-            // add controller method to router
-            {
-                type: "modify",
-                path: "src/presentation/routes/{{kebabCase domain}}.route.ts",
-                pattern: /^/m,
-                template: 'import { control{{titleCase name}} } from "../controllers/{{kebabCase domain}}.controller";\n'
-            },
+            // // create test
+            // {
+            //     type: "add",
+            //     path: "tests/{{kebabCase name}}/{{kebabCase name}}.integration.test.ts",
+            //     templateFile: "templates/integration.test.template.hbs",
+            // },
+            // // create test data
+            // {
+            //     type: "add",
+            //     path: "tests/{{kebabCase name}}/{{kebabCase name}}.test-data.ts",
+            //     templateFile: "templates/test-data.template.hbs",
+            // },
+            // // create usecase
+            // {
+            //     type: "add",
+            //     path: "src/application/{{kebabCase name}}.usecase.ts",
+            //     templateFile: "templates/usecase.template.hbs",
+            // },
+            // // add usecase to composition root
+            // {
+            //     type: "modify",
+            //     path: "src/composition-root.ts",
+            //     pattern: /(import .*;)(\r?\n)(?=\s*[^import])/m,
+            //     template: '$1$2import { {{titleCase name}}Usecase } from "./application/{{kebabCase name}}.usecase";$2'
+            // },
+            // {
+            //     type: "modify",
+            //     path: "src/composition-root.ts",
+            //     pattern: /^[ \t]*\/\/Usecases.*$/m,
+            //     template: '$&\nexport const {{camelCase name}}Usecase = new {{titleCase name}}Usecase();'
+            // },
+            // // add usecase to controller
+            // {
+            //     type: "modify",
+            //     path: "src/presentation/controllers/{{kebabCase domain}}.controller.ts",
+            //     pattern: /^/m,
+            //     template: 'import { {{camelCase name}}Usecase } from "../../composition-root";\n'
+            // },
+            // {
+            //     type: "modify",
+            //     path: "src/presentation/controllers/{{kebabCase domain}}.controller.ts",
+            //     pattern: /^[ \t]*\/\/Handlers.*$/m,
+            //     templateFile: "templates/controller-method.template.hbs"
+            // },
+            // // add controller method to router
+            // {
+            //     type: "modify",
+            //     path: "src/presentation/routes/{{kebabCase domain}}.route.ts",
+            //     pattern: /^/m,
+            //     template: 'import { control{{titleCase name}} } from "../controllers/{{kebabCase domain}}.controller";\n'
+            // },
             {
                 type: "modify",
                 path: "src/presentation/routes/{{kebabCase domain}}.route.ts",
                 pattern: /^[ \t]*\/\/Handlers.*$/m, // matches "//repositories" line even with spaces/tabs
-                template: '$&\nrouter.{{lowerCase apiMethod}}("{{apiURI}}", control{{titleCase name}});'
+                template: '$&\nrouter.{{lowerCase apiMethod}}("{{stripDomain apiURI domain}}", control{{titleCase name}});'
             },
         ],
     })
@@ -223,5 +224,34 @@ export default function (plop) {
         }
 
         return result;
+    });
+
+    plop.setHelper("stripDomain", function (uri, domain) {
+        if (!uri) return uri;
+        if (!domain) return uri;
+
+        uri = String(uri);
+        domain = String(domain).trim();
+
+        // If domain is a Handlebars placeholder like "{{domain}}", remove braces for matching
+        const domainBare = domain.replace(/^\{\{\s*/, "").replace(/\s*\}\}$/, "");
+
+        // build a regex that matches:
+        //  - optional protocol + host: ^https?://[^/]+
+        //  - optional leading slash
+        //  - optional "{{domain}}" placeholder or bare domain (escaped)
+        //  - optional trailing slash after domain
+        const domainRE = `(?:\\{\\{\\s*${escapeRegExp(domainBare)}s?\\s*\\}\\}|${escapeRegExp(domainBare)}s?)`;
+        const fullRE = new RegExp(`^(?:https?:\\/\\/[^/]+)?\\/?${domainRE}(?=\\/|$)\\/?`, "i");
+
+        // replace match with single leading slash
+        const result = uri.replace(fullRE, "/");
+
+        // make sure we return a path that starts with "/"
+        return result.startsWith("/") ? result : `/${result}`;
+
+        function escapeRegExp(str) {
+            return String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        }
     });
 }

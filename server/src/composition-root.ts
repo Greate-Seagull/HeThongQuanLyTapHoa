@@ -20,6 +20,10 @@ import { StocktakingRepository } from "./infrastructure/repositories/stocktaking
 import { EmployeeReadAccess } from "./infrastructure/read-accessors/employee.read-accessor";
 import { ShelfReadAccessor } from "./infrastructure/read-accessors/shelf.read-accessor";
 import { ProductReadAccessor } from "./infrastructure/read-accessors/product.read-accessor";
+import { AccountRepository } from "./infrastructure/repositories/account.repository";
+import { AccountReadAccessor } from "./infrastructure/read-accessors/account.read-accessor";
+import { SignUpUsecase } from "./application/sign-up.usecase";
+import { Expiry, PasswordService, TokenService } from "./utils/encrypt";
 
 config;
 export const prisma = new PrismaClient({
@@ -31,13 +35,29 @@ export const prisma = new PrismaClient({
 
 const transactionManager = new TransactionManager(prisma);
 //Repositories
+const userRepo = new UserRepository(prisma);
+export const accountRepo = new AccountRepository(prisma);
 //Read accessors
+export const accountRead = new AccountReadAccessor(prisma);
+//Domain services
+export const passwordService = new PasswordService(config.bcrypt.saltRound);
+export const tokenService = new TokenService(
+	config.jwt.secret,
+	config.jwt.expiry as Expiry
+);
 //Usecases
+export const signUpUsecase = new SignUpUsecase(
+	accountRead,
+	userRepo,
+	accountRepo,
+	transactionManager,
+	passwordService,
+	tokenService
+);
 //---------------------------------------------------------
 const productReadAccessor = new ProductReadAccessor(prisma);
 const promotionRepo = new PromotionRepository(prisma);
 const employeeRepo = new EmployeeRepository(prisma);
-const userRepo = new UserRepository(prisma);
 const productRepo = new ProductRepositoryPostgree(prisma);
 export const invoiceRepo = new InvoiceRepository(prisma);
 const goodReceiptRepo = new GoodReceiptRepository(prisma);

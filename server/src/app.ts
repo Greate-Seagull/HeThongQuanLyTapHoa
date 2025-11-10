@@ -4,6 +4,7 @@ import promotionRouter from "./presentation/routes/promotion.route";
 import invoiceRouter from "./presentation/routes/invoice.route";
 import goodReceiptRouter from "./presentation/routes/good-receipt.route";
 import stocktakingRouter from "./presentation/routes/stocktaking.route";
+import accountRouter from "./presentation/routes/account.route";
 
 const app = express();
 
@@ -13,5 +14,6 @@ app.use("/promotions", promotionRouter);
 app.use("/invoices", invoiceRouter);
 app.use("/good-receipts", goodReceiptRouter);
 app.use("/stocktakings", stocktakingRouter);
+app.use("/accounts", accountRouter);
 
 export default app;

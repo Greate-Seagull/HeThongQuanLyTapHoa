@@ -23,5 +23,9 @@ describe("{{normalCase name}} integration test", () => {
 			input = send;
 			output = await request(app).{{lowerCase apiMethod}}(path).send(input);
 		});
+
+		it("Should return 200", () => {
+			expect(output.status).toBe(200);
+		});
 	});
 });

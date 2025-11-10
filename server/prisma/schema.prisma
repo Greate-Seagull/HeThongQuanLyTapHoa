@@ -50,6 +50,18 @@ model User {
   name     String
   point    Int       @default(0)
   invoices Invoice[]
+  accounts Account[]
+}
+
+model Account {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  phoneNumber  String   @unique
+  passwordHash String
+  salt         String
+  loggedAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
 }
 
 model Employee {

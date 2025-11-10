@@ -5,6 +5,15 @@ export class User {
 
 	private constructor() {}
 
+	static create(name: string) {
+		let entity = new User();
+
+		entity._name = name;
+		entity._point = 0;
+
+		return entity;
+	}
+
 	static rehydrate(input: UserRehydrateProps) {
 		let entity = new User();
 

@@ -52,6 +52,7 @@ export const ModelName = {
   Promotion: 'Promotion',
   PromotionDetail: 'PromotionDetail',
   User: 'User',
+  Account: 'Account',
   Employee: 'Employee',
   Invoice: 'Invoice',
   InvoiceDetail: 'InvoiceDetail',
@@ -123,6 +124,18 @@ export const UserScalarFieldEnum = {
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const AccountScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  phoneNumber: 'phoneNumber',
+  passwordHash: 'passwordHash',
+  salt: 'salt',
+  loggedAt: 'loggedAt'
+} as const
+
+export type AccountScalarFieldEnum = (typeof AccountScalarFieldEnum)[keyof typeof AccountScalarFieldEnum]
 
 
 export const EmployeeScalarFieldEnum = {

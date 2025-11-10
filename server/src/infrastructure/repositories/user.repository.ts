@@ -26,6 +26,15 @@ export class UserRepository implements UserRepository {
 		return UserMapper.toDomain(raw);
 	}
 
+	async add(transaction: Prisma.TransactionClient, user: User) {
+		const raw = await transaction.user.create({
+			data: UserMapper.toPersistence(user),
+			select: UserRepository.baseQuery,
+		});
+
+		return UserMapper.toDomain(raw);
+	}
+
 	static baseQuery = {
 		id: true,
 		name: true,
