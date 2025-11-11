@@ -7,43 +7,51 @@ on:
         branches: [main]
 
 jobs:
-    CI:
+    test:
         runs-on: ubuntu-latest
 
+        services:
+            postgres:
+                image: postgres:15-alpine
+                env:
+                    POSTGRES_USER: postgres
+                    POSTGRES_PASSWORD: postgres
+                    POSTGRES_DB: testdb
+                ports:
+                    - 5432:5432
+                options: >-
+                    --health-cmd pg_isready
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+
         env:
-            DATABASE_URL: ${{ secrets.DATABASE_URL }}
+            DATABASE_URL: postgres://postgres:postgres@localhost:5432/testdb
             SALT_ROUND: 10
             JWT_SECRET: "Secure"
             JWT_EXPIRY: "15m"
 
         steps:
-            - name: Clone repository into the runner(VM)
+            - name: ⬇️ Checkout code
               uses: actions/checkout@v4
 
-            - name: Install Node.js
+            - name: 🛠️ Setup Node.js
               uses: actions/setup-node@v4
+              with:
+                  node-version: 20
 
-            - name: Install dependencies
+            - name: 📦 Install dependencies
               working-directory: ./server
               run: npm ci
 
-            - name: Check DATABASE_URL exists
-              run: |
-                  if [ -z "$DATABASE_URL" ]; then
-                      echo "DATABASE_URL not set"
-                      exit 1
-                    else
-                      echo "DATABASE_URL is set"
-                    fi
-
-            - name: Generate clients
+            - name: ✨ Generate clients (Prisma)
               working-directory: ./server
               run: npm run generate
 
-            # - name: Build
-            #   working-directory: ./server
-            #   run: npm run build
+            - name: ⚙️ Run Database Migrations (Example)
+              working-directory: ./server
+              run: npm run migrate:ci
 
-            - name: Test
+            - name: ✅ Run Tests
               working-directory: ./server
               run: npm test
