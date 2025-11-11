@@ -1,0 +1,13 @@
+import { {{titleCase name}} } from "../../domain/{{kebabCase name}}";
+
+export class {{titleCase name}}Mapper {
+	static toDomain(raw: any): {{titleCase name}} {
+		return {{titleCase name}}.rehydrate(raw);
+	}
+
+	static toPersistence(entity: {{titleCase name}}) {
+		return {
+			
+		};
+	}
+}

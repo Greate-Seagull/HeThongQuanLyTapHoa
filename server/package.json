@@ -1,0 +1,47 @@
+{
+	"name": "server",
+	"version": "1.0.0",
+	"description": "",
+	"homepage": "https://github.com/Greate-Seagull/HeThongQuanLyTapHoa#readme",
+	"bugs": {
+		"url": "https://github.com/Greate-Seagull/HeThongQuanLyTapHoa/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Greate-Seagull/HeThongQuanLyTapHoa.git"
+	},
+	"license": "UNLICENSED",
+	"author": "Hung",
+	"main": "server.js",
+	"directories": {
+		"test": "tests"
+	},
+	"scripts": {
+		"migrate:ci": "npx prisma migrate deploy",
+		"generate": "npx prisma generate",
+		"build": "tsc",
+		"start": "node dist/index.js",
+		"test": "npx jest --runInBand --verbose --roots=tests"
+	},
+	"dependencies": {
+		"@prisma/client": "^6.18.0",
+		"bcrypt": "^6.0.0",
+		"dotenv": "^17.2.3",
+		"express": "^5.1.0",
+		"inversify": "^7.10.4",
+		"jsonwebtoken": "^9.0.2",
+		"zod": "^4.1.12"
+	},
+	"devDependencies": {
+		"@types/bcrypt": "^6.0.0",
+		"@types/express": "^5.0.3",
+		"@types/jest": "^30.0.0",
+		"@types/jsonwebtoken": "^9.0.10",
+		"@types/supertest": "^6.0.3",
+		"jest": "^30.2.0",
+		"nodemon": "^3.1.10",
+		"prisma": "^6.18.0",
+		"supertest": "^7.1.4",
+		"ts-jest": "^29.4.5"
+	}
+}

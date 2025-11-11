@@ -1,0 +1,10 @@
+import { PrismaClient } from "@prisma/client";
+import { {{titleCase name}}Mapper } from "../mappers/{{kebabCase name}}.mapper";
+
+export class {{titleCase name}}Repository implements {{titleCase name}}Repository {
+	constructor(private readonly prisma: PrismaClient) {}
+
+	static baseQuery = {
+		id: true,
+	};
+}

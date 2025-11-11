@@ -1,0 +1,26 @@
+{
+	"compilerOptions": {
+		"module": "commonjs",
+		"declaration": true,
+		"removeComments": true,
+		"emitDecoratorMetadata": true,
+		"experimentalDecorators": true,
+		"allowSyntheticDefaultImports": true,
+		"target": "es2024",
+		"sourceMap": true,
+		"outDir": "./dist",
+		"baseUrl": "./",
+		// "paths": {
+		// 	"@domain/*": ["./src/domain/*"],
+		// 	"@infrastructure/*": ["./src/infrastructure/*"],
+		// 	"@usecase/*": ["./src/application/*"],
+		// 	"@view/*": ["./src/presentation/*"],
+		// 	"@utils/*": ["./src/utils/*"],
+		// 	"@constants/*": ["./src/constants/*"],
+		// 	"@presentation/*": ["./src/presentation/*"],
+		// 	"@config/*": ["./src/config/*"]
+		// },
+		"incremental": true,
+		"esModuleInterop": true
+	}
+}

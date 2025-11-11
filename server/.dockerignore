@@ -1,0 +1,8 @@
+node_modules
+templates
+tests
+dist
+.gitignore
+Dockerfile
+jest.config.js
+plopfile.mjs
