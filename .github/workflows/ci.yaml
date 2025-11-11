@@ -1,0 +1,40 @@
+name: CI
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+jobs:
+    CI:
+        runs-on: ubuntu-latest
+
+        env:
+            DATABASE_URL: ${{ secrets.DATABASE_URL }}
+            SALT_ROUND: 10
+            JWT_SECRET: "Secure"
+            JWT_EXPIRY: "15m"
+
+        steps:
+            - name: Clone repository into the runner(VM)
+              uses: actions/checkout@v4
+
+            - name: Install Node.js
+              uses: actions/setup-node@v4
+
+            - name: Install dependencies
+              working-directory: ./server
+              run: npm ci
+
+            - name: Generate clients
+              working-directory: ./server
+              run: npm run generate
+
+            # - name: Build
+            #   working-directory: ./server
+            #   run: npm run build
+
+            - name: Test
+              working-directory: ./server
+              run: npm test

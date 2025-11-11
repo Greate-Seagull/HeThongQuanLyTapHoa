@@ -58,12 +58,14 @@ erDiagram
     User {
         id int
         name string   
-        point int     
+        point int   
+        createdAt datetime  
     }
 
     Employee {
         id int
         name string
+        positionId int
     }
 
     GoodReceipt {
@@ -116,6 +118,29 @@ erDiagram
         slotId int
     }
 
+    Account {
+        id int
+        userId int
+        phoneNumber string
+        passwordHash string
+        salt string
+        loggedAt datetime        
+    }
+
+    EmployeeAccount {
+        id int
+        employeeId int
+        username string
+        passwordHash string
+        salt string
+        loggedAt datetime
+    }
+
+    EmployeePosition {
+        id int
+        name string
+    }
+
     Product }o--|| ProductUnit: account
     Promotion }o--|| PromotionType: as
     Product ||--o{ PromotionDetail: has
@@ -137,4 +162,7 @@ erDiagram
     ProductStatus ||--o{ StocktakingDetail: has
     Slot ||--o{ StocktakingDetail: has
     Product }o--|| ProductStatus: in
+    Account ||--|| User: own
+    Employee ||--|| EmployeeAccount: own
+    Employee }o--|| EmployeePosition: in
 ```
