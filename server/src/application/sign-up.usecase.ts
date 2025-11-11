@@ -2,7 +2,7 @@ import { Account } from "../domain/account";
 import { User } from "../domain/user";
 import { AccountReadAccessor } from "../infrastructure/read-accessors/account.read-accessor";
 import { AccountRepository } from "../infrastructure/repositories/account.repository";
-import { TransactionManager } from "../infrastructure/repositories/transaction";
+import { TransactionManager } from "../infrastructure/transaction";
 import { UserRepository } from "../infrastructure/repositories/user.repository";
 import {
 	PasswordService,

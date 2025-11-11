@@ -1,15 +1,11 @@
-import request from "supertest";
-import app from "../../src/app";
-import { prisma } from "../../src/composition-root";
+import { createGoodReceiptUsecase, prisma } from "../../src/composition-root";
 import { employee, product1, send } from "./create-goods-receipt.test-data";
 
 jest.setTimeout(50000);
 
 describe("Create good receipt integration test", () => {
-	let path = `/good-receipts`;
 	let input;
 	let output;
-
 	beforeAll(async () => {
 		await Promise.all([
 			prisma.employee.create({ data: employee as any }),
@@ -30,23 +26,19 @@ describe("Create good receipt integration test", () => {
 	describe("Normal case", () => {
 		beforeAll(async () => {
 			input = send;
-			output = await request(app).post(path).send(input);
-		});
-
-		it("Should return 200", () => {
-			expect(output.status).toBe(200);
+			output = await createGoodReceiptUsecase.execute(input);
 		});
 
 		it("Should return good receipt id", () => {
-			expect(output.body).toHaveProperty("goodReceiptId");
+			expect(output).toHaveProperty("goodReceiptId");
 		});
 
 		it("Should return correct employee name", () => {
-			expect(output.body).toHaveProperty("employeeName", employee.name);
+			expect(output).toHaveProperty("employeeName", employee.name);
 		});
 
 		it("Should return correct products size", () => {
-			expect(output.body.products).toHaveLength(send.items.length);
+			expect(output.products).toHaveLength(send.items.length);
 		});
 	});
 
@@ -55,11 +47,15 @@ describe("Create good receipt integration test", () => {
 			beforeAll(async () => {
 				input = structuredClone(send);
 				input.employeeId = -1;
-				output = await request(app).post(path).send(input);
+				try {
+					output = await createGoodReceiptUsecase.execute(input);
+				} catch (e) {
+					output = e;
+				}
 			});
 
 			it("Should return error message", () => {
-				expect(output.body.message).toBe(
+				expect(output.message).toBe(
 					`Employee not found, ${input.employeeId}`
 				);
 			});
@@ -69,13 +65,15 @@ describe("Create good receipt integration test", () => {
 			beforeAll(async () => {
 				input = structuredClone(send);
 				input.items[0].productId = -1;
-				output = await request(app).post(path).send(input);
+				try {
+					output = await createGoodReceiptUsecase.execute(input);
+				} catch (e) {
+					output = e;
+				}
 			});
 
 			it("Should return error message", () => {
-				expect(output.body.message).toBe(
-					`Expect all products to be valid`
-				);
+				expect(output.message).toBe(`Expect all products to be valid`);
 			});
 		});
 
@@ -83,13 +81,15 @@ describe("Create good receipt integration test", () => {
 			beforeAll(async () => {
 				input = structuredClone(send);
 				input.items[0].quantity = -1;
-				output = await request(app).post(path).send(input);
+				try {
+					output = await createGoodReceiptUsecase.execute(input);
+				} catch (e) {
+					output = e;
+				}
 			});
 
 			it("Should return error message", () => {
-				expect(output.body.message).toBe(
-					`The received quantity is under 0`
-				);
+				expect(output.message).toBe(`The received quantity is under 0`);
 			});
 		});
 
@@ -97,11 +97,15 @@ describe("Create good receipt integration test", () => {
 			beforeAll(async () => {
 				input = structuredClone(send);
 				input.items[0].price = -1;
-				output = await request(app).post(path).send(input);
+				try {
+					output = await createGoodReceiptUsecase.execute(input);
+				} catch (e) {
+					output = e;
+				}
 			});
 
 			it("Should return error message", () => {
-				expect(output.body.message).toBe(
+				expect(output.message).toBe(
 					`Expect the import cost to be positive`
 				);
 			});

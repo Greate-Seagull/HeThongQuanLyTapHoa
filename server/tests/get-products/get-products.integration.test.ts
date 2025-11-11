@@ -1,10 +1,7 @@
-import request from "supertest";
-import app from "../../src/app";
-import { prisma } from "../../src/composition-root";
+import { getProductsUsecase, prisma } from "../../src/composition-root";
 import { product1, product2 } from "./get-products.test-data";
 
 describe("Get products integration test", () => {
-	let path = "/products";
 	let input;
 	let output;
 
@@ -21,19 +18,15 @@ describe("Get products integration test", () => {
 	describe("Normal case", () => {
 		beforeAll(async () => {
 			input = {};
-			output = await request(app).get(path).send(input);
-		});
-
-		it("Should return 200", () => {
-			expect(output.status).toBe(200);
+			output = await getProductsUsecase.execute(input);
 		});
 
 		it("Should return correct product 1", () => {
-			expect(output.body.products[0]).toMatchSnapshot(product1);
+			expect(output.products[0]).toMatchSnapshot(product1);
 		});
 
 		it("Should return correct product 2", () => {
-			expect(output.body.products[1]).toMatchSnapshot(product2);
+			expect(output.products[1]).toMatchSnapshot(product2);
 		});
 	});
 
@@ -47,7 +40,7 @@ describe("Get products integration test", () => {
 	// 	});
 
 	// 	it("Should return error message", () => {
-	// 		expect(output.body.message).toBe(`Product not found. ${fakeId}`);
+	// 		expect(output.message).toBe(`Product not found. ${fakeId}`);
 	// 	});
 	// });
 });

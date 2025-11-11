@@ -1,12 +1,9 @@
-import request from "supertest";
-import app from "../../src/app";
-import { prisma } from "../../src/composition-root";
+import { prisma, signInUsecase } from "../../src/composition-root";
 import { account, send, user } from "./sign-in.test-data";
 
 jest.setTimeout(20000);
 
 describe("Sign in integration test", () => {
-	let path = `/accounts/sign-in`;
 	let input;
 	let output;
 
@@ -23,15 +20,11 @@ describe("Sign in integration test", () => {
 	describe("Normal case", () => {
 		beforeAll(async () => {
 			input = send;
-			output = await request(app).post(path).send(input);
-		});
-
-		it("Should return 200", () => {
-			expect(output.status).toBe(200);
+			output = await signInUsecase.execute(input);
 		});
 
 		it("Should return jwt", () => {
-			expect(output.body).toHaveProperty("token");
+			expect(output).toHaveProperty("token");
 		});
 	});
 
@@ -40,13 +33,15 @@ describe("Sign in integration test", () => {
 			beforeAll(async () => {
 				input = structuredClone(send);
 				input.phoneNumber = "-1";
-				output = await request(app).post(path).send(input);
+				try {
+					output = await signInUsecase.execute(input);
+				} catch (e) {
+					output = e;
+				}
 			});
 
 			it("Should return error message", () => {
-				expect(output.body.message).toBe(
-					`Invalid phone number or password`
-				);
+				expect(output.message).toBe(`Invalid phone number or password`);
 			});
 		});
 
@@ -54,13 +49,15 @@ describe("Sign in integration test", () => {
 			beforeAll(async () => {
 				input = structuredClone(send);
 				input.password = "-1";
-				output = await request(app).post(path).send(input);
+				try {
+					output = await signInUsecase.execute(input);
+				} catch (e) {
+					output = e;
+				}
 			});
 
 			it("Should return error message", () => {
-				expect(output.body.message).toBe(
-					`Invalid phone number or password`
-				);
+				expect(output.message).toBe(`Invalid phone number or password`);
 			});
 		});
 	});

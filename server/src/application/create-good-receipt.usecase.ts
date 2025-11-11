@@ -2,7 +2,7 @@ import { GoodReceipt } from "../domain/good-receipt";
 import { EmployeeRepository } from "../infrastructure/repositories/employee.repository";
 import { GoodReceiptRepository } from "../infrastructure/repositories/good-receipt.repository";
 import { ProductRepository } from "../infrastructure/repositories/product.repository";
-import { TransactionManager } from "../infrastructure/repositories/transaction";
+import { TransactionManager } from "../infrastructure/transaction";
 
 type LineItem = {
 	productId: number;
@@ -58,7 +58,6 @@ export class CreateGoodReceiptUsecase {
 				this.goodReceiptRepo.add(tx, goodReceipt),
 				this.productRepo.save(tx, products),
 			]);
-
 			return { goodReceipt: savedGoodReceipt, products: savedProducts };
 		});
 

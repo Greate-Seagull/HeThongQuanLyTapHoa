@@ -1,6 +1,4 @@
-import request from "supertest";
-import app from "../../src/app";
-import { prisma } from "../../src/composition-root";
+import { createStocktakingUsecase, prisma } from "../../src/composition-root";
 import {
 	employee,
 	product1,
@@ -12,7 +10,6 @@ import {
 jest.setTimeout(50000);
 
 describe("Create stocktaking integration test", () => {
-	let path = `/stocktakings`;
 	let input;
 	let output;
 
@@ -44,15 +41,11 @@ describe("Create stocktaking integration test", () => {
 	describe("Normal case", () => {
 		beforeAll(async () => {
 			input = send;
-			output = await request(app).post(path).send(input);
-		});
-
-		it("Should return 200", () => {
-			expect(output.status).toBe(200);
+			output = await createStocktakingUsecase.execute(input);
 		});
 
 		it("Should return success message", () => {
-			expect(output.body.message).toBe(`Success`);
+			expect(output.message).toBe(`Success`);
 		});
 	});
 
@@ -61,13 +54,15 @@ describe("Create stocktaking integration test", () => {
 			beforeAll(async () => {
 				input = structuredClone(send);
 				input.products[0].barcode = -1;
-				output = await request(app).post(path).send(input);
+				try {
+					output = await createStocktakingUsecase.execute(input);
+				} catch (e) {
+					output = e;
+				}
 			});
 
 			it("Should return error message", () => {
-				expect(output.body.message).toBe(
-					`Expect all products to be valid`
-				);
+				expect(output.message).toBe(`Expect all products to be valid`);
 			});
 		});
 
@@ -75,11 +70,15 @@ describe("Create stocktaking integration test", () => {
 			beforeAll(async () => {
 				input = structuredClone(send);
 				input.employeeId = -1;
-				output = await request(app).post(path).send(input);
+				try {
+					output = await createStocktakingUsecase.execute(input);
+				} catch (e) {
+					output = e;
+				}
 			});
 
 			it("Should return error message", () => {
-				expect(output.body.message).toBe(
+				expect(output.message).toBe(
 					`Employee not found, ${input.employeeId}`
 				);
 			});
@@ -89,11 +88,15 @@ describe("Create stocktaking integration test", () => {
 			beforeAll(async () => {
 				input = structuredClone(send);
 				input.products[0].status = "UNKNOWN";
-				output = await request(app).post(path).send(input);
+				try {
+					output = await createStocktakingUsecase.execute(input);
+				} catch (e) {
+					output = e;
+				}
 			});
 
 			it("Should return error message", () => {
-				expect(output.body).toHaveProperty("message");
+				expect(output).toHaveProperty("message");
 			});
 		});
 
@@ -101,11 +104,15 @@ describe("Create stocktaking integration test", () => {
 			beforeAll(async () => {
 				input = structuredClone(send);
 				input.products = [];
-				output = await request(app).post(path).send(input);
+				try {
+					output = await createStocktakingUsecase.execute(input);
+				} catch (e) {
+					output = e;
+				}
 			});
 
 			it("Should return error message", () => {
-				expect(output.body.message).toBe(
+				expect(output.message).toBe(
 					`Expect stocktaking to have at least one item, got ${input.products}`
 				);
 			});
@@ -115,11 +122,15 @@ describe("Create stocktaking integration test", () => {
 			beforeAll(async () => {
 				input = structuredClone(send);
 				input.products[0].quantity = -1;
-				output = await request(app).post(path).send(input);
+				try {
+					output = await createStocktakingUsecase.execute(input);
+				} catch (e) {
+					output = e;
+				}
 			});
 
 			it("Should return error message", () => {
-				expect(output.body.message).toBe(
+				expect(output.message).toBe(
 					`Expect the quantity to be positive`
 				);
 			});
@@ -129,11 +140,15 @@ describe("Create stocktaking integration test", () => {
 			beforeAll(async () => {
 				input = structuredClone(send);
 				input.products[0].slotId = -1;
-				output = await request(app).post(path).send(input);
+				try {
+					output = await createStocktakingUsecase.execute(input);
+				} catch (e) {
+					output = e;
+				}
 			});
 
 			it("Should return error message", () => {
-				expect(output.body).toHaveProperty("message");
+				expect(output).toHaveProperty("message");
 			});
 		});
 	});

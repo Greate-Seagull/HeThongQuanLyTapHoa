@@ -1,12 +1,9 @@
-import request from "supertest";
-import app from "../../src/app";
-import { prisma } from "../../src/composition-root";
+import { createAccountUsecase, prisma } from "../../src/composition-root";
 import { employee, employeeAccount, send } from "./create-account.test-data";
 
 jest.setTimeout(20000);
 
 describe("Create account integration test", () => {
-	let path = `/employee-accounts`;
 	let input;
 	let output;
 
@@ -17,7 +14,7 @@ describe("Create account integration test", () => {
 	describe("Normal case", () => {
 		beforeAll(async () => {
 			input = send;
-			output = await request(app).post(path).send(input);
+			output = await createAccountUsecase.execute(input);
 		});
 
 		afterAll(async () => {
@@ -29,8 +26,8 @@ describe("Create account integration test", () => {
 			});
 		});
 
-		it("Should return 200", () => {
-			expect(output.status).toBe(200);
+		it("Should return success message", () => {
+			expect(output.message).toBe("Success");
 		});
 	});
 
@@ -42,7 +39,11 @@ describe("Create account integration test", () => {
 
 				input = structuredClone(send);
 				input.username = employeeAccount.username;
-				output = await request(app).post(path).send(input);
+				try {
+					output = await createAccountUsecase.execute(input);
+				} catch (e) {
+					output = e;
+				}
 			});
 
 			afterAll(async () => {
@@ -53,9 +54,7 @@ describe("Create account integration test", () => {
 			});
 
 			it("Should return error message", () => {
-				expect(output.body.message).toBe(
-					`The username has already existed`
-				);
+				expect(output.message).toBe(`The username has already existed`);
 			});
 		});
 
@@ -63,11 +62,15 @@ describe("Create account integration test", () => {
 			beforeAll(async () => {
 				input = structuredClone(send);
 				input.position = "UNKNOWN";
-				output = await request(app).post(path).send(input);
+				try {
+					output = await createAccountUsecase.execute(input);
+				} catch (e) {
+					output = e;
+				}
 			});
 
 			it("Should return error message", () => {
-				expect(output.body).toHaveProperty("message");
+				expect(output).toHaveProperty("message");
 			});
 		});
 	});

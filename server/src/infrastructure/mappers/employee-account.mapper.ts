@@ -2,6 +2,8 @@ import { EmployeeAccount } from "../../domain/employee-account";
 
 export class EmployeeAccountMapper {
 	static toDomain(raw: any): EmployeeAccount {
+		if (!raw) return raw;
+
 		return EmployeeAccount.rehydrate(raw);
 	}
 

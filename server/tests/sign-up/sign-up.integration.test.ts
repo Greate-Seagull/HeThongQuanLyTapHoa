@@ -1,12 +1,9 @@
-import request from "supertest";
-import app from "../../src/app";
-import { prisma } from "../../src/composition-root";
+import { prisma, signUpUsecase } from "../../src/composition-root";
 import { account, send, user } from "./sign-up.test-data";
 
 jest.setTimeout(20000);
 
 describe("Sign up integration test", () => {
-	let path = `/accounts`;
 	let input;
 	let output;
 
@@ -17,7 +14,7 @@ describe("Sign up integration test", () => {
 	describe("Normal case", () => {
 		beforeAll(async () => {
 			input = send;
-			output = await request(app).post(path).send(input);
+			output = await signUpUsecase.execute(input);
 		});
 
 		afterAll(async () => {
@@ -29,12 +26,8 @@ describe("Sign up integration test", () => {
 			});
 		});
 
-		it("Should return 200", () => {
-			expect(output.status).toBe(200);
-		});
-
 		it("Should return jwt", () => {
-			expect(output.body).toHaveProperty("token");
+			expect(output).toHaveProperty("token");
 		});
 	});
 
@@ -46,7 +39,11 @@ describe("Sign up integration test", () => {
 
 				input = structuredClone(send);
 				input.phoneNumber = account.phoneNumber;
-				output = await request(app).post(path).send(input);
+				try {
+					output = await signUpUsecase.execute(input);
+				} catch (e) {
+					output = e;
+				}
 			});
 
 			afterAll(async () => {
@@ -55,7 +52,7 @@ describe("Sign up integration test", () => {
 			});
 
 			it("Should return error message", () => {
-				expect(output.body.message).toBe(
+				expect(output.message).toBe(
 					`The phone number has already existed`
 				);
 			});

@@ -3,7 +3,7 @@ import { Container } from "inversify";
 import { PrismaClient } from "./generated/client";
 import { TYPES } from "./types";
 
-import { TransactionManager } from "./infrastructure/repositories/transaction";
+import { PrismaTransactionManager } from "./infrastructure/transaction";
 import { ProductReadAccessor } from "./infrastructure/read-accessors/product.read-accessor";
 import { PromotionRepository } from "./infrastructure/repositories/promotion.repository";
 import { CreateInvoiceUsecase } from "./application/create-invoice.usecase";
@@ -22,7 +22,7 @@ const container = new Container({ defaultScope: "Singleton" });
 container.bind(TYPES.PrismaClient).toConstantValue(new PrismaClient());
 container
 	.bind(TYPES.TransactionManager)
-	.to(TransactionManager)
+	.to(PrismaTransactionManager)
 	.inSingletonScope();
 
 // Repositories

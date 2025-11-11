@@ -1,6 +1,4 @@
-import request from "supertest";
-import app from "../../src/app";
-import { prisma } from "../../src/composition-root";
+import { prisma, updateProductsUsecase } from "../../src/composition-root";
 import {
 	product1Input,
 	product2,
@@ -11,7 +9,6 @@ import {
 jest.setTimeout(50000);
 
 describe("Update products integration test", () => {
-	let path = `/products/bulk`;
 	let input;
 	let output;
 
@@ -33,7 +30,7 @@ describe("Update products integration test", () => {
 		describe("One insert and one update case", () => {
 			beforeAll(async () => {
 				input = send;
-				output = await request(app).put(path).send(input);
+				output = await updateProductsUsecase.execute(input);
 			});
 
 			afterAll(async () => {
@@ -46,12 +43,8 @@ describe("Update products integration test", () => {
 				});
 			});
 
-			it("Should return 200", () => {
-				expect(output.status).toBe(200);
-			});
-
 			it("Should return success message", () => {
-				expect(output.body.message).toBe(`Success`);
+				expect(output.message).toBe(`Success`);
 			});
 		});
 
@@ -59,15 +52,11 @@ describe("Update products integration test", () => {
 			beforeAll(async () => {
 				input = structuredClone(send);
 				input.products = [product2Input];
-				output = await request(app).put(path).send(input);
-			});
-
-			it("Should return 200", () => {
-				expect(output.status).toBe(200);
+				output = await updateProductsUsecase.execute(input);
 			});
 
 			it("Should return success message", () => {
-				expect(output.body.message).toBe(`Success`);
+				expect(output.message).toBe(`Success`);
 			});
 		});
 	});
@@ -77,13 +66,15 @@ describe("Update products integration test", () => {
 			beforeAll(async () => {
 				input = structuredClone(send);
 				input.products[0].price = -1;
-				output = await request(app).put(path).send(input);
+				try {
+					output = await updateProductsUsecase.execute(input);
+				} catch (e) {
+					output = e;
+				}
 			});
 
 			it("Should return error message", () => {
-				expect(output.body.message).toBe(
-					`Expect the price to be positive`
-				);
+				expect(output.message).toBe(`Expect the price to be positive`);
 			});
 		});
 
@@ -91,11 +82,15 @@ describe("Update products integration test", () => {
 			beforeAll(async () => {
 				input = structuredClone(send);
 				input.products[0].unit = "ABCD";
-				output = await request(app).put(path).send(input);
+				try {
+					output = await updateProductsUsecase.execute(input);
+				} catch (e) {
+					output = e;
+				}
 			});
 
 			it("Should return error message", () => {
-				expect(output.body).toHaveProperty("message");
+				expect(output).toHaveProperty("message");
 			});
 		});
 
@@ -103,11 +98,15 @@ describe("Update products integration test", () => {
 			beforeAll(async () => {
 				input = structuredClone(send);
 				input.products[0].barcode = -1;
-				output = await request(app).put(path).send(input);
+				try {
+					output = await updateProductsUsecase.execute(input);
+				} catch (e) {
+					output = e;
+				}
 			});
 
 			it("Should return error message", () => {
-				expect(output.body.message).toBe(
+				expect(output.message).toBe(
 					`Expect the barcode to be positive`
 				);
 			});
@@ -117,11 +116,15 @@ describe("Update products integration test", () => {
 			beforeAll(async () => {
 				input = structuredClone(send);
 				input.products[1].barcode = product1Input.barcode;
-				output = await request(app).put(path).send(input);
+				try {
+					output = await updateProductsUsecase.execute(input);
+				} catch (e) {
+					output = e;
+				}
 			});
 
 			it("Should return error message", () => {
-				expect(output.body).toHaveProperty("message");
+				expect(output).toHaveProperty("message");
 			});
 		});
 	});

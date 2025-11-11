@@ -3,7 +3,7 @@ import { EmployeeAccountReadAccessor } from "../infrastructure/read-accessors/em
 import { PasswordService } from "../domain/services/encrypt.service";
 import { EmployeeRepository } from "../infrastructure/repositories/employee.repository";
 import { EmployeeAccountRepository } from "../infrastructure/repositories/employee-account.repository";
-import { TransactionManager } from "../infrastructure/repositories/transaction";
+import { TransactionManager } from "../infrastructure/transaction";
 import { Employee } from "../domain/employee";
 import { EmployeeAccount } from "../domain/employee-account";
 

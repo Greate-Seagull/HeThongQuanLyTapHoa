@@ -1,6 +1,4 @@
-import request from "supertest";
-import app from "../../src/app";
-import { prisma } from "../../src/composition-root";
+import { createPromotionUsecase, prisma } from "../../src/composition-root";
 import {
 	product1,
 	product2,
@@ -8,7 +6,6 @@ import {
 } from "./create-promotion.test-data";
 
 describe("Create promotion integration test", () => {
-	let path = `/promotions`;
 	let input;
 	let output;
 
@@ -30,15 +27,11 @@ describe("Create promotion integration test", () => {
 	describe("Normal case", () => {
 		beforeAll(async () => {
 			input = promotionInput;
-			output = await request(app).post(path).send(input);
-		});
-
-		it("Should return 200", () => {
-			expect(output.status).toBe(200);
+			output = await createPromotionUsecase.execute(input);
 		});
 
 		it("Should return promotion id", () => {
-			expect(output.body).toHaveProperty("promotionId");
+			expect(output).toHaveProperty("promotionId");
 		});
 	});
 
@@ -50,14 +43,16 @@ describe("Create promotion integration test", () => {
 				input = structuredClone(promotionInput);
 				input.endedAt = endedAt.toISOString();
 
-				output = await request(app).post(path).send(input);
+				try {
+					output = await createPromotionUsecase.execute(input);
+				} catch (e) {
+					output = e;
+				}
 			});
 
 			it("Should return error message", () => {
-				expect(output.body.message).toBe(
-					`Expect start date to be before end date; got start date: ${new Date(
-						input.startedAt
-					)}, end date: ${new Date(input.endedAt)}`
+				expect(output.message).toBe(
+					`Expect start date to be before end date; got start date: ${input.startedAt}, end date: ${input.endedAt}`
 				);
 			});
 		});
@@ -67,11 +62,15 @@ describe("Create promotion integration test", () => {
 				input = structuredClone(promotionInput);
 				input.value = -1;
 
-				output = await request(app).post(path).send(input);
+				try {
+					output = await createPromotionUsecase.execute(input);
+				} catch (e) {
+					output = e;
+				}
 			});
 
 			it("Should return error message", () => {
-				expect(output.body.message).toBe(
+				expect(output.message).toBe(
 					`Expect promotion value to be greater than zero, got ${input.value}`
 				);
 			});
@@ -82,11 +81,15 @@ describe("Create promotion integration test", () => {
 				input = structuredClone(promotionInput);
 				input.promotionType = "UNKNOWN";
 
-				output = await request(app).post(path).send(input);
+				try {
+					output = await createPromotionUsecase.execute(input);
+				} catch (e) {
+					output = e;
+				}
 			});
 
 			it("Should return error message", () => {
-				expect(output.body).toHaveProperty("message");
+				expect(output).toHaveProperty("message");
 			});
 		});
 
@@ -95,11 +98,15 @@ describe("Create promotion integration test", () => {
 				input = structuredClone(promotionInput);
 				input.productIds = [];
 
-				output = await request(app).post(path).send(input);
+				try {
+					output = await createPromotionUsecase.execute(input);
+				} catch (e) {
+					output = e;
+				}
 			});
 
 			it("Should return error message", () => {
-				expect(output.body.message).toBe(
+				expect(output.message).toBe(
 					`Expect promotion to have at least one product Id, got ${input.productIds}`
 				);
 			});

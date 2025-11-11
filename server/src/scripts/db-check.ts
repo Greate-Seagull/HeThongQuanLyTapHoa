@@ -1,7 +1,7 @@
 import { invoiceRepo, prisma } from "../composition-root";
 
 async function checkDB() {
-	const result = await prisma.user.findMany();
+	const result = await prisma.employee.delete({ where: { id: 10000 } });
 	console.log(result);
 }
 

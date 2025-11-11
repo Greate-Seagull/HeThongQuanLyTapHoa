@@ -67,7 +67,7 @@ export const item2 = {
 };
 
 export const send = {
-	employeeId: employee.id,
+	authId: employee.id,
 	userId: user.id,
 	items: [item1, item2],
 };

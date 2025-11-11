@@ -1,6 +1,6 @@
 import { Product } from "../domain/product";
 import { ProductRepository } from "../infrastructure/repositories/product.repository";
-import { TransactionManager } from "../infrastructure/repositories/transaction";
+import { TransactionManager } from "../infrastructure/transaction";
 
 export interface UpdateProdutsUsecaseInput {
 	products: {

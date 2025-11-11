@@ -6,7 +6,7 @@ import { EmployeeRepository } from "../infrastructure/repositories/employee.repo
 import { InvoiceRepository } from "../infrastructure/repositories/invoice.repository";
 import { ProductRepository } from "../infrastructure/repositories/product.repository";
 import { PromotionRepository } from "../infrastructure/repositories/promotion.repository";
-import { TransactionManager } from "../infrastructure/repositories/transaction";
+import { TransactionManager } from "../infrastructure/transaction";
 import { UserRepository } from "../infrastructure/repositories/user.repository";
 
 export type ItemInput = {

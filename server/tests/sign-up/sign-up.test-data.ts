@@ -12,7 +12,7 @@ export const user = {
 export const account = {
 	id: 10000,
 	userId: user.id,
-	phoneNumber: "1234567890",
+	phoneNumber: "1234567810",
 	passwordHash: "sign up",
 	salt: "sign up",
 };

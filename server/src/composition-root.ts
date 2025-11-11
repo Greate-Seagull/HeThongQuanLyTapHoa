@@ -9,7 +9,7 @@ import { CreateInvoiceUsecase } from "./application/create-invoice.usecase";
 import { UserRepository } from "./infrastructure/repositories/user.repository";
 import { ProductRepositoryPostgree } from "./infrastructure/repositories/product.repository.postgree";
 import { InvoiceRepository } from "./infrastructure/repositories/invoice.repository";
-import { TransactionManager } from "./infrastructure/repositories/transaction";
+import { PrismaTransactionManager } from "./infrastructure/transaction";
 import { SalesTransactionService } from "./domain/services/sales-transaction.service";
 import { CreateGoodReceiptUsecase } from "./application/create-good-receipt.usecase";
 import { GoodReceiptRepository } from "./infrastructure/repositories/good-receipt.repository";
@@ -42,14 +42,14 @@ export const prisma = new PrismaClient({
 	],
 });
 
-const transactionManager = new TransactionManager(prisma);
+const transactionManager = new PrismaTransactionManager(prisma);
 //Repositories
-const employeeRepo = new EmployeeRepository(prisma);
+export const employeeRepo = new EmployeeRepository(prisma);
 export const employeeAccountRepo = new EmployeeAccountRepository(prisma);
 const userRepo = new UserRepository(prisma);
 export const accountRepo = new AccountRepository(prisma);
 //Read accessors
-const employeeReadAccessor = new EmployeeReadAccess(prisma);
+export const employeeReadAccessor = new EmployeeReadAccess(prisma);
 export const employeeAccountRead = new EmployeeAccountReadAccessor(prisma);
 export const accountRead = new AccountReadAccessor(prisma);
 //Domain services
@@ -88,9 +88,9 @@ export const signUpUsecase = new SignUpUsecase(
 //---------------------------------------------------------
 const productReadAccessor = new ProductReadAccessor(prisma);
 const promotionRepo = new PromotionRepository(prisma);
-const productRepo = new ProductRepositoryPostgree(prisma);
+export const productRepo = new ProductRepositoryPostgree(prisma);
 export const invoiceRepo = new InvoiceRepository(prisma);
-const goodReceiptRepo = new GoodReceiptRepository(prisma);
+export const goodReceiptRepo = new GoodReceiptRepository(prisma);
 const shelfReadAccessor = new ShelfReadAccessor(prisma);
 const stocktakingRepo = new StocktakingRepository(prisma);
 
