@@ -17,7 +17,7 @@
 		"test": "tests"
 	},
 	"scripts": {
-		"migrate:ci": "npx prisma migrage deploy",
+		"migrate:ci": "npx prisma migrate deploy",
 		"generate": "npx prisma generate",
 		"build": "tsc",
 		"start": "node dist/index.js",
