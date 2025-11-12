@@ -1,4 +1,5 @@
 import express from "express";
+import jsend from "jsend";
 import productRouter from "./presentation/routes/product.route";
 import promotionRouter from "./presentation/routes/promotion.route";
 import invoiceRouter from "./presentation/routes/invoice.route";
@@ -10,6 +11,7 @@ import employeeAccountRouter from "./presentation/routes/employee-account.route"
 const app = express();
 
 app.use(express.json());
+app.use(jsend.middleware);
 app.use("/products", productRouter);
 app.use("/promotions", promotionRouter);
 app.use("/invoices", invoiceRouter);

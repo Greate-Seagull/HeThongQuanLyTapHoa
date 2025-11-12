@@ -1,6 +1,4 @@
-import { Product } from "src/domain/product";
 import { ProductReadAccessor } from "src/infrastructure/read-accessors/product.read-accessor";
-import { PromotionType } from "../domain/promotion";
 import { PromotionRepository } from "../infrastructure/repositories/promotion.repository";
 import { PromotionPricingService } from "../domain/services/promotion-pricing.service";
 
