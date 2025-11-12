@@ -8,12 +8,13 @@ export async function controlUseAccount(req, res) {
 
 		let input = req.body;
 		const output = await useAccountUsecase.execute(input);
-		res.json(output);
+		res.jsend.success(output);
 
 		console.log("Return POST /employee-accounts/sign-in");
 	} catch (e: any) {
 		console.error(e.message);
-		res.status(400).json({ message: e.message });
+		res.status(400);
+		res.jsend.fail(e.message);
 	}
 }
 
