@@ -21,14 +21,17 @@ steps:
 
 # Step 3: Install dependencies
 - script: npm ci
+  workingDirectory: ./server
   displayName: 'Install dependencies'
 
 # Step 4: Run tests
 - script: npm test
+  workingDirectory: ./server
   displayName: 'Run tests'
 
 # Step 5: Build the project
 - script: npm run build
+  workingDirectory: ./server
   displayName: 'Build project'
 
 # Step 6: (Optional) Publish build artifacts
