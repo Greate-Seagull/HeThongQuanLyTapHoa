@@ -42,17 +42,19 @@ steps:
 # Step 4: Run tests
 - script: npm test
   workingDirectory: ./server
+  env:
+    DATABASE_URL: $(DATABASE_URL)
+    JWT_EXPIRY: $(JWT_EXPIRY)
+    JWT_SECRET: $(JWT_SECRET)
+    SALT_ROUND: $(SALT_ROUND)
   displayName: 'Run tests'
 
 # Step 5: Build the project
 - script: npm run build
   workingDirectory: ./server
+  env:
+    DATABASE_URL: $(DATABASE_URL)
+    JWT_EXPIRY: $(JWT_EXPIRY)
+    JWT_SECRET: $(JWT_SECRET)
+    SALT_ROUND: $(SALT_ROUND)
   displayName: 'Build project'
-
-# Step 6: (Optional) Publish build artifacts
-- task: PublishBuildArtifacts@1
-  inputs:
-    pathToPublish: 'dist' # Replace with your build output folder
-    artifactName: 'drop'
-    publishLocation: 'Container'
-  displayName: 'Publish artifacts'
