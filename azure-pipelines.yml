@@ -39,7 +39,21 @@ steps:
   workingDirectory: ./server
   displayName: 'Install dependencies'
 
-# Step 4: Run tests
+# Step 4: Generate resources
+- script: npm run generate
+  workingDirectory: ./server
+  env:
+    DATABASE_URL: $(DATABASE_URL)
+  displayName: 'Generate resources'
+
+# Step 5: Migrate database to local
+- script: npm run migrate:ci
+  workingDirectory: ./server
+  env:
+    DATABASE_URL: $(DATABASE_URL)
+  displayName: 'Migrate database to local'
+
+# Step 6: Run tests
 - script: npm test
   workingDirectory: ./server
   env:
@@ -49,7 +63,7 @@ steps:
     SALT_ROUND: $(SALT_ROUND)
   displayName: 'Run tests'
 
-# Step 5: Build the project
+# Step 7: Build the project
 - script: npm run build
   workingDirectory: ./server
   env:
