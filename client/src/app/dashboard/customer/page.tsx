@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
+import { ProfilePage } from '@/components/ProfilePage'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
@@ -180,6 +181,7 @@ export default function CustomerDashboardPage() {
   const menuItems = [
     { id: 'points', label: 'Điểm tích lũy', icon: <Award className="h-4 w-4" /> },
     { id: 'invoices', label: 'Hóa đơn mua hàng', icon: <Receipt className="h-4 w-4" /> },
+    { id: 'profile', label: 'Thông tin cá nhân', icon: <Star className="h-4 w-4" /> },
   ]
 
   // Lọc hóa đơn của khách hàng hiện tại
@@ -249,6 +251,20 @@ export default function CustomerDashboardPage() {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {activeMenu === 'profile' && (
+        <ProfilePage
+          user={{
+            id: user?.customerId || 1,
+            name: 'Nguyễn Văn A',
+            phone: '0901234567',
+            phoneNumber: '0901234567',
+            point: currentPoints,
+            loggedAt: new Date(),
+          }}
+          role="customer"
+        />
       )}
 
       {activeMenu === 'invoices' && (

@@ -2,15 +2,18 @@
 
 import { useState } from 'react'
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
+import { ProfilePage } from '@/components/ProfilePage'
 import { EmployeeManagement } from '@/components/management/EmployeeManagement'
 import { PromotionManagement } from '@/components/management/PromotionManagement'
 import { ProductManagement } from '@/components/management/ProductManagement'
 import { LocationManagement } from '@/components/management/LocationManagement'
 import { CustomerManagement } from '@/components/management/CustomerManagement'
 import { Reports } from '@/components/management/Reports'
-import { Users, Tag, Package, MapPin, UserCircle, BarChart3 } from 'lucide-react'
+import { Users, Tag, Package, MapPin, UserCircle, BarChart3, User } from 'lucide-react'
+import { useAuthStore } from '@/store/auth-store'
 
 export default function OwnerDashboardPage() {
+  const { user } = useAuthStore()
   const [activeMenu, setActiveMenu] = useState('employees')
 
   const menuItems = [
@@ -20,6 +23,7 @@ export default function OwnerDashboardPage() {
     { id: 'locations', label: 'Vị trí', icon: <MapPin className="h-4 w-4" /> },
     { id: 'customers', label: 'Khách hàng', icon: <UserCircle className="h-4 w-4" /> },
     { id: 'reports', label: 'Báo cáo', icon: <BarChart3 className="h-4 w-4" /> },
+    { id: 'profile', label: 'Thông tin cá nhân', icon: <User className="h-4 w-4" /> },
   ]
 
   const renderContent = () => {
@@ -36,6 +40,18 @@ export default function OwnerDashboardPage() {
         return <CustomerManagement />
       case 'reports':
         return <Reports />
+      case 'profile':
+        return (
+          <ProfilePage
+            user={{
+              id: 1,
+              name: 'Chủ cửa hàng',
+              username: user?.username || 'admin',
+              loggedAt: new Date(),
+            }}
+            role="owner"
+          />
+        )
       default:
         return <EmployeeManagement />
     }
