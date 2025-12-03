@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
+import { ProfilePage } from '@/components/ProfilePage'
 import { InventoryForm } from '@/components/management/InventoryForm'
 import { ImportForm } from '@/components/management/ImportForm'
 import { InvoiceManagement } from '@/components/management/InvoiceManagement'
-import { ClipboardCheck, PackagePlus, FileText } from 'lucide-react'
+import { ClipboardCheck, PackagePlus, FileText, User } from 'lucide-react'
 import { useAuthStore } from '@/store/auth-store'
 import { useRouter } from 'next/navigation'
 
@@ -18,17 +19,22 @@ export default function StaffDashboardPage() {
   const getMenuItems = () => {
     const position = user?.employeeData?.position || ''
     
+    const profileItem = { id: 'profile', label: 'Thông tin cá nhân', icon: <User className="h-4 w-4" /> }
+    
     if (position === 'INVENTORY') {
       return [
         { id: 'inventory', label: 'Phiếu kiểm kê', icon: <ClipboardCheck className="h-4 w-4" /> },
+        profileItem,
       ]
     } else if (position === 'RECEIVING') {
       return [
         { id: 'import', label: 'Phiếu nhập hàng', icon: <PackagePlus className="h-4 w-4" /> },
+        profileItem,
       ]
     } else if (position === 'SALES') {
       return [
         { id: 'invoice', label: 'Hóa đơn', icon: <FileText className="h-4 w-4" /> },
+        profileItem,
       ]
     }
     
@@ -37,6 +43,7 @@ export default function StaffDashboardPage() {
       { id: 'inventory', label: 'Phiếu kiểm kê', icon: <ClipboardCheck className="h-4 w-4" /> },
       { id: 'import', label: 'Phiếu nhập hàng', icon: <PackagePlus className="h-4 w-4" /> },
       { id: 'invoice', label: 'Hóa đơn', icon: <FileText className="h-4 w-4" /> },
+      profileItem,
     ]
   }
 
@@ -65,6 +72,19 @@ export default function StaffDashboardPage() {
         return <ImportForm currentUser={user.employeeData} />
       case 'invoice':
         return <InvoiceManagement currentUser={user.employeeData} />
+      case 'profile':
+        return (
+          <ProfilePage
+            user={{
+              id: user.employeeData.id,
+              name: user.employeeData.name,
+              username: user.username,
+              position: user.employeeData.position,
+              loggedAt: new Date(),
+            }}
+            role="staff"
+          />
+        )
       default:
         return <InventoryForm currentUser={user.employeeData} />
     }
