@@ -1,70 +1,50 @@
+'use client';
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Trash2, Search, ClipboardCheck, Package, Check, ChevronsUpDown, ChevronRight } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Plus, Trash2, Search, ClipboardCheck, Check, ChevronsUpDown, ChevronRight, Eye, Package } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { EmployeePosition, ProductStatus, ProductUnit } from '@/types';
+import type { Employee, Product, Slot, StocktakingDetail } from '@/types';
 
-enum EmployeePosition {
-  SALES = 'SALES',
-  INVENTORY = 'INVENTORY',
-  RECEIVING = 'RECEIVING',
-}
-
-enum ProductStatus {
-  GOOD = 'GOOD',
-  EXPIRED = 'EXPIRED',
-}
-
-interface Employee {
-  id: number;
-  name: string;
-  position: EmployeePosition;
-}
-
-interface Product {
-  id: number;
-  name: string;
-  barcode: number;
-  price: number;
-  amount: number;
-  status: ProductStatus;
-}
-
-interface Shelf {
-  id: number;
-  name: string;
-}
+// Mock data - synced with ProductManagement
+const mockProducts: Product[] = [
+  { id: 1, name: 'Coca Cola 330ml', barcode: 8934673123456, price: 10000, amount: 150, unit: ProductUnit.UNKNOWN, status: ProductStatus.GOOD },
+  { id: 2, name: 'Pepsi 330ml', barcode: 8934673123457, price: 9500, amount: 200, unit: ProductUnit.UNKNOWN, status: ProductStatus.GOOD },
+  { id: 3, name: 'Bánh Oreo', barcode: 8934673123458, price: 15000, amount: 80, unit: ProductUnit.UNKNOWN, status: ProductStatus.GOOD },
+  { id: 4, name: 'Mì Hảo Hảo', barcode: 8934673123459, price: 4000, amount: 300, unit: ProductUnit.UNKNOWN, status: ProductStatus.GOOD },
+  { id: 5, name: 'Sữa TH True Milk', barcode: 8934673123460, price: 28000, amount: 50, unit: ProductUnit.UNKNOWN, status: ProductStatus.GOOD },
+];
 
 interface Rack {
   id: number;
   name: string;
-  shelfId: number;
-  shelf: Shelf;
+  shelf: { id: number; name: string };
 }
 
-interface Slot {
-  id: number;
-  name: string;
-  rackId: number;
-  rack: Rack;
-}
+// Mock slots - synced with LocationManagement
+const mockSlots: Slot[] = [
+  { id: 1, name: 'Ô A', rackId: 1, rack: { id: 1, name: 'Ngăn 1', shelfId: 1, shelf: { id: 1, name: 'Kệ 1' } } as any },
+  { id: 2, name: 'Ô B', rackId: 1, rack: { id: 1, name: 'Ngăn 1', shelfId: 1, shelf: { id: 1, name: 'Kệ 1' } } as any },
+  { id: 3, name: 'Ô C', rackId: 1, rack: { id: 1, name: 'Ngăn 1', shelfId: 1, shelf: { id: 1, name: 'Kệ 1' } } as any },
+  { id: 4, name: 'Ô A', rackId: 2, rack: { id: 2, name: 'Ngăn 2', shelfId: 1, shelf: { id: 1, name: 'Kệ 1' } } as any },
+  { id: 5, name: 'Ô B', rackId: 2, rack: { id: 2, name: 'Ngăn 2', shelfId: 1, shelf: { id: 1, name: 'Kệ 1' } } as any },
+  { id: 6, name: 'Ô A', rackId: 3, rack: { id: 3, name: 'Ngăn 1', shelfId: 2, shelf: { id: 2, name: 'Kệ 2' } } as any },
+];
 
-interface StocktakingDetail {
-  id: number;
-  productId: number;
-  product: Product;
-  slotId: number;
-  slot: Slot;
-  status: ProductStatus;
-  quantity: number;
-}
+const inventoryStaff: Employee[] = [
+  { id: 1, name: 'Nguyễn Văn Kiệm', position: EmployeePosition.INVENTORY },
+  { id: 2, name: 'Trần Thị Nhập', position: EmployeePosition.RECEIVING },
+  { id: 3, name: 'Lê Văn Bán', position: EmployeePosition.SALES },
+];
 
 interface Stocktaking {
   id: number;
@@ -74,50 +54,6 @@ interface Stocktaking {
   details: StocktakingDetail[];
 }
 
-// Danh sách nhân viên kiểm kê
-const inventoryStaffList: Employee[] = [
-  { id: 1, name: 'Nguyễn Văn Kiểm', position: EmployeePosition.INVENTORY },
-  { id: 4, name: 'Phạm Thị Lan', position: EmployeePosition.INVENTORY },
-];
-
-// Mock products
-const mockProducts: Product[] = [
-  { id: 1, name: 'Coca Cola 330ml', barcode: 8934673123456, price: 10000, amount: 150, status: ProductStatus.GOOD },
-  { id: 2, name: 'Pepsi 330ml', barcode: 8934673123457, price: 9500, amount: 200, status: ProductStatus.GOOD },
-  { id: 3, name: 'Bánh Oreo', barcode: 8934673123458, price: 15000, amount: 80, status: ProductStatus.GOOD },
-  { id: 4, name: 'Mì Hảo Hảo', barcode: 8934673123459, price: 4000, amount: 300, status: ProductStatus.GOOD },
-  { id: 5, name: 'Sữa TH True Milk', barcode: 8934673123460, price: 28000, amount: 50, status: ProductStatus.GOOD },
-  { id: 6, name: 'Nước suối Lavie', barcode: 8934673123461, price: 5000, amount: 100, status: ProductStatus.GOOD },
-  { id: 7, name: 'Snack Oishi', barcode: 8934673123462, price: 7000, amount: 120, status: ProductStatus.GOOD },
-  { id: 8, name: 'Kem Wall\'s', barcode: 8934673123463, price: 12000, amount: 60, status: ProductStatus.GOOD },
-];
-
-// Mock locations
-const mockShelves: Shelf[] = [
-  { id: 1, name: 'Kệ A' },
-  { id: 2, name: 'Kệ B' },
-  { id: 3, name: 'Kệ C' },
-];
-
-const mockRacks: Rack[] = [
-  { id: 1, name: 'Ngăn 1', shelfId: 1, shelf: mockShelves[0] },
-  { id: 2, name: 'Ngăn 2', shelfId: 1, shelf: mockShelves[0] },
-  { id: 3, name: 'Ngăn 1', shelfId: 2, shelf: mockShelves[1] },
-  { id: 4, name: 'Ngăn 2', shelfId: 2, shelf: mockShelves[1] },
-  { id: 5, name: 'Ngăn 1', shelfId: 3, shelf: mockShelves[2] },
-];
-
-const mockSlots: Slot[] = [
-  { id: 1, name: 'Ô A', rackId: 1, rack: mockRacks[0] },
-  { id: 2, name: 'Ô B', rackId: 1, rack: mockRacks[0] },
-  { id: 3, name: 'Ô C', rackId: 1, rack: mockRacks[0] },
-  { id: 4, name: 'Ô A', rackId: 2, rack: mockRacks[1] },
-  { id: 5, name: 'Ô B', rackId: 2, rack: mockRacks[1] },
-  { id: 6, name: 'Ô A', rackId: 3, rack: mockRacks[2] },
-  { id: 7, name: 'Ô B', rackId: 3, rack: mockRacks[2] },
-  { id: 8, name: 'Ô A', rackId: 4, rack: mockRacks[3] },
-];
-
 interface InventoryFormProps {
   currentUser?: { id: number; position: string };
 }
@@ -126,6 +62,8 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
   const [stocktakings, setStocktakings] = useState<Stocktaking[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreatingStocktaking, setIsCreatingStocktaking] = useState(false);
+  const [viewingStocktaking, setViewingStocktaking] = useState<Stocktaking | null>(null);
+  const [showStocktakingDialog, setShowStocktakingDialog] = useState(false);
 
   // Form state for creating new stocktaking
   const [barcodeInput, setBarcodeInput] = useState('');
@@ -224,6 +162,7 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
     const newId = stocktakingDetails.length + 1;
     const newDetail: StocktakingDetail = {
       id: newId,
+      stocktakingId: 0, // Will be set when stocktaking is created
       productId: product.id,
       product,
       slotId: slot.id,
@@ -255,9 +194,12 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
       return;
     }
 
-    const employee = inventoryStaffList.find(e => e.id === currentUser.id);
+    // Kiểm tra nhân viên có quyền kiểm kê không (position = INVENTORY)
+    const employee = inventoryStaff.find(e => 
+      e.id === currentUser.id && e.position === EmployeePosition.INVENTORY
+    );
     if (!employee) {
-      toast.error('Nhân viên không có quyền kiểm kê hoặc không tồn tại');
+      toast.error('Nhân viên không có quyền kiểm kê. Chỉ nhân viên "Kiểm kê" mới có quyền lập phiếu kiểm kê.');
       return;
     }
 
@@ -324,6 +266,11 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
     toast.success('Lập phiếu kiểm kê thành công!', {
       description: `Phiếu PKK${newId.toString().padStart(3, '0')} đã được tạo với ${stocktakingDetails.length} mục. Đã gửi thông báo đến quản lý.`,
     });
+  };
+
+  const handleViewStocktaking = (stocktaking: Stocktaking) => {
+    setViewingStocktaking(stocktaking);
+    setShowStocktakingDialog(true);
   };
 
   return (
@@ -401,7 +348,7 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                             {mockProducts.map((product) => (
                               <CommandItem
                                 key={product.id}
-                                value={product.name}
+                                value={product.name || ''}
                                 onSelect={() => {
                                   setSelectedProductId(product.id);
                                   setOpenProductCombobox(false);
@@ -441,8 +388,8 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                         aria-expanded={openSlotCombobox}
                         className="w-full justify-between border-purple-200"
                       >
-                        {selectedSlot 
-                          ? `${selectedSlot.rack.shelf.name} > ${selectedSlot.rack.name} > ${selectedSlot.name}`
+                        {selectedSlot && selectedSlot.rack?.shelf
+                          ? `${selectedSlot.rack!.shelf!.name} > ${selectedSlot.rack!.name} > ${selectedSlot.name}`
                           : 'Chọn vị trí...'}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
@@ -453,10 +400,10 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                         <CommandList>
                           <CommandEmpty>Không tìm thấy vị trí</CommandEmpty>
                           <CommandGroup heading="Danh sách vị trí">
-                            {mockSlots.map((slot) => (
+                            {mockSlots.filter(s => s.rack?.shelf).map((slot) => (
                               <CommandItem
                                 key={slot.id}
-                                value={`${slot.rack.shelf.name} ${slot.rack.name} ${slot.name}`}
+                                value={`${slot.rack!.shelf!.name} ${slot.rack!.name} ${slot.name}`}
                                 onSelect={() => {
                                   setSelectedSlotId(slot.id);
                                   setOpenSlotCombobox(false);
@@ -468,9 +415,9 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                                   }`}
                                 />
                                 <div className="flex items-center gap-1 text-sm">
-                                  <span>{slot.rack.shelf.name}</span>
+                                  <span>{slot.rack!.shelf!.name}</span>
                                   <ChevronRight className="h-3 w-3" />
-                                  <span>{slot.rack.name}</span>
+                                  <span>{slot.rack!.name}</span>
                                   <ChevronRight className="h-3 w-3" />
                                   <span>{slot.name}</span>
                                 </div>
@@ -550,15 +497,15 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                     <TableBody>
                       {stocktakingDetails.map((detail) => (
                         <TableRow key={detail.id}>
-                          <TableCell>{detail.product.name}</TableCell>
-                          <TableCell>{detail.product.barcode}</TableCell>
+                          <TableCell>{detail.product!.name}</TableCell>
+                          <TableCell>{detail.product!.barcode}</TableCell>
                           <TableCell>
                             <div className="flex items-center gap-1 text-sm">
-                              <span className="text-gray-600">{detail.slot.rack.shelf.name}</span>
+                              <span className="text-gray-600">{detail.slot!.rack!.shelf!.name}</span>
                               <ChevronRight className="h-3 w-3 text-gray-400" />
-                              <span className="text-gray-600">{detail.slot.rack.name}</span>
+                              <span className="text-gray-600">{detail.slot!.rack!.name}</span>
                               <ChevronRight className="h-3 w-3 text-gray-400" />
-                              <span className="text-gray-600">{detail.slot.name}</span>
+                              <span className="text-gray-600">{detail.slot!.name}</span>
                             </div>
                           </TableCell>
                           <TableCell>
@@ -646,6 +593,7 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                       <TableHead className="text-blue-900">Người kiểm</TableHead>
                       <TableHead className="text-blue-900">Số mục</TableHead>
                       <TableHead className="text-blue-900">Tổng số lượng</TableHead>
+                      <TableHead className="text-blue-900 text-right">Thao tác</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -658,6 +606,16 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                         <TableCell>
                           {stocktaking.details.reduce((sum, d) => sum + d.quantity, 0)}
                         </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewStocktaking(stocktaking)}
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -667,6 +625,91 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
           </CardContent>
         </Card>
       )}
+
+      {/* Stocktaking Details Dialog */}
+      <Dialog open={showStocktakingDialog} onOpenChange={setShowStocktakingDialog}>
+        <DialogContent className="border-blue-200 max-w-[95vw] lg:max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-blue-900">Chi tiết phiếu kiểm kê</DialogTitle>
+            <DialogDescription className="text-sm text-gray-500">
+              {viewingStocktaking && `Mã phiếu: PKK${viewingStocktaking.id.toString().padStart(3, '0')}`}
+            </DialogDescription>
+          </DialogHeader>
+
+          {viewingStocktaking && (
+            <div className="space-y-4">
+              {/* Thông tin phiếu */}
+              <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50 rounded-lg">
+                <div>
+                  <p className="text-sm text-gray-600">Người kiểm</p>
+                  <p className="font-semibold">{viewingStocktaking.employee.name}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Ngày kiểm</p>
+                  <p className="font-semibold">{viewingStocktaking.createdAt.toLocaleDateString('vi-VN')}</p>
+                </div>
+              </div>
+
+              {/* Danh sách sản phẩm kiểm kê */}
+              <div className="border border-blue-200 rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-blue-50">
+                      <TableHead className="text-blue-900">Sản phẩm</TableHead>
+                      <TableHead className="text-blue-900">Barcode</TableHead>
+                      <TableHead className="text-blue-900">Vị trí</TableHead>
+                      <TableHead className="text-blue-900">Tình trạng</TableHead>
+                      <TableHead className="text-blue-900">SL</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {viewingStocktaking.details.map((detail) => (
+                      <TableRow key={detail.id} className="hover:bg-blue-50">
+                        <TableCell>{detail.product!.name}</TableCell>
+                        <TableCell>{detail.product!.barcode}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1 text-sm whitespace-nowrap">
+                            <span className="text-gray-600">{detail.slot!.rack!.shelf!.name}</span>
+                            <ChevronRight className="h-3 w-3 text-gray-400" />
+                            <span className="text-gray-600">{detail.slot!.rack!.name}</span>
+                            <ChevronRight className="h-3 w-3 text-gray-400" />
+                            <span className="text-gray-600">{detail.slot!.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded text-sm whitespace-nowrap inline-block ${
+                            detail.status === ProductStatus.GOOD 
+                              ? 'bg-green-100 text-green-700' 
+                              : 'bg-red-100 text-red-700'
+                          }`}>
+                            {detail.status === ProductStatus.GOOD ? 'Tốt' : 'Hết hạn'}
+                          </span>
+                        </TableCell>
+                        <TableCell>{detail.quantity}</TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow className="bg-blue-100 font-semibold">
+                      <TableCell colSpan={4} className="text-right">Tổng số lượng:</TableCell>
+                      <TableCell>
+                        {viewingStocktaking.details.reduce((sum, d) => sum + d.quantity, 0)}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              onClick={() => setShowStocktakingDialog(false)}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Đóng
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
