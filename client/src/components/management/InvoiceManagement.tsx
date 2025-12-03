@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -5,40 +7,17 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { Plus, Trash2, Search, ShoppingCart, Receipt, Check, ChevronsUpDown, Printer, Tag, User, Coins } from 'lucide-react';
+import { Plus, Trash2, Search, ShoppingCart, Receipt, Check, ChevronsUpDown, Printer, Tag, User } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { toast } from 'sonner';
+import { ProductUnit, ProductStatus, EmployeePosition } from '@/types';
+import type { Employee, Product } from '@/types';
 
-enum EmployeePosition {
-  SALES = 'SALES',
-  INVENTORY = 'INVENTORY',
-  RECEIVING = 'RECEIVING',
-}
-
-enum ProductStatus {
-  GOOD = 'GOOD',
-  EXPIRED = 'EXPIRED',
-}
-
+// Enums và Types cho Invoice Management
 enum PromotionType {
   PERCENTAGE = 'PERCENTAGE',
   FIXED = 'FIXED',
-}
-
-interface Employee {
-  id: number;
-  name: string;
-  position: EmployeePosition;
-}
-
-interface Product {
-  id: number;
-  name: string;
-  barcode: number;
-  price: number;
-  amount: number;
-  status: ProductStatus;
 }
 
 interface Promotion {
@@ -85,38 +64,32 @@ interface Invoice {
   details: InvoiceDetail[];
 }
 
-// Danh sách nhân viên bán hàng
-const salesStaffList: Employee[] = [
-  { id: 3, name: 'Lê Văn Bán', position: EmployeePosition.SALES },
-  { id: 6, name: 'Nguyễn Thị Hoa', position: EmployeePosition.SALES },
-];
-
-// Mock products với số lượng tồn kho
+// Mock data - synced với ProductManagement
 const mockProducts: Product[] = [
-  { id: 1, name: 'Coca Cola 330ml', barcode: 8934673123456, price: 10000, amount: 150, status: ProductStatus.GOOD },
-  { id: 2, name: 'Pepsi 330ml', barcode: 8934673123457, price: 9500, amount: 200, status: ProductStatus.GOOD },
-  { id: 3, name: 'Bánh Oreo', barcode: 8934673123458, price: 15000, amount: 80, status: ProductStatus.GOOD },
-  { id: 4, name: 'Mì Hảo Hảo', barcode: 8934673123459, price: 4000, amount: 300, status: ProductStatus.GOOD },
-  { id: 5, name: 'Sữa TH True Milk', barcode: 8934673123460, price: 28000, amount: 50, status: ProductStatus.GOOD },
-  { id: 6, name: 'Nước suối Lavie', barcode: 8934673123461, price: 5000, amount: 100, status: ProductStatus.GOOD },
-  { id: 7, name: 'Snack Oishi', barcode: 8934673123462, price: 7000, amount: 120, status: ProductStatus.GOOD },
-  { id: 8, name: 'Kem Wall\'s', barcode: 8934673123463, price: 12000, amount: 60, status: ProductStatus.GOOD },
+  { id: 1, name: 'Coca Cola 330ml', barcode: 8934673123456, price: 10000, amount: 150, unit: ProductUnit.UNKNOWN, status: ProductStatus.GOOD },
+  { id: 2, name: 'Pepsi 330ml', barcode: 8934673123457, price: 9500, amount: 200, unit: ProductUnit.UNKNOWN, status: ProductStatus.GOOD },
+  { id: 3, name: 'Bánh Oreo', barcode: 8934673123458, price: 15000, amount: 80, unit: ProductUnit.UNKNOWN, status: ProductStatus.GOOD },
+  { id: 4, name: 'Mì Hảo Hảo', barcode: 8934673123459, price: 4000, amount: 300, unit: ProductUnit.UNKNOWN, status: ProductStatus.GOOD },
+  { id: 5, name: 'Sữa TH True Milk', barcode: 8934673123460, price: 28000, amount: 50, unit: ProductUnit.UNKNOWN, status: ProductStatus.GOOD },
 ];
 
-// Mock promotions
 const mockPromotions: Promotion[] = [
   { id: 1, name: 'Giảm 10% Coca', type: PromotionType.PERCENTAGE, value: 10, startDate: new Date('2025-11-01'), endDate: new Date('2025-12-31'), productId: 1 },
   { id: 2, name: 'Giảm 5000đ Oreo', type: PromotionType.FIXED, value: 5000, startDate: new Date('2025-11-01'), endDate: new Date('2025-12-31'), productId: 3 },
   { id: 3, name: 'Giảm 15% Sữa TH', type: PromotionType.PERCENTAGE, value: 15, startDate: new Date('2025-11-01'), endDate: new Date('2025-12-31'), productId: 5 },
-  { id: 4, name: 'Giảm 2000đ Snack', type: PromotionType.FIXED, value: 2000, startDate: new Date('2025-11-01'), endDate: new Date('2025-12-31'), productId: 7 },
 ];
 
-// Mock customers
 const mockCustomers: Customer[] = [
   { id: 1, name: 'Nguyễn Văn A', phone: '0901234567', loyaltyPoints: 5000 },
   { id: 2, name: 'Trần Thị B', phone: '0912345678', loyaltyPoints: 3000 },
   { id: 3, name: 'Lê Văn C', phone: '0923456789', loyaltyPoints: 10000 },
   { id: 4, name: 'Phạm Thị D', phone: '0934567890', loyaltyPoints: 2500 },
+];
+
+const salesStaff: Employee[] = [
+  { id: 1, name: 'Nguyễn Văn Kiệm', position: EmployeePosition.INVENTORY },
+  { id: 2, name: 'Trần Thị Nhập', position: EmployeePosition.RECEIVING },
+  { id: 3, name: 'Lê Văn Bán', position: EmployeePosition.SALES },
 ];
 
 interface InvoiceManagementProps {
@@ -141,6 +114,7 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
   const [selectedCustomerId, setSelectedCustomerId] = useState<number>(0);
   const [pointsToUse, setPointsToUse] = useState<number>(0);
   const [openCustomerCombobox, setOpenCustomerCombobox] = useState(false);
+  const [openProductCombobox, setOpenProductCombobox] = useState(false);
 
   const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
 
@@ -193,7 +167,7 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
     // Tìm theo barcode hoặc tên sản phẩm
     const product = products.find(p => 
       p.barcode.toString() === productBarcode || 
-      p.name.toLowerCase().includes(productBarcode.toLowerCase())
+      (p.name && p.name.toLowerCase().includes(productBarcode.toLowerCase()))
     );
     
     if (!product) {
@@ -211,7 +185,6 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
     setQuantity(1);
 
     if (promotion) {
-      const discount = calculateDiscountAmount(promotion, product.price);
       toast.success(`Tìm thấy: ${product.name}`, {
         description: `Khuyến mãi: ${promotion.name} - Giảm ${promotion.type === PromotionType.PERCENTAGE ? promotion.value + '%' : promotion.value.toLocaleString('vi-VN') + 'đ'}`,
       });
@@ -322,9 +295,9 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
       return;
     }
 
-    const employee = salesStaffList.find(e => e.id === currentUser.id);
+    const employee = salesStaff.find(e => e.id === currentUser.id && e.position === EmployeePosition.SALES);
     if (!employee) {
-      toast.error('Nhân viên không có quyền thanh toán hoặc không tồn tại');
+      toast.error('Chỉ nhân viên "Bán hàng" mới có quyền thanh toán');
       return;
     }
 
@@ -503,22 +476,125 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-4">
+                {/* Product Dropdown */}
+                <div>
+                  <Label htmlFor="product-select" className="text-sm mb-2">Chọn sản phẩm</Label>
+                  <Popover open={openProductCombobox} onOpenChange={setOpenProductCombobox}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openProductCombobox}
+                        className="w-full justify-between border-orange-200 h-auto min-h-[40px]"
+                      >
+                        {searchedProduct ? (
+                          <div className="flex flex-col items-start text-left">
+                            <span className="font-medium">{searchedProduct.name}</span>
+                            <span className="text-xs text-gray-500">
+                              Barcode: {searchedProduct.barcode} | Tồn: {searchedProduct.amount} | Giá: {searchedProduct.price.toLocaleString('vi-VN')}đ
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-500">Chọn sản phẩm từ danh sách...</span>
+                        )}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[500px] p-0">
+                      <Command>
+                        <CommandInput placeholder="Tìm kiếm sản phẩm..." />
+                        <CommandList>
+                          <CommandEmpty>Không tìm thấy sản phẩm</CommandEmpty>
+                          <CommandGroup>
+                            {products.map((product) => {
+                              const isInCart = cart.some(item => item.productId === product.id);
+                              const promotion = findBestPromotion(product.id);
+                              return (
+                                <CommandItem
+                                  key={product.id}
+                                  value={`${product.name} ${product.barcode}`}
+                                  onSelect={() => {
+                                    if (isInCart) {
+                                      toast.error('Sản phẩm đã có trong giỏ hàng');
+                                      return;
+                                    }
+                                    
+                                    setSearchedProduct(product);
+                                    setBestPromotion(promotion);
+                                    setQuantity(1);
+                                    setProductBarcode('');
+                                    setOpenProductCombobox(false);
+                                    
+                                    if (promotion) {
+                                      toast.success(`Đã chọn: ${product.name}`, {
+                                        description: `Khuyến mãi: ${promotion.name}`,
+                                      });
+                                    } else {
+                                      toast.success(`Đã chọn: ${product.name}`);
+                                    }
+                                  }}
+                                  disabled={isInCart}
+                                  className={isInCart ? 'opacity-50 cursor-not-allowed' : ''}
+                                >
+                                  <div className="flex items-center justify-between w-full py-2">
+                                    <div className="flex-1">
+                                      <p className="font-medium">{product.name}</p>
+                                      <p className="text-xs text-gray-500">
+                                        Barcode: {product.barcode} | Tồn kho: {product.amount}
+                                      </p>
+                                    </div>
+                                    <div className="ml-4 text-right">
+                                      <p className="font-semibold text-orange-600">
+                                        {product.price.toLocaleString('vi-VN')}đ
+                                      </p>
+                                      {promotion && (
+                                        <p className="text-xs text-green-600 flex items-center gap-1">
+                                          <Tag className="h-3 w-3" />
+                                          KM
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                </CommandItem>
+                              );
+                            })}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Separator */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-orange-200" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-orange-50/30 px-2 text-gray-500">Hoặc</span>
+                  </div>
+                </div>
+
                 {/* Barcode or Product Name Input */}
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Nhập barcode hoặc tên sản phẩm..."
-                    value={productBarcode}
-                    onChange={(e) => setProductBarcode(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleSearchProduct();
-                      }
-                    }}
-                    className="border-orange-200"
-                  />
-                  <Button onClick={handleSearchProduct} className="bg-orange-600 hover:bg-orange-700">
-                    <Search className="h-4 w-4" />
-                  </Button>
+                <div>
+                  <Label htmlFor="barcode-input" className="text-sm mb-2">Quét barcode hoặc nhập tên</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="barcode-input"
+                      placeholder="Nhập barcode hoặc tên sản phẩm..."
+                      value={productBarcode}
+                      onChange={(e) => setProductBarcode(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleSearchProduct();
+                        }
+                      }}
+                      className="border-orange-200"
+                    />
+                    <Button onClick={handleSearchProduct} className="bg-orange-600 hover:bg-orange-700">
+                      <Search className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Product Info */}

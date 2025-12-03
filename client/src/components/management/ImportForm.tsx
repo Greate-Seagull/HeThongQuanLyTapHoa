@@ -1,41 +1,35 @@
+'use client';
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Trash2, Search, Package, ShoppingCart, Check, ChevronsUpDown } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Plus, Trash2, Search, Package, ShoppingCart, Check, ChevronsUpDown, Eye } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { toast } from 'sonner';
+import { ProductUnit, ProductStatus, EmployeePosition } from '@/types';
+import type { Employee, Product } from '@/types';
 
-enum EmployeePosition {
-  SALES = 'SALES',
-  INVENTORY = 'INVENTORY',
-  RECEIVING = 'RECEIVING',
-}
+// Mock data - synced with ProductManagement
+const mockProducts: Product[] = [
+  { id: 1, name: 'Coca Cola 330ml', barcode: 8934673123456, price: 10000, amount: 150, unit: ProductUnit.UNKNOWN, status: ProductStatus.GOOD },
+  { id: 2, name: 'Pepsi 330ml', barcode: 8934673123457, price: 9500, amount: 200, unit: ProductUnit.UNKNOWN, status: ProductStatus.GOOD },
+  { id: 3, name: 'Bánh Oreo', barcode: 8934673123458, price: 15000, amount: 80, unit: ProductUnit.UNKNOWN, status: ProductStatus.GOOD },
+  { id: 4, name: 'Mì Hảo Hảo', barcode: 8934673123459, price: 4000, amount: 300, unit: ProductUnit.UNKNOWN, status: ProductStatus.GOOD },
+  { id: 5, name: 'Sữa TH True Milk', barcode: 8934673123460, price: 28000, amount: 50, unit: ProductUnit.UNKNOWN, status: ProductStatus.GOOD },
+];
 
-enum ProductStatus {
-  GOOD = 'GOOD',
-  EXPIRED = 'EXPIRED',
-}
+const receivingStaff: Employee[] = [
+  { id: 1, name: 'Nguyễn Văn Kiệm', position: EmployeePosition.INVENTORY },
+  { id: 2, name: 'Trần Thị Nhập', position: EmployeePosition.RECEIVING },
+  { id: 3, name: 'Lê Văn Bán', position: EmployeePosition.SALES },
+];
 
-interface Employee {
-  id: number;
-  name: string;
-  position: EmployeePosition;
-}
-
-interface Product {
-  id: number;
-  name: string;
-  barcode: number;
-  price: number;
-  amount: number;
-  status: ProductStatus;
-}
-
+// Local interfaces cho component này
 interface GoodReceiptDetail {
   productId: number;
   product: Product;
@@ -46,28 +40,10 @@ interface GoodReceiptDetail {
 interface GoodReceipt {
   id: number;
   employeeId: number;
-  createdAt: Date;
   employee: Employee;
+  createdAt: Date;
   details: GoodReceiptDetail[];
 }
-
-// Danh sách nhân viên nhập hàng
-const receivingStaffList: Employee[] = [
-  { id: 2, name: 'Trần Thị Nhập', position: EmployeePosition.RECEIVING },
-  { id: 5, name: 'Hoàng Văn Hùng', position: EmployeePosition.RECEIVING },
-];
-
-// Mock products - sẽ được cập nhật số lượng khi nhập hàng
-const mockProducts: Product[] = [
-  { id: 1, name: 'Coca Cola 330ml', barcode: 8934673123456, price: 10000, amount: 150, status: ProductStatus.GOOD },
-  { id: 2, name: 'Pepsi 330ml', barcode: 8934673123457, price: 9500, amount: 200, status: ProductStatus.GOOD },
-  { id: 3, name: 'Bánh Oreo', barcode: 8934673123458, price: 15000, amount: 80, status: ProductStatus.GOOD },
-  { id: 4, name: 'Mì Hảo Hảo', barcode: 8934673123459, price: 4000, amount: 300, status: ProductStatus.GOOD },
-  { id: 5, name: 'Sữa TH True Milk', barcode: 8934673123460, price: 28000, amount: 50, status: ProductStatus.GOOD },
-  { id: 6, name: 'Nước suối Lavie', barcode: 8934673123461, price: 5000, amount: 100, status: ProductStatus.GOOD },
-  { id: 7, name: 'Snack Oishi', barcode: 8934673123462, price: 7000, amount: 120, status: ProductStatus.GOOD },
-  { id: 8, name: 'Kem Wall\'s', barcode: 8934673123463, price: 12000, amount: 60, status: ProductStatus.GOOD },
-];
 
 interface ImportFormProps {
   currentUser?: { id: number; position: string };
@@ -78,6 +54,8 @@ export function ImportForm({ currentUser }: ImportFormProps) {
   const [goodReceipts, setGoodReceipts] = useState<GoodReceipt[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreatingReceipt, setIsCreatingReceipt] = useState(false);
+  const [viewingReceipt, setViewingReceipt] = useState<GoodReceipt | null>(null);
+  const [showReceiptDialog, setShowReceiptDialog] = useState(false);
   
   // Form state for creating new receipt
   const [selectedProductId, setSelectedProductId] = useState<number>(0);
@@ -189,10 +167,12 @@ export function ImportForm({ currentUser }: ImportFormProps) {
       return;
     }
 
-    // Kiểm tra mã nhân viên có tồn tại và có quyền nhập hàng
-    const employee = receivingStaffList.find(e => e.id === currentUser.id);
+    // Kiểm tra nhân viên có quyền nhập hàng không (position = RECEIVING)
+    const employee = receivingStaff.find(e => 
+      e.id === currentUser.id && e.position === EmployeePosition.RECEIVING
+    );
     if (!employee) {
-      toast.error('Nhân viên không có quyền nhập hàng hoặc không tồn tại');
+      toast.error('Nhân viên không có quyền nhập hàng. Chỉ nhân viên "Nhập kho" mới có quyền tạo phiếu nhập.');
       return;
     }
 
@@ -259,6 +239,11 @@ export function ImportForm({ currentUser }: ImportFormProps) {
 
   const calculateTotal = () => {
     return receiptDetails.reduce((sum, detail) => sum + (detail.quantity * detail.price), 0);
+  };
+
+  const handleViewReceipt = (receipt: GoodReceipt) => {
+    setViewingReceipt(receipt);
+    setShowReceiptDialog(true);
   };
 
   return (
@@ -335,7 +320,7 @@ export function ImportForm({ currentUser }: ImportFormProps) {
                             {availableProducts.map((product) => (
                               <CommandItem
                                 key={product.id}
-                                value={product.name}
+                                value={product.name || ''}
                                 onSelect={() => {
                                   setSelectedProductId(product.id);
                                   setImportPrice(product.price);
@@ -514,6 +499,7 @@ export function ImportForm({ currentUser }: ImportFormProps) {
                       <TableHead className="text-blue-900">Người nhập</TableHead>
                       <TableHead className="text-blue-900">Số mặt hàng</TableHead>
                       <TableHead className="text-blue-900">Tổng tiền</TableHead>
+                      <TableHead className="text-blue-900 text-right">Thao tác</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -526,6 +512,16 @@ export function ImportForm({ currentUser }: ImportFormProps) {
                         <TableCell>
                           {receipt.details.reduce((sum, d) => sum + (d.quantity * d.price), 0).toLocaleString('vi-VN')}đ
                         </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewReceipt(receipt)}
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -534,6 +530,75 @@ export function ImportForm({ currentUser }: ImportFormProps) {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {/* Receipt Detail Dialog */}
+      {showReceiptDialog && viewingReceipt && (
+        <Dialog open={showReceiptDialog} onOpenChange={setShowReceiptDialog}>
+          <DialogContent className="border-blue-200 max-w-3xl">
+            <DialogHeader>
+              <DialogTitle className="text-blue-900">Chi tiết phiếu nhập hàng</DialogTitle>
+              <DialogDescription className="text-sm text-gray-500">
+                Mã phiếu: PNH{viewingReceipt.id.toString().padStart(3, '0')}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              {/* Thông tin phiếu */}
+              <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50 rounded-lg">
+                <div>
+                  <p className="text-sm text-gray-600">Người nhập</p>
+                  <p className="font-semibold">{viewingReceipt.employee.name}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Ngày nhập</p>
+                  <p className="font-semibold">{viewingReceipt.createdAt.toLocaleDateString('vi-VN')}</p>
+                </div>
+              </div>
+
+              {/* Danh sách sản phẩm */}
+              <div className="border border-blue-200 rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-blue-50">
+                      <TableHead className="text-blue-900">Sản phẩm</TableHead>
+                      <TableHead className="text-blue-900">Mã vạch</TableHead>
+                      <TableHead className="text-blue-900">SL</TableHead>
+                      <TableHead className="text-blue-900">Giá nhập</TableHead>
+                      <TableHead className="text-blue-900">Thành tiền</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {viewingReceipt.details.map((detail) => (
+                      <TableRow key={detail.productId} className="hover:bg-blue-50">
+                        <TableCell>{detail.product.name}</TableCell>
+                        <TableCell>{detail.product.barcode}</TableCell>
+                        <TableCell>{detail.quantity}</TableCell>
+                        <TableCell>{detail.price.toLocaleString('vi-VN')}đ</TableCell>
+                        <TableCell>{(detail.quantity * detail.price).toLocaleString('vi-VN')}đ</TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow className="bg-blue-100 font-semibold">
+                      <TableCell colSpan={4} className="text-right">Tổng cộng:</TableCell>
+                      <TableCell>
+                        {viewingReceipt.details.reduce((sum, d) => sum + (d.quantity * d.price), 0).toLocaleString('vi-VN')}đ
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                onClick={() => setShowReceiptDialog(false)}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                Đóng
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
