@@ -1,0 +1,53 @@
+'use client'
+
+import { useState } from 'react'
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
+import { EmployeeManagement } from '@/components/management/EmployeeManagement'
+import { PromotionManagement } from '@/components/management/PromotionManagement'
+import { ProductManagement } from '@/components/management/ProductManagement'
+import { LocationManagement } from '@/components/management/LocationManagement'
+import { CustomerManagement } from '@/components/management/CustomerManagement'
+import { Reports } from '@/components/management/Reports'
+import { Users, Tag, Package, MapPin, UserCircle, BarChart3 } from 'lucide-react'
+
+export default function OwnerDashboardPage() {
+  const [activeMenu, setActiveMenu] = useState('employees')
+
+  const menuItems = [
+    { id: 'employees', label: 'Nhân viên', icon: <Users className="h-4 w-4" /> },
+    { id: 'promotions', label: 'Khuyến mãi', icon: <Tag className="h-4 w-4" /> },
+    { id: 'products', label: 'Sản phẩm', icon: <Package className="h-4 w-4" /> },
+    { id: 'locations', label: 'Vị trí', icon: <MapPin className="h-4 w-4" /> },
+    { id: 'customers', label: 'Khách hàng', icon: <UserCircle className="h-4 w-4" /> },
+    { id: 'reports', label: 'Báo cáo', icon: <BarChart3 className="h-4 w-4" /> },
+  ]
+
+  const renderContent = () => {
+    switch (activeMenu) {
+      case 'employees':
+        return <EmployeeManagement />
+      case 'promotions':
+        return <PromotionManagement />
+      case 'products':
+        return <ProductManagement />
+      case 'locations':
+        return <LocationManagement />
+      case 'customers':
+        return <CustomerManagement />
+      case 'reports':
+        return <Reports />
+      default:
+        return <EmployeeManagement />
+    }
+  }
+
+  return (
+    <DashboardLayout
+      menuItems={menuItems}
+      activeMenu={activeMenu}
+      onMenuChange={setActiveMenu}
+    >
+      {renderContent()}
+    </DashboardLayout>
+  )
+}
