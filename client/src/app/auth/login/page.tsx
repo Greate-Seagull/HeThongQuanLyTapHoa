@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { LogIn, Store } from 'lucide-react'
 import { useAuthStore, UserRole } from '@/store/auth-store'
 import { toast } from 'sonner'
+import { customerSignIn, employeeSignIn, ownerSignIn } from '@/services/auth.service'
 
 export default function LoginPage() {
   const [username, setUsername] = useState('')
@@ -29,39 +30,67 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      // Mock login logic with position mapping for staff
-      let userData: any = { username, role: selectedRole }
-      
-      if (selectedRole === 'staff') {
-        // Mock staff accounts with positions matching EmployeePosition enum
-        const staffAccounts: { [key: string]: { id: number; position: 'SALES' | 'INVENTORY' | 'RECEIVING'; name: string } } = {
-          'nvkiem': { id: 1, position: 'INVENTORY', name: 'Nguyễn Văn Kiểm' },
-          'ttnhap': { id: 2, position: 'RECEIVING', name: 'Trần Thị Nhập' },
-          'lvban': { id: 3, position: 'SALES', name: 'Lê Văn Bán' },
+      let response: any
+      let userData: any
+
+      // Call different API endpoints based on selected role
+      if (selectedRole === 'customer') {
+        // ⚠️ IMPORTANT: Backend expects phoneNumber, not username
+        // For now, we'll use username as phoneNumber
+        // TODO: Update UI to use phone number field for customers
+        response = await customerSignIn({
+          phoneNumber: username,
+          password: password,
+        })
+        
+        // ⚠️ Backend only returns token, missing user data
+        // We'll create minimal user object until backend adds full response
+        userData = {
+          username: username, // Using phoneNumber as username for now
+          role: 'customer' as UserRole,
+          customerId: undefined, // Backend doesn't return this yet
+        }
+      } else if (selectedRole === 'staff') {
+        response = await employeeSignIn({
+          username: username,
+          password: password,
+        })
+        
+        // ⚠️ CRITICAL: Backend only returns token, missing employee data
+        // Cannot determine position (SALES/INVENTORY/RECEIVING) without employee object
+        // This will cause issues in dashboard that rely on position
+        userData = {
+          username: username,
+          role: 'staff' as UserRole,
+          employeeData: undefined, // Backend doesn't return this yet
         }
         
-        const staffInfo = staffAccounts[username.toLowerCase()]
-        if (!staffInfo) {
-          toast.error('Tài khoản nhân viên không tồn tại')
+        toast.warning('Đăng nhập thành công, nhưng thông tin nhân viên chưa đầy đủ')
+      } else if (selectedRole === 'owner') {
+        // ⚠️ CRITICAL: No owner endpoint exists yet
+        // This will throw error until backend implements it
+        try {
+          response = await ownerSignIn({
+            username: username,
+            password: password,
+          })
+          
+          userData = {
+            username: username,
+            role: 'owner' as UserRole,
+            userId: undefined,
+          }
+        } catch (error: any) {
+          toast.error('Chức năng đăng nhập chủ cửa hàng chưa được backend hỗ trợ')
           setIsLoading(false)
           return
         }
-        
-        userData = { 
-          username, 
-          role: selectedRole,
-          employeeData: staffInfo
-        }
-      } else if (selectedRole === 'customer') {
-        userData = { username, role: selectedRole, customerId: 1 }
-      } else if (selectedRole === 'owner') {
-        userData = { username, role: selectedRole, userId: 1 }
       }
+
+      // Store token is already handled in auth.service.ts via apiClient.setToken()
+      // Also store in auth store for persistence
+      login(userData, response.token)
       
-      // TODO: Replace with actual API call
-      // await apiClient.post('/auth/login', { username, password, role: selectedRole })
-      
-      login(userData)
       toast.success('Đăng nhập thành công!')
       
       // Navigate based on role
@@ -72,8 +101,9 @@ export default function LoginPage() {
       } else {
         router.push('/dashboard/customer')
       }
-    } catch (error) {
-      toast.error('Đăng nhập thất bại. Vui lòng thử lại.')
+    } catch (error: any) {
+      console.error('Login error:', error)
+      toast.error(error.message || 'Đăng nhập thất bại. Vui lòng thử lại.')
     } finally {
       setIsLoading(false)
     }
