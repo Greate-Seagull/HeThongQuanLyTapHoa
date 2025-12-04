@@ -7,17 +7,17 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { UserPlus, ArrowLeft, Store, ShieldCheck, Users, ShoppingBag } from 'lucide-react'
+import { UserPlus, ArrowLeft, Store, Users, ShoppingBag } from 'lucide-react'
 import { toast } from 'sonner'
+import { EmployeePosition } from '@/types'
 
-type UserRole = 'owner' | 'staff' | 'customer'
+type UserRole = 'staff' | 'customer'
 
-// Mock database của users đã đăng ký
+// Mock database của users đã đăng ký (không bao gồm owner - owner chỉ có sẵn trong DB)
 const existingUsers = [
-  { username: 'admin', role: 'owner' },
-  { username: 'nvkiem', role: 'staff' },
-  { username: 'ttnhap', role: 'staff' },
-  { username: 'lvban', role: 'staff' },
+  { username: 'nvkiem', role: 'staff', position: EmployeePosition.INVENTORY },
+  { username: 'ttnhap', role: 'staff', position: EmployeePosition.RECEIVING },
+  { username: 'lvban', role: 'staff', position: EmployeePosition.SALES },
   { username: 'khach1', role: 'customer' },
 ]
 
@@ -27,6 +27,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [selectedRole, setSelectedRole] = useState<UserRole>('customer')
+  const [position, setPosition] = useState<EmployeePosition>(EmployeePosition.SALES)
   const [phone, setPhone] = useState('')
   
   const router = useRouter()
@@ -75,16 +76,36 @@ export default function RegisterPage() {
     }
 
     // Đăng ký thành công
+    const positionLabel = position === EmployeePosition.INVENTORY ? 'Kiểm kê' : 
+                          position === EmployeePosition.RECEIVING ? 'Nhập hàng' : 'Bán hàng'
+    
     toast.success('Đăng ký tài khoản thành công!', {
-      description: `Tài khoản ${username} (${selectedRole === 'owner' ? 'Chủ cửa hàng' : selectedRole === 'staff' ? 'Nhân viên' : 'Khách hàng'}) đã được tạo`,
+      description: `Tài khoản ${username} (${selectedRole === 'staff' ? `Nhân viên ${positionLabel}` : 'Khách hàng'}) đã được tạo`,
     })
 
     // Mock: Thêm user vào database
-    existingUsers.push({ username, role: selectedRole })
+    if (selectedRole === 'staff') {
+      existingUsers.push({ username, role: selectedRole, position })
+    } else {
+      existingUsers.push({ username, role: selectedRole })
+    }
 
     setTimeout(() => {
       router.push('/auth/login')
     }, 1500)
+  }
+
+  const getPositionLabel = (pos: EmployeePosition) => {
+    switch (pos) {
+      case EmployeePosition.INVENTORY:
+        return 'Kiểm kê'
+      case EmployeePosition.RECEIVING:
+        return 'Nhập hàng'
+      case EmployeePosition.SALES:
+        return 'Bán hàng'
+      default:
+        return pos
+    }
   }
 
   return (
@@ -103,16 +124,7 @@ export default function RegisterPage() {
           {/* Role Selection */}
           <div className="space-y-2">
             <Label className="text-blue-900">Vai trò đăng ký</Label>
-            <div className="grid grid-cols-3 gap-2">
-              <Button
-                type="button"
-                variant={selectedRole === 'owner' ? 'default' : 'outline'}
-                onClick={() => setSelectedRole('owner')}
-                className={`flex flex-col items-center gap-1 h-auto py-3 ${selectedRole === 'owner' ? 'bg-blue-600 hover:bg-blue-700' : 'border-blue-200'}`}
-              >
-                <ShieldCheck className="h-5 w-5" />
-                <span className="text-xs">Chủ CH</span>
-              </Button>
+            <div className="grid grid-cols-2 gap-2">
               <Button
                 type="button"
                 variant={selectedRole === 'staff' ? 'default' : 'outline'}
@@ -133,6 +145,23 @@ export default function RegisterPage() {
               </Button>
             </div>
           </div>
+
+          {/* Position Selection for Staff */}
+          {selectedRole === 'staff' && (
+            <div className="space-y-2">
+              <Label htmlFor="position" className="text-blue-900">Chức vụ</Label>
+              <select
+                id="position"
+                value={position}
+                onChange={(e) => setPosition(e.target.value as EmployeePosition)}
+                className="w-full px-3 py-2 border border-blue-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              >
+                <option value={EmployeePosition.SALES}>Nhân viên bán hàng</option>
+                <option value={EmployeePosition.RECEIVING}>Nhân viên nhập hàng</option>
+                <option value={EmployeePosition.INVENTORY}>Nhân viên kiểm kê</option>
+              </select>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="fullName" className="text-blue-900">Họ và tên</Label>

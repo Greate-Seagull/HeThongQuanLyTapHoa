@@ -10,9 +10,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { KeyRound, ArrowLeft, Store, CheckCircle } from 'lucide-react'
 import { toast } from 'sonner'
 
-// Mock database của users đã đăng ký (tuân thủ schema - không có email)
+// Mock database của users (bao gồm owner có sẵn trong DB + staff + customer đã đăng ký)
 const existingUsers = [
-  { username: 'admin', role: 'owner', name: 'Chủ cửa hàng' },
+  { username: 'admin', role: 'owner', name: 'Chủ cửa hàng' }, // Owner có sẵn trong DB, không cho đăng ký nhưng vẫn có thể quên mật khẩu
   { username: 'nvkiem', role: 'staff', name: 'Nguyễn Văn Kiểm' },
   { username: 'ttnhap', role: 'staff', name: 'Trần Thị Nhập' },
   { username: 'lvban', role: 'staff', name: 'Lê Văn Bán' },
