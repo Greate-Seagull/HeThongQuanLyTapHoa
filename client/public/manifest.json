@@ -1,0 +1,16 @@
+{
+  "name": "Hệ Thống Quản Lý Tạp Hóa",
+  "short_name": "Tạp Hóa",
+  "description": "Phần mềm quản lý cửa hàng tạp hóa",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#5865F2",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
