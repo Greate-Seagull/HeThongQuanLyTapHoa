@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { UserPlus, ArrowLeft, Store, Users, ShoppingBag } from 'lucide-react'
 import { toast } from 'sonner'
 import { EmployeePosition } from '@/types'
+import { customerSignUp, employeeSignUp } from '@/services/auth.service'
+import { useAuthStore } from '@/store/auth-store'
 
 type UserRole = 'staff' | 'customer'
 
@@ -29,10 +31,13 @@ export default function RegisterPage() {
   const [selectedRole, setSelectedRole] = useState<UserRole>('customer')
   const [position, setPosition] = useState<EmployeePosition>(EmployeePosition.SALES)
   const [phone, setPhone] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [employeeId, setEmployeeId] = useState('')
   
   const router = useRouter()
+  const login = useAuthStore((state) => state.login)
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     // Validation
     if (!fullName.trim()) {
       toast.error('Vui lòng nhập họ và tên')
@@ -41,15 +46,6 @@ export default function RegisterPage() {
 
     if (!username.trim()) {
       toast.error('Vui lòng nhập tên đăng nhập')
-      return
-    }
-
-    // Kiểm tra username đã tồn tại
-    const userExists = existingUsers.some(u => u.username.toLowerCase() === username.toLowerCase())
-    if (userExists) {
-      toast.error('Tên đăng nhập đã tồn tại trong hệ thống', {
-        description: 'Vui lòng chọn tên đăng nhập khác',
-      })
       return
     }
 
@@ -75,24 +71,86 @@ export default function RegisterPage() {
       return
     }
 
-    // Đăng ký thành công
-    const positionLabel = position === EmployeePosition.INVENTORY ? 'Kiểm kê' : 
-                          position === EmployeePosition.RECEIVING ? 'Nhập hàng' : 'Bán hàng'
-    
-    toast.success('Đăng ký tài khoản thành công!', {
-      description: `Tài khoản ${username} (${selectedRole === 'staff' ? `Nhân viên ${positionLabel}` : 'Khách hàng'}) đã được tạo`,
-    })
-
-    // Mock: Thêm user vào database
-    if (selectedRole === 'staff') {
-      existingUsers.push({ username, role: selectedRole, position })
-    } else {
-      existingUsers.push({ username, role: selectedRole })
+    if (selectedRole === 'staff' && !employeeId.trim()) {
+      toast.error('Vui lòng nhập mã nhân viên')
+      return
     }
 
-    setTimeout(() => {
-      router.push('/auth/login')
-    }, 1500)
+    setIsLoading(true)
+
+    try {
+      if (selectedRole === 'customer') {
+        // Customer registration: POST /accounts
+        const response = await customerSignUp({
+          name: fullName,
+          phoneNumber: phone,
+          password: password,
+        })
+
+        // ⚠️ Backend only returns token, missing user data
+        const userData = {
+          username: phone, // Using phoneNumber as username
+          role: 'customer' as const,
+          customerId: undefined,
+        }
+
+        login(userData, response.token)
+
+        toast.success('Đăng ký tài khoản khách hàng thành công!', {
+          description: 'Bạn đã có thể đăng nhập vào hệ thống',
+        })
+
+        setTimeout(() => {
+          router.push('/dashboard/customer')
+        }, 1500)
+      } else if (selectedRole === 'staff') {
+        // ⚠️ CRITICAL ISSUE: Backend expects employeeId (employee must exist first)
+        // This is a two-step process:
+        // 1. Admin must create Employee record first with position
+        // 2. Then create EmployeeAccount with employeeId reference
+        
+        try {
+          const response = await employeeSignUp({
+            employeeId: parseInt(employeeId),
+            username: username,
+            password: password,
+          })
+
+          // ⚠️ Backend only returns token, missing employee data
+          const userData = {
+            username: username,
+            role: 'staff' as const,
+            employeeData: undefined, // Cannot get position without employee data
+          }
+
+          login(userData, response.token)
+
+          toast.success('Đăng ký tài khoản nhân viên thành công!', {
+            description: 'Bạn đã có thể đăng nhập vào hệ thống',
+          })
+
+          setTimeout(() => {
+            router.push('/dashboard/staff')
+          }, 1500)
+        } catch (error: any) {
+          // If employeeId doesn't exist, show helpful error
+          if (error.message.includes('not found') || error.message.includes('không tồn tại')) {
+            toast.error('Mã nhân viên không tồn tại', {
+              description: 'Vui lòng liên hệ quản trị viên để tạo hồ sơ nhân viên trước',
+            })
+          } else {
+            throw error
+          }
+        }
+      }
+    } catch (error: any) {
+      console.error('Registration error:', error)
+      toast.error('Đăng ký thất bại', {
+        description: error.message || 'Vui lòng thử lại sau',
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const getPositionLabel = (pos: EmployeePosition) => {
@@ -146,20 +204,23 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* Position Selection for Staff */}
+          {/* Employee ID for Staff (Backend requirement) */}
           {selectedRole === 'staff' && (
             <div className="space-y-2">
-              <Label htmlFor="position" className="text-blue-900">Chức vụ</Label>
-              <select
-                id="position"
-                value={position}
-                onChange={(e) => setPosition(e.target.value as EmployeePosition)}
-                className="w-full px-3 py-2 border border-blue-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-              >
-                <option value={EmployeePosition.SALES}>Nhân viên bán hàng</option>
-                <option value={EmployeePosition.RECEIVING}>Nhân viên nhập hàng</option>
-                <option value={EmployeePosition.INVENTORY}>Nhân viên kiểm kê</option>
-              </select>
+              <Label htmlFor="employeeId" className="text-blue-900">
+                Mã nhân viên <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="employeeId"
+                type="text"
+                placeholder="Nhập mã nhân viên (yêu cầu từ quản trị viên)"
+                value={employeeId}
+                onChange={(e) => setEmployeeId(e.target.value)}
+                className="border-blue-200 focus:border-blue-600"
+              />
+              <p className="text-xs text-gray-500">
+                ⚠️ Quản trị viên phải tạo hồ sơ nhân viên trước khi đăng ký tài khoản
+              </p>
             </div>
           )}
 
@@ -228,9 +289,10 @@ export default function RegisterPage() {
           <Button 
             onClick={handleRegister} 
             className="w-full bg-blue-600 hover:bg-blue-700"
+            disabled={isLoading}
           >
             <UserPlus className="mr-2 h-4 w-4" />
-            Đăng ký
+            {isLoading ? 'Đang đăng ký...' : 'Đăng ký'}
           </Button>
 
           <Link href="/auth/login" className="block">
