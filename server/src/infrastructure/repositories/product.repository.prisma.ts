@@ -22,7 +22,7 @@ export class ProductRepositoryPrisma implements ProductRepository {
 
 		if (!raw) return null;
 
-		let entity = fromPersistence(Product, raw);
+		const entity = fromPersistence(Product, raw);
 		this.tracker.track(entity.id, raw);
 		return entity;
 	}
@@ -37,9 +37,9 @@ export class ProductRepositoryPrisma implements ProductRepository {
 			...ProductRepositoryPrisma.baseQuery,
 		});
 
-		let entities: Product[] = [];
+		const entities: Product[] = [];
 		for (const raw of raws) {
-			let entity = fromPersistence(Product, raw);
+			const entity = fromPersistence(Product, raw);
 			this.tracker.track(entity.id, raw);
 			entities.push(entity);
 		}
@@ -54,7 +54,7 @@ export class ProductRepositoryPrisma implements ProductRepository {
 
 		if (!raw) return null;
 
-		let entity = fromPersistence(Product, raw);
+		const entity = fromPersistence(Product, raw);
 		this.tracker.track(entity.id, raw);
 		return entity;
 	}
@@ -73,9 +73,9 @@ export class ProductRepositoryPrisma implements ProductRepository {
 			...ProductRepositoryPrisma.baseQuery,
 		});
 
-		let entities: Product[] = [];
+		const entities: Product[] = [];
 		for (const raw of raws) {
-			let entity = fromPersistence(Product, raw);
+			const entity = fromPersistence(Product, raw);
 			this.tracker.track(entity.id, raw);
 			entities.push(entity);
 		}
@@ -97,9 +97,9 @@ export class ProductRepositoryPrisma implements ProductRepository {
 		});
 
 		const raws = await Promise.all(promisedRaws);
-		let entities: Product[] = [];
+		const entities: Product[] = [];
 		for (const raw of raws) {
-			let entity = fromPersistence(Product, raw);
+			const entity = fromPersistence(Product, raw);
 			this.tracker.track(entity.id, raw);
 			entities.push(entity);
 		}

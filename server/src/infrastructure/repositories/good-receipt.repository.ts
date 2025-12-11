@@ -14,7 +14,7 @@ export class GoodReceiptRepository implements GoodReceiptRepository {
 
 	async add(transaction: Prisma.TransactionClient, entity: GoodReceipt) {
 		const repo = transaction ? transaction : this.prisma;
-		let data = toPersistenceObject(entity);
+		const data = toPersistenceObject(entity);
 		data.goodReceiptDetails = {
 			create: entity.goodReceiptDetails.map(toPersistenceObject),
 		};
@@ -23,7 +23,7 @@ export class GoodReceiptRepository implements GoodReceiptRepository {
 			...GoodReceiptRepository.baseQuery,
 		});
 
-		let savedEntity = fromPersistence(GoodReceipt, raw);
+		const savedEntity = fromPersistence(GoodReceipt, raw);
 		this.tracker.track(savedEntity.id, raw);
 		return savedEntity;
 	}

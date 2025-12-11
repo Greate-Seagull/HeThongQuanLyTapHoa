@@ -9,7 +9,7 @@ export function create(cls: any, input: any) {
 	const types = instance.__typeMap;
 	if (!types) return input;
 
-	let domain = new cls();
+	const domain = new cls();
 	for (const setter of required) {
 		const value = input[setter];
 		if (value === undefined || value === null)

@@ -13,7 +13,7 @@ function buildSelect(cls: any) {
 	const types = instance.__typeMap;
 	if (!types) return true;
 
-	let select = {};
+	const select = {};
 	for (const key of readable) {
 		select[key] = buildSelect(types[key]);
 	}
@@ -31,7 +31,7 @@ function create(cls: any, input: any) {
 	const types = instance.__typeMap;
 	if (!types) return input;
 
-	let domain = new cls();
+	const domain = new cls();
 	for (const setter of required) {
 		const value = input[setter];
 		if (value === undefined || value === null)
@@ -51,7 +51,7 @@ function toPersistence(entity: any) {
 	const writable = instance.__writable;
 	if (!writable || writable.length === 0) return entity;
 
-	let persist = {};
+	const persist = {};
 	for (const key of writable) {
 		persist[key] = toPersistence(entity[key]);
 	}
@@ -67,7 +67,7 @@ function fromPersistence(cls: any, raw: any) {
 	const types = instance.__typeMap;
 	if (!types) return raw;
 
-	let e = new cls();
+	const e = new cls();
 	for (const key of Object.keys(e)) {
 		const publicKey = key.startsWith("_") ? key.slice(1) : key;
 		e[key] = fromPersistence(types[publicKey], raw[publicKey]);
@@ -76,7 +76,7 @@ function fromPersistence(cls: any, raw: any) {
 }
 
 async function checkDB() {
-	let e = null;
+	const e = null;
 	console.dir(await prisma.product.deleteMany(), {
 		depth: null,
 	});

@@ -22,7 +22,7 @@ export class UserRepository implements UserRepository {
 
 		if (!raw) return raw;
 
-		let entity = fromPersistence(User, raw);
+		const entity = fromPersistence(User, raw);
 		this.tracker.track(entity.id, raw);
 		return entity;
 	}
@@ -35,7 +35,7 @@ export class UserRepository implements UserRepository {
 			...UserRepository.baseQuery,
 		});
 
-		let entity = fromPersistence(User, raw);
+		const entity = fromPersistence(User, raw);
 		this.tracker.track(entity.id, raw);
 		return entity;
 	}
@@ -47,7 +47,7 @@ export class UserRepository implements UserRepository {
 			...UserRepository.baseQuery,
 		});
 
-		let entity = fromPersistence(User, raw);
+		const entity = fromPersistence(User, raw);
 		this.tracker.track(entity.id, raw);
 		return entity;
 	}

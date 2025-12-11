@@ -45,7 +45,7 @@ export function buildPrismaSelectFromDecorator(cls: any) {
 	const types = instance.__typeMap;
 	if (!types) return true;
 
-	let select = {};
+	const select = {};
 	for (const key of readable) {
 		select[key] = buildPrismaSelectFromDecorator(types[key]);
 	}
@@ -61,7 +61,7 @@ export function buildSafePrismaSelect(cls: any): { select: object } {
 	const types = instance.__typeMap;
 	if (!types) return null;
 
-	let select = {};
+	const select = {};
 	for (const key of readable) {
 		const subSelect = buildSafePrismaSelect(types[key]);
 		select[key] = subSelect || true;

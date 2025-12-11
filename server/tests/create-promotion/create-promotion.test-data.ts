@@ -10,8 +10,8 @@ export const product2 = {
 	barcode: 123457,
 };
 
-let startedAt = new Date();
-let endedAt = new Date();
+const startedAt = new Date();
+const endedAt = new Date();
 endedAt.setDate(startedAt.getDate() + 14);
 
 export const send = {

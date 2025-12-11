@@ -1,20 +1,21 @@
 import { Router } from "express";
-import {
-	controlGetProducts,
-	controlSearchProduct,
-	controlUpdateProducts,
-} from "../controllers/product.controller";
 import { authenticationMiddleware } from "../middlewares/authentication.middleware";
 import { authorizationMiddleware } from "../middlewares/authorization.middleware";
+import { controller } from "../controllers/controller";
+import {
+	getProductsUsecase,
+	searchProductsUsecase,
+	updateProductsUsecase,
+} from "../../composition-root";
 
 const router = Router();
-router.get("/", controlGetProducts);
-router.get("/:productId", controlSearchProduct);
+router.get("/", controller(getProductsUsecase));
+router.get("/:productId", controller(searchProductsUsecase));
 router.put(
 	"/bulk",
 	authenticationMiddleware,
 	authorizationMiddleware("ADMIN"),
-	controlUpdateProducts
+	controller(updateProductsUsecase)
 );
 
 export default router;

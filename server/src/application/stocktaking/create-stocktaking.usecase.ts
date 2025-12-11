@@ -81,7 +81,7 @@ export class CreateStocktakingUsecase {
 	}
 
 	getDistinctSlotIds(items: any[]) {
-		let ids = new Set<number>();
+		const ids = new Set<number>();
 		for (const item of items) {
 			if (item.slotId) ids.add(item.slotId);
 		}

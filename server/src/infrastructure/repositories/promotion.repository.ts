@@ -13,7 +13,7 @@ export class PromotionRepository implements PromotionRepository {
 	constructor(private readonly prisma: PrismaClient) {}
 
 	async add(promotion: Promotion): Promise<Promotion> {
-		let data = toPersistenceObject(promotion);
+		const data = toPersistenceObject(promotion);
 		data.promotionDetails = {
 			create: promotion.promotionDetails.map(toPersistenceObject),
 		};
@@ -22,7 +22,7 @@ export class PromotionRepository implements PromotionRepository {
 			...PromotionRepository.baseQuery,
 		});
 
-		let entity = fromPersistence(Promotion, raw);
+		const entity = fromPersistence(Promotion, raw);
 		this.tracker.track(entity.id, raw);
 		return entity;
 	}
@@ -37,9 +37,9 @@ export class PromotionRepository implements PromotionRepository {
 			...PromotionRepository.baseQuery,
 		});
 
-		let entities = [];
+		const entities = [];
 		for (const raw of raws) {
-			let entity = fromPersistence(Promotion, raw);
+			const entity = fromPersistence(Promotion, raw);
 			this.tracker.track(entity.id, raw);
 			entities.push(entity);
 		}

@@ -12,7 +12,7 @@ export class SalesTransactionService {
 	processSale(input: ProcessInvoiceInput): ProcessedInvoiceOutput {
 		const productMap = new Map(input.products.map((p) => [p.id, p]));
 		const promotionMap = new Map(input.promotions.map((p) => [p.id, p]));
-		let items = computeItemSnapshot(productMap, promotionMap, input.items);
+		const items = computeItemSnapshot(productMap, promotionMap, input.items);
 		let total = computeTotal(items);
 		total = applyUsedPoints(input.user, input.usedPoint, total);
 		reduceStocks(productMap, input.items);
@@ -42,7 +42,7 @@ export class SalesTransactionService {
 			promotions: Map<PromotionId, Promotion>,
 			items: LineItems
 		): ProcessedLineItem[] {
-			let computedItems: ProcessedLineItem[] = [];
+			const computedItems: ProcessedLineItem[] = [];
 			for (const item of items) {
 				const product = products.get(item.productId);
 				const promotion = promotions.get(item.promotionId);

@@ -13,7 +13,7 @@ export class InvoiceRepository implements InvoiceRepository {
 	constructor(private readonly prisma: PrismaClient) {}
 
 	async add(transaction: Prisma.TransactionClient, invoice: Invoice) {
-		let data = toPersistenceObject(invoice);
+		const data = toPersistenceObject(invoice);
 		data.invoiceDetails = {
 			create: invoice.invoiceDetails.map(toPersistenceObject),
 		};
@@ -22,7 +22,7 @@ export class InvoiceRepository implements InvoiceRepository {
 			...InvoiceRepository.baseQuery,
 		});
 
-		let entity = fromPersistence(Invoice, raw);
+		const entity = fromPersistence(Invoice, raw);
 		this.tracker.track(entity.id, raw);
 		return entity;
 	}

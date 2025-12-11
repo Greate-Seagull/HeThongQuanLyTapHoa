@@ -40,7 +40,7 @@ describe("Create promotion integration test", () => {
 	describe("Abnormal case", () => {
 		describe("Late start date case", () => {
 			beforeAll(async () => {
-				let endedAt = new Date();
+				const endedAt = new Date();
 				endedAt.setDate(endedAt.getDate() - 14);
 				input = structuredClone(send);
 				input.endedAt = endedAt.toISOString();

@@ -179,7 +179,7 @@ export class CreateInvoiceUsecase {
 	}
 
 	private getDistinctPromotionIds(items: LineItems): number[] {
-		let promotionIds = new Set<number>();
+		const promotionIds = new Set<number>();
 		for (const item of items) {
 			if (item.promotionId != null) promotionIds.add(item.promotionId);
 		}

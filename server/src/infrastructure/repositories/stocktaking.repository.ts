@@ -14,7 +14,7 @@ export class StocktakingRepository implements StocktakingRepository {
 
 	async add(transaction: Prisma.TransactionClient, entity: Stocktaking) {
 		const repo = transaction ? transaction : this.prisma;
-		let data = toPersistenceObject(entity);
+		const data = toPersistenceObject(entity);
 		data.stocktakingDetails = {
 			create: entity.stocktakingDetails.map(toPersistenceObject),
 		};
@@ -23,7 +23,7 @@ export class StocktakingRepository implements StocktakingRepository {
 			...StocktakingRepository.baseQuery,
 		});
 
-		let savedEntity = fromPersistence(Stocktaking, raw);
+		const savedEntity = fromPersistence(Stocktaking, raw);
 		this.tracker.track(savedEntity.id, raw);
 		return savedEntity;
 	}

@@ -10,7 +10,7 @@ export function toPersistenceUsingSchema<T extends AnyEntity>(
 	const props = entity.props;
 	if (!props) return null;
 
-	let result: record = {};
+	const result: record = {};
 	for (const key of Object.keys(props)) {
 		if (key === "id") continue; // ID is not persisted directly
 
@@ -62,7 +62,7 @@ export function toPersistence(entity: any) {
 	const writable = instance.__writable;
 	if (!writable || writable.length === 0) return entity;
 
-	let persist = {};
+	const persist = {};
 	for (const key of writable) {
 		persist[key] = toPersistence(entity[key]);
 	}
@@ -74,7 +74,7 @@ export function toPersistenceObject(entity: any) {
 	const writable = instance.__writable;
 	if (!writable || writable.length === 0) return entity;
 
-	let persist = {};
+	const persist = {};
 	for (const key of writable) {
 		persist[key] = entity[key];
 	}
@@ -91,7 +91,7 @@ export function fromPersistence(cls: any, raw: any) {
 	const types = instance.__typeMap;
 	if (!types) return raw;
 
-	let e = new cls();
+	const e = new cls();
 	for (const key of Object.keys(e)) {
 		const publicKey = key.startsWith("_") ? key.slice(1) : key;
 		e[key] = fromPersistence(types[publicKey], raw[publicKey]);

@@ -50,7 +50,7 @@ export class CreatePromotionUsecase {
 			productIds: productIds,
 		});
 
-		let promotion = Promotion.create(parsedInput);
+		const promotion = Promotion.create(parsedInput);
 
 		const savedPromotion = await this.promotionRepo.add(promotion);
 		log.debug("Task saved", {

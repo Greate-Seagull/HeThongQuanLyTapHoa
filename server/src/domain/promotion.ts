@@ -52,7 +52,7 @@ export class Promotion {
 	private constructor() {}
 
 	static create(input: any) {
-		let entity = create(Promotion, input);
+		const entity = create(Promotion, input);
 		entity.updateDates(entity.startedAt, entity.endedAt);
 
 		return entity;
