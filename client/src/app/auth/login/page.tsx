@@ -35,20 +35,20 @@ export default function LoginPage() {
 
       // Call different API endpoints based on selected role
       if (selectedRole === 'customer') {
-        // ⚠️ IMPORTANT: Backend expects phoneNumber, not username
-        // For now, we'll use username as phoneNumber
-        // TODO: Update UI to use phone number field for customers
         response = await customerSignIn({
           phoneNumber: username,
           password: password,
         })
         
-        // ⚠️ Backend only returns token, missing user data
-        // We'll create minimal user object until backend adds full response
+        // Backend now returns user data with token
         userData = {
-          username: username, // Using phoneNumber as username for now
+          username: username, // Using phoneNumber as username
           role: 'customer' as UserRole,
-          customerId: undefined, // Backend doesn't return this yet
+          customerId: response.user?.id,
+        }
+        
+        if (response.user) {
+          toast.success(`Đăng nhập thành công! Chào mừng ${response.user.name}`)
         }
       } else if (selectedRole === 'staff') {
         response = await employeeSignIn({
@@ -56,16 +56,23 @@ export default function LoginPage() {
           password: password,
         })
         
-        // ⚠️ CRITICAL: Backend only returns token, missing employee data
-        // Cannot determine position (SALES/INVENTORY/RECEIVING) without employee object
-        // This will cause issues in dashboard that rely on position
+        // Debug: Log the response to see what backend returns
+        console.log('Employee sign-in response:', response)
+        
+        // Backend now returns employee data with token
         userData = {
           username: username,
           role: 'staff' as UserRole,
-          employeeData: undefined, // Backend doesn't return this yet
+          employeeData: response.employee, // Employee data now included in response
         }
         
-        toast.warning('Đăng nhập thành công, nhưng thông tin nhân viên chưa đầy đủ')
+        console.log('userData created:', userData)
+        
+        if (response.employee) {
+          toast.success(`Đăng nhập thành công! Chào mừng ${response.employee.name}`)
+        } else {
+          toast.warning('Đăng nhập thành công, nhưng thông tin nhân viên chưa đầy đủ')
+        }
       } else if (selectedRole === 'owner') {
         // ⚠️ CRITICAL: No owner endpoint exists yet
         // This will throw error until backend implements it

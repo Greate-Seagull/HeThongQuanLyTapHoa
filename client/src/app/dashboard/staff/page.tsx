@@ -57,13 +57,6 @@ export default function StaffDashboardPage() {
       return
     }
     
-    // Show warning if employee data is missing
-    if (!user.employeeData) {
-      toast.warning('Thông tin nhân viên chưa đầy đủ', {
-        description: 'Một số tính năng có thể không hoạt động chính xác. Vui lòng liên hệ quản trị viên.',
-      })
-    }
-    
     // Set default active menu based on first menu item
     if (!activeMenu && menuItems.length > 0) {
       setActiveMenu(menuItems[0].id)
@@ -71,38 +64,46 @@ export default function StaffDashboardPage() {
   }, [user, router, activeMenu, menuItems])
 
   const renderContent = () => {
-    if (!user) return null
-    
-    // ⚠️ WORKAROUND: Backend doesn't return employee data on login
-    // Use mock data until backend is fixed
-    const mockEmployeeData = user.employeeData || {
-      id: 1,
-      name: user.username || 'Nhân viên',
-      position: 'SALES', // Default to SALES
+    if (!user || !user.employeeData) {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <p className="text-gray-500">Đang tải thông tin nhân viên...</p>
+        </div>
+      )
     }
+    
+    const employeeData = user.employeeData
     
     switch (activeMenu) {
       case 'inventory':
-        return <InventoryForm currentUser={mockEmployeeData} />
+        return <InventoryForm currentUser={employeeData} />
       case 'import':
-        return <ImportForm currentUser={mockEmployeeData} />
+        return <ImportForm currentUser={employeeData} />
       case 'invoice':
-        return <InvoiceManagement currentUser={mockEmployeeData} />
+        return <InvoiceManagement currentUser={employeeData} />
       case 'profile':
         return (
           <ProfilePage
             user={{
-              id: mockEmployeeData.id,
-              name: mockEmployeeData.name,
+              id: employeeData.id,
+              name: employeeData.name,
               username: user.username,
-              position: mockEmployeeData.position,
+              position: employeeData.position,
               loggedAt: new Date(),
             }}
             role="staff"
           />
         )
       default:
-        return <InvoiceManagement currentUser={mockEmployeeData} />
+        // Default to first available feature based on position
+        if (employeeData.position === 'INVENTORY') {
+          return <InventoryForm currentUser={employeeData} />
+        } else if (employeeData.position === 'RECEIVING') {
+          return <ImportForm currentUser={employeeData} />
+        } else if (employeeData.position === 'SALES') {
+          return <InvoiceManagement currentUser={employeeData} />
+        }
+        return <InvoiceManagement currentUser={employeeData} />
     }
   }
 

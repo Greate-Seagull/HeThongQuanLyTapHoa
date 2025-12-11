@@ -6,7 +6,6 @@ import { TYPES } from "./types";
 import { PrismaTransactionManager } from "./infrastructure/transaction";
 import { ProductReadAccessor } from "./infrastructure/read-accessors/product.read-accessor";
 import { PromotionRepository } from "./infrastructure/repositories/promotion.repository";
-import { CreateInvoiceUsecase } from "./application/create-invoice.usecase";
 import { CreatePromotionUsecase } from "./application/promotion/create-promotion.usecase";
 import { SearchProductsUsecase } from "./application/product/search-products.usecase";
 import { PromotionPricingService } from "./domain/services/promotion-pricing.service";
@@ -15,6 +14,7 @@ import { EmployeeRepository } from "./infrastructure/repositories/employee.repos
 import { InvoiceRepository } from "./infrastructure/repositories/invoice.repository";
 import { ProductRepositoryPrisma } from "./infrastructure/repositories/product.repository.prisma";
 import { UserRepository } from "./infrastructure/repositories/user.repository";
+import { CreateInvoiceUsecase } from "./application/invoice/create-invoice.usecase";
 
 const container = new Container({ defaultScope: "Singleton" });
 
