@@ -73,6 +73,7 @@ export const createAccountUsecase = new CreateAccountUsecase(
 	transactionManager
 );
 export const signInUsecase = new SignInUsecase(
+	userRepo,
 	accountRepo,
 	passwordService,
 	tokenService

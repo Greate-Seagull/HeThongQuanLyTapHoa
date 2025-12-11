@@ -75,6 +75,6 @@ export class CreateAccountUsecase {
 		});
 
 		log.info("Task completed");
-		return {};
+		return outputSchema.parse({});
 	}
 }

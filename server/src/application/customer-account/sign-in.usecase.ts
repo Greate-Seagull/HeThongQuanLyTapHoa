@@ -5,6 +5,7 @@ import {
 } from "../../domain/services/encrypt.service";
 import { AccountRepository } from "../../infrastructure/repositories/account.repository";
 import { logger, maskPhone } from "../../domain/services/logger.service";
+import { UserRepository } from "../../infrastructure/repositories/user.repository";
 
 const inputSchema = z.object({
 	phoneNumber: z.string(),
@@ -13,12 +14,14 @@ const inputSchema = z.object({
 
 const outputSchema = z.object({
 	token: z.string(),
+	user: z.object({ id: z.number(), name: z.string(), point: z.number() }),
 });
 
 type SignInOutput = z.infer<typeof outputSchema>;
 
 export class SignInUsecase {
 	constructor(
+		private readonly userRepo: UserRepository,
 		private readonly accountRepo: AccountRepository,
 		private readonly passwordService: PasswordService,
 		private readonly tokenService: TokenService
@@ -39,6 +42,8 @@ export class SignInUsecase {
 			log.warn("Task failed: account not found");
 			throw Error(`Invalid phone number or password`);
 		}
+
+		const user = await this.userRepo.getById(account.userId);
 
 		const isPasswordValid = this.passwordService.comparePassword(
 			parsedInput.password,
@@ -65,6 +70,6 @@ export class SignInUsecase {
 		});
 
 		log.info("Task completed");
-		return outputSchema.parse({ token });
+		return outputSchema.parse({ token, user });
 	}
 }

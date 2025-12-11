@@ -14,6 +14,12 @@ const inputSchema = z.object({
 
 const outputSchema = z.object({
 	token: z.string(),
+	employee: z.object({
+		id: z.number(),
+		username: z.string(),
+		name: z.string(),
+		position: z.string(),
+	}),
 });
 
 type UseAccountOutput = z.infer<typeof outputSchema>;
@@ -71,6 +77,12 @@ export class UseAccountUsecase {
 		});
 
 		log.info("Task completed");
-		return outputSchema.parse({ token });
+		return outputSchema.parse({
+			token,
+			employee: {
+				username: savedAccount.username,
+				...employee,
+			},
+		});
 	}
 }

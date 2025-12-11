@@ -6,6 +6,12 @@ jest.setTimeout(20000);
 
 const outputSchema = z.object({
 	token: z.string(),
+	employee: z.object({
+		id: z.number(),
+		username: z.string(),
+		name: z.string(),
+		position: z.string(),
+	}),
 });
 
 describe("Use account integration test", () => {
@@ -28,7 +34,7 @@ describe("Use account integration test", () => {
 			output = await useAccountUsecase.execute(input);
 		});
 
-		it("Should return jwt", () => {
+		it("Should return correct output schema", () => {
 			expect(() => outputSchema.parse(output)).not.toThrow();
 		});
 	});
