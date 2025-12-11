@@ -1,11 +1,12 @@
 import { Router } from "express";
-import { controlCreateGoodReceipt } from "../controllers/good-receipt.controller";
 import { authenticationMiddleware } from "../middlewares/authentication.middleware";
 import { authorizationMiddleware } from "../middlewares/authorization.middleware";
+import { controller } from "../controllers/controller";
+import { createGoodReceiptUsecase } from "../../composition-root";
 
 const router = Router();
 router.use(authenticationMiddleware);
 router.use(authorizationMiddleware("RECEIVING"));
-router.post("/", controlCreateGoodReceipt);
+router.post("/", controller(createGoodReceiptUsecase));
 
 export default router;

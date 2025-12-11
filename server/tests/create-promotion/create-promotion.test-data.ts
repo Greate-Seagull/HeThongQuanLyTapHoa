@@ -10,16 +10,17 @@ export const product2 = {
 	barcode: 123457,
 };
 
-let startedAt = new Date();
-let endedAt = new Date();
+const startedAt = new Date();
+const endedAt = new Date();
 endedAt.setDate(startedAt.getDate() + 14);
 
-export const promotionInput = {
+export const send = {
+	authId: 1,
 	name: "Create promotion",
 	startedAt: startedAt.toISOString(),
 	endedAt: endedAt.toISOString(),
 	condition: "Create promotion",
 	value: 0.5,
 	promotionType: "PERCENTAGE",
-	productIds: [product1.id, product2.id],
+	promotionDetails: [{ productId: product1.id }, { productId: product2.id }],
 };

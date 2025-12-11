@@ -1,36 +1,27 @@
-import { ItemInput } from "../../application/create-invoice.usecase";
-import { Product } from "../product";
-import { Promotion } from "../promotion";
+import z from "zod";
+import {
+	LineItems,
+	ProcessedLineItem,
+	processedLineItemSchema,
+} from "../../application/invoice/create-invoice.usecase";
+import { Product, ProductId } from "../product";
+import { Promotion, PromotionId } from "../promotion";
 import { User } from "../user";
 
 export class SalesTransactionService {
-	processSale(input: ProcessInvoiceInput) {
+	processSale(input: ProcessInvoiceInput): ProcessedInvoiceOutput {
 		const productMap = new Map(input.products.map((p) => [p.id, p]));
 		const promotionMap = new Map(input.promotions.map((p) => [p.id, p]));
-		let items = computeItemSnapshot(productMap, promotionMap, input.items);
+		const items = computeItemSnapshot(productMap, promotionMap, input.items);
 		let total = computeTotal(items);
 		total = applyUsedPoints(input.user, input.usedPoint, total);
 		reduceStocks(productMap, input.items);
-		return createOutput(input, items, total);
-
-		function createOutput(
-			input: ProcessInvoiceInput,
-			items: LineItem[],
-			total: number
-		): ProcessInvoiceOutput {
-			return {
-				user: input.user,
-				usedPoint: input.usedPoint,
-				products: input.products,
-				promotions: input.promotions,
-				items: items,
-				total,
-			};
-		}
+		return outputSchema.parse({ items, total });
 
 		function applyUsedPoints(user: User, usedPoint: number, total: number) {
-			if (user) {
-				total -= user.usePoints(usedPoint);
+			if (user && usedPoint) {
+				total -= usedPoint;
+				user.usePoints(usedPoint);
 				user.earnPoints(total);
 			}
 			return total;
@@ -38,7 +29,7 @@ export class SalesTransactionService {
 
 		function reduceStocks(
 			products: Map<number, Product>,
-			items: ItemInput[]
+			items: LineItems
 		) {
 			for (const item of items) {
 				const product = products.get(item.productId);
@@ -47,11 +38,11 @@ export class SalesTransactionService {
 		}
 
 		function computeItemSnapshot(
-			products: Map<number, Product>,
-			promotions: Map<number, Promotion>,
-			items: ItemInput[]
-		): LineItem[] {
-			let computedItems: LineItem[] = [];
+			products: Map<ProductId, Product>,
+			promotions: Map<PromotionId, Promotion>,
+			items: LineItems
+		): ProcessedLineItem[] {
+			const computedItems: ProcessedLineItem[] = [];
 			for (const item of items) {
 				const product = products.get(item.productId);
 				const promotion = promotions.get(item.promotionId);
@@ -59,7 +50,7 @@ export class SalesTransactionService {
 					? promotion.applyDiscount(product)
 					: product.price;
 
-				const loggedItem: LineItem = {
+				const loggedItem = processedLineItemSchema.parse({
 					productId: product.id,
 					productName: product.name,
 					quantity: item.quantity,
@@ -68,14 +59,14 @@ export class SalesTransactionService {
 					promotionId: promotion ? promotion.id : null,
 					promotionName: promotion ? promotion.name : "",
 					subTotal: discountedPrice * item.quantity,
-				};
+				});
 
 				computedItems.push(loggedItem);
 			}
 			return computedItems;
 		}
 
-		function computeTotal(computedItems: LineItem[]) {
+		function computeTotal(computedItems: ProcessedLineItem[]) {
 			let total = 0;
 			for (const item of computedItems) {
 				total += item.subTotal;
@@ -86,29 +77,16 @@ export class SalesTransactionService {
 }
 
 export interface ProcessInvoiceInput {
-	user: User;
-	usedPoint: number | 0;
-	products: Product[];
-	promotions: Promotion[];
-	items: ItemInput[];
-}
-
-type LineItem = {
-	productId: number;
-	productName: string;
-	quantity: number;
-	originalPrice: number;
-	discountedPrice: number;
-	promotionId: number;
-	promotionName: string;
-	subTotal: number;
-};
-
-export interface ProcessInvoiceOutput {
-	user: User;
+	user: User | null;
 	usedPoint: number;
 	products: Product[];
 	promotions: Promotion[];
-	items: LineItem[];
-	total: number;
+	items: LineItems;
 }
+
+const outputSchema = z.object({
+	items: z.array(processedLineItemSchema),
+	total: z.number(),
+});
+
+type ProcessedInvoiceOutput = z.infer<typeof outputSchema>;

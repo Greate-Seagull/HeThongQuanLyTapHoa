@@ -70,4 +70,5 @@ export const send = {
 	authId: employee.id,
 	userId: user.id,
 	items: [item1, item2],
+	// usedPoint: 4000,
 };

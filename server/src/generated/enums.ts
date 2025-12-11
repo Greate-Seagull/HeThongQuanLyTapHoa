@@ -34,7 +34,8 @@ export type ProductStatus = (typeof ProductStatus)[keyof typeof ProductStatus]
 export const EmployeePosition = {
   SALES: 'SALES',
   INVENTORY: 'INVENTORY',
-  RECEIVING: 'RECEIVING'
+  RECEIVING: 'RECEIVING',
+  MANAGER: 'MANAGER'
 } as const
 
 export type EmployeePosition = (typeof EmployeePosition)[keyof typeof EmployeePosition]

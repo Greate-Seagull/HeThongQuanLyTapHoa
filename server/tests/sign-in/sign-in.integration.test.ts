@@ -1,7 +1,13 @@
+import z from "zod";
 import { prisma, signInUsecase } from "../../src/composition-root";
 import { account, send, user } from "./sign-in.test-data";
 
 jest.setTimeout(20000);
+
+const outputSchema = z.object({
+	token: z.string(),
+	user: z.object({ id: z.number(), name: z.string(), point: z.number() }),
+});
 
 describe("Sign in integration test", () => {
 	let input;
@@ -21,10 +27,11 @@ describe("Sign in integration test", () => {
 		beforeAll(async () => {
 			input = send;
 			output = await signInUsecase.execute(input);
+			console.log(output);
 		});
 
-		it("Should return jwt", () => {
-			expect(output).toHaveProperty("token");
+		it("Should return correct output schema", () => {
+			expect(() => outputSchema.parse(output)).not.toThrow();
 		});
 	});
 

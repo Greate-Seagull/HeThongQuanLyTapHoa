@@ -1,58 +1,54 @@
-export class Employee {
-	private _id: number;
-	private _name: string;
-	private _position: EmployeePosition;
-
-	private constructor() {}
-
-	static create(name: string, position: string) {
-		let entity = new Employee();
-
-		entity._name = name;
-		entity.updatePosition(position);
-
-		return entity;
-	}
-
-	updatePosition(position: string) {
-		const positions = Object.keys(EmployeePosition);
-		if (!positions.includes(position))
-			throw Error(
-				`Expect a valid position in [${positions}], got ${position}`
-			);
-
-		this._position = position as EmployeePosition;
-	}
-
-	static rehydrate(input: EmployeeRehydrateProps) {
-		let entity = new Employee();
-
-		entity._id = input.id;
-		entity._name = input.name;
-		entity._position = input.position as EmployeePosition;
-
-		return entity;
-	}
-
-	get id() {
-		return this._id;
-	}
-	get name() {
-		return this._name;
-	}
-	get position() {
-		return this._position;
-	}
-}
-
-export interface EmployeeRehydrateProps {
-	id: number;
-	name: string;
-	position: string;
-}
+import { Read, Required, Type, Write } from "../types/decorators";
 
 export enum EmployeePosition {
 	SALES = "SALES",
 	INVENTORY = "INVENTORY",
 	RECEIVING = "RECEIVING",
+	MANAGER = "MANAGER",
+}
+
+export type EmployeeId = number | null;
+
+export class Employee {
+	private _id: EmployeeId = null;
+	private _name: string = null;
+	private _position: EmployeePosition = EmployeePosition.SALES;
+
+	private constructor() {}
+
+	// Setters
+	private set id(value: EmployeeId) {
+		if (value < 0) throw Error(`Invalid id, ${value}`);
+		this._id = value;
+	}
+	private set name(value: string) {
+		this._name = value;
+	}
+	private set position(value: EmployeePosition) {
+		const positions = Object.keys(EmployeePosition);
+		if (!positions.includes(value))
+			throw Error(`Invalid position, ${value}`);
+		this._position = value;
+	}
+
+	// Getters
+	@Read
+	@Type(Number)
+	get id(): EmployeeId {
+		return this._id;
+	}
+	@Read
+	@Write
+	@Required
+	@Type(String)
+	get name() {
+		return this._name;
+	}
+	@Read
+	@Write
+	@Required
+	@Type(EmployeePosition)
+	get position() {
+		return this._position;
+	}
 }

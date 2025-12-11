@@ -7,13 +7,13 @@ import { PrismaTransactionManager } from "./infrastructure/transaction";
 import { ProductReadAccessor } from "./infrastructure/read-accessors/product.read-accessor";
 import { PromotionRepository } from "./infrastructure/repositories/promotion.repository";
 import { CreateInvoiceUsecase } from "./application/create-invoice.usecase";
-import { CreatePromotionUsecase } from "./application/create-promotion.usecase";
-import { SearchProductsUsecase } from "./application/search-products.usecase";
+import { CreatePromotionUsecase } from "./application/promotion/create-promotion.usecase";
+import { SearchProductsUsecase } from "./application/product/search-products.usecase";
 import { PromotionPricingService } from "./domain/services/promotion-pricing.service";
 import { SalesTransactionService } from "./domain/services/sales-transaction.service";
 import { EmployeeRepository } from "./infrastructure/repositories/employee.repository";
 import { InvoiceRepository } from "./infrastructure/repositories/invoice.repository";
-import { ProductRepositoryPostgree } from "./infrastructure/repositories/product.repository.postgree";
+import { ProductRepositoryPrisma } from "./infrastructure/repositories/product.repository.prisma";
 import { UserRepository } from "./infrastructure/repositories/user.repository";
 
 const container = new Container({ defaultScope: "Singleton" });
@@ -30,7 +30,7 @@ container.bind(TYPES.ProductReadAccessor).to(ProductReadAccessor);
 container.bind(TYPES.PromotionRepository).to(PromotionRepository);
 container.bind(TYPES.EmployeeRepository).to(EmployeeRepository);
 container.bind(TYPES.UserRepository).to(UserRepository);
-container.bind(TYPES.ProductRepositoryPostgree).to(ProductRepositoryPostgree);
+container.bind(TYPES.ProductRepositoryPostgree).to(ProductRepositoryPrisma);
 container.bind(TYPES.InvoiceRepository).to(InvoiceRepository);
 
 // Domain services

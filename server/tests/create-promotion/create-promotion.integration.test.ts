@@ -1,9 +1,10 @@
+import z from "zod";
 import { createPromotionUsecase, prisma } from "../../src/composition-root";
-import {
-	product1,
-	product2,
-	promotionInput,
-} from "./create-promotion.test-data";
+import { product1, product2, send } from "./create-promotion.test-data";
+
+const outputSchema = z.object({
+	promotionId: z.number(),
+});
 
 describe("Create promotion integration test", () => {
 	let input;
@@ -17,7 +18,7 @@ describe("Create promotion integration test", () => {
 
 	afterAll(async () => {
 		await prisma.promotion.deleteMany({
-			where: { name: promotionInput.name },
+			where: { name: send.name },
 		});
 		await prisma.product.deleteMany({
 			where: { id: { in: [product1.id, product2.id] } },
@@ -26,21 +27,22 @@ describe("Create promotion integration test", () => {
 
 	describe("Normal case", () => {
 		beforeAll(async () => {
-			input = promotionInput;
+			input = send;
 			output = await createPromotionUsecase.execute(input);
+			console.log(output);
 		});
 
 		it("Should return promotion id", () => {
-			expect(output).toHaveProperty("promotionId");
+			expect(() => outputSchema.parse(output)).not.toThrow();
 		});
 	});
 
 	describe("Abnormal case", () => {
 		describe("Late start date case", () => {
 			beforeAll(async () => {
-				let endedAt = new Date();
+				const endedAt = new Date();
 				endedAt.setDate(endedAt.getDate() - 14);
-				input = structuredClone(promotionInput);
+				input = structuredClone(send);
 				input.endedAt = endedAt.toISOString();
 
 				try {
@@ -52,14 +54,16 @@ describe("Create promotion integration test", () => {
 
 			it("Should return error message", () => {
 				expect(output.message).toBe(
-					`Expect start date to be before end date; got start date: ${input.startedAt}, end date: ${input.endedAt}`
+					`Expect start date to be before end date; got start date: ${new Date(
+						input.startedAt
+					)}, end date: ${new Date(input.endedAt)}`
 				);
 			});
 		});
 
 		describe("Invalid value case", () => {
 			beforeAll(async () => {
-				input = structuredClone(promotionInput);
+				input = structuredClone(send);
 				input.value = -1;
 
 				try {
@@ -70,15 +74,13 @@ describe("Create promotion integration test", () => {
 			});
 
 			it("Should return error message", () => {
-				expect(output.message).toBe(
-					`Expect promotion value to be greater than zero, got ${input.value}`
-				);
+				expect(output.message).toBe(`Invalid value, ${input.value}`);
 			});
 		});
 
 		describe("Invalid pronotion type case", () => {
 			beforeAll(async () => {
-				input = structuredClone(promotionInput);
+				input = structuredClone(send);
 				input.promotionType = "UNKNOWN";
 
 				try {
@@ -95,8 +97,8 @@ describe("Create promotion integration test", () => {
 
 		describe("Invalid pronotion type case", () => {
 			beforeAll(async () => {
-				input = structuredClone(promotionInput);
-				input.productIds = [];
+				input = structuredClone(send);
+				input.promotionDetails = [];
 
 				try {
 					output = await createPromotionUsecase.execute(input);
@@ -107,7 +109,7 @@ describe("Create promotion integration test", () => {
 
 			it("Should return error message", () => {
 				expect(output.message).toBe(
-					`Expect promotion to have at least one product Id, got ${input.productIds}`
+					`Expect promotion to have at least one product Id`
 				);
 			});
 		});

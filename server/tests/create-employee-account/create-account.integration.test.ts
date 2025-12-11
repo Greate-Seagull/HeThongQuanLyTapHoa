@@ -1,7 +1,10 @@
+import z from "zod";
 import { createAccountUsecase, prisma } from "../../src/composition-root";
 import { employee, employeeAccount, send } from "./create-account.test-data";
 
 jest.setTimeout(20000);
+
+const outputSchema = z.object();
 
 describe("Create account integration test", () => {
 	let input;
@@ -27,7 +30,7 @@ describe("Create account integration test", () => {
 		});
 
 		it("Should return success message", () => {
-			expect(output.message).toBe("Success");
+			expect(() => outputSchema.parse(output)).not.toThrow();
 		});
 	});
 
@@ -70,7 +73,9 @@ describe("Create account integration test", () => {
 			});
 
 			it("Should return error message", () => {
-				expect(output).toHaveProperty("message");
+				expect(output.message).toBe(
+					`Invalid position, ${input.position}`
+				);
 			});
 		});
 	});

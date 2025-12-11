@@ -1,25 +1,31 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { Invoice } from "../../domain/invoice";
-import { InvoiceMapper } from "../mappers/invoice.mapper";
+import {
+	fromPersistence,
+	toPersistenceObject,
+} from "../../domain/services/mapper.service";
+import { ChangeTracker } from "../cache/change-tracker";
+import { buildSafePrismaSelect } from "../../domain/services/query-builder.service";
 
 export class InvoiceRepository implements InvoiceRepository {
+	private tracker = new ChangeTracker<any>();
+
 	constructor(private readonly prisma: PrismaClient) {}
 
 	async add(transaction: Prisma.TransactionClient, invoice: Invoice) {
+		const data = toPersistenceObject(invoice);
+		data.invoiceDetails = {
+			create: invoice.invoiceDetails.map(toPersistenceObject),
+		};
 		const raw = await transaction.invoice.create({
-			data: InvoiceMapper.toPersistence(invoice),
-			select: InvoiceRepository.baseQuery,
+			data: this.tracker.diff(invoice.id, data),
+			...InvoiceRepository.baseQuery,
 		});
 
-		return InvoiceMapper.toDomain(raw);
+		const entity = fromPersistence(Invoice, raw);
+		this.tracker.track(entity.id, raw);
+		return entity;
 	}
 
-	static baseQuery = {
-		id: true,
-		employeeId: true,
-		userId: true,
-		usedPoint: true,
-		total: true,
-		invoiceDetails: true,
-	};
+	static baseQuery = buildSafePrismaSelect(Invoice);
 }

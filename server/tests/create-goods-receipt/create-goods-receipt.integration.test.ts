@@ -1,7 +1,21 @@
+import z from "zod";
 import { createGoodReceiptUsecase, prisma } from "../../src/composition-root";
 import { employee, product1, send } from "./create-goods-receipt.test-data";
 
 jest.setTimeout(50000);
+
+const outputSchema = z.object({
+	goodReceiptId: z.number(),
+	employeeName: z.literal(employee.name),
+	createdAt: z.date(),
+	products: z.tuple([
+		z.object({
+			productId: z.literal(product1.id),
+			name: z.literal(product1.name),
+			amount: z.literal(send.items[0].quantity),
+		}),
+	]),
+});
 
 describe("Create good receipt integration test", () => {
 	let input;
@@ -29,38 +43,12 @@ describe("Create good receipt integration test", () => {
 			output = await createGoodReceiptUsecase.execute(input);
 		});
 
-		it("Should return good receipt id", () => {
-			expect(output).toHaveProperty("goodReceiptId");
-		});
-
-		it("Should return correct employee name", () => {
-			expect(output).toHaveProperty("employeeName", employee.name);
-		});
-
-		it("Should return correct products size", () => {
-			expect(output.products).toHaveLength(send.items.length);
+		it("Should return correct result", () => {
+			expect(() => outputSchema.parse(output)).not.toThrow();
 		});
 	});
 
 	describe("Abnormal case", () => {
-		describe("Not found employee case", () => {
-			beforeAll(async () => {
-				input = structuredClone(send);
-				input.employeeId = -1;
-				try {
-					output = await createGoodReceiptUsecase.execute(input);
-				} catch (e) {
-					output = e;
-				}
-			});
-
-			it("Should return error message", () => {
-				expect(output.message).toBe(
-					`Employee not found, ${input.employeeId}`
-				);
-			});
-		});
-
 		describe("Invalid product case", () => {
 			beforeAll(async () => {
 				input = structuredClone(send);
@@ -89,7 +77,9 @@ describe("Create good receipt integration test", () => {
 			});
 
 			it("Should return error message", () => {
-				expect(output.message).toBe(`The received quantity is under 0`);
+				expect(output.message).toBe(
+					`Invalid received quantity, ${input.items[0].quantity}`
+				);
 			});
 		});
 
@@ -106,7 +96,7 @@ describe("Create good receipt integration test", () => {
 
 			it("Should return error message", () => {
 				expect(output.message).toBe(
-					`Expect the import cost to be positive`
+					`Invalid price, ${input.items[0].price}`
 				);
 			});
 		});

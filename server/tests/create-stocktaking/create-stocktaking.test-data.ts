@@ -54,6 +54,6 @@ export const product2Input = {
 };
 
 export const send = {
-	employeeId: employee.id,
+	authId: employee.id,
 	products: [product1Input, product2Input],
 };

@@ -12,6 +12,10 @@ export class PasswordService {
 	hashPassword(barePassword: string, salt: string): string {
 		return bcrypt.hashSync(barePassword, salt);
 	}
+
+	comparePassword(barePassword: string, hashedPassword: string): boolean {
+		return bcrypt.compareSync(barePassword, hashedPassword);
+	}
 }
 
 export type Expiry = `${number}${"s" | "m" | "h" | "d"}`;

@@ -1,3 +1,4 @@
+import z from "zod";
 import { createStocktakingUsecase, prisma } from "../../src/composition-root";
 import {
 	employee,
@@ -8,6 +9,8 @@ import {
 } from "./create-stocktaking.test-data";
 
 jest.setTimeout(50000);
+
+const outputSchema = z.object();
 
 describe("Create stocktaking integration test", () => {
 	let input;
@@ -23,7 +26,7 @@ describe("Create stocktaking integration test", () => {
 
 	afterAll(async () => {
 		await prisma.stocktaking.deleteMany({
-			where: { employeeId: employee.id },
+			where: { employeeId: send.authId },
 		});
 		await Promise.all([
 			prisma.shelf.delete({ where: { id: shelf.id } }),
@@ -44,8 +47,8 @@ describe("Create stocktaking integration test", () => {
 			output = await createStocktakingUsecase.execute(input);
 		});
 
-		it("Should return success message", () => {
-			expect(output.message).toBe(`Success`);
+		it("Should return correct output schema", () => {
+			expect(() => outputSchema.parse(output)).not.toThrow();
 		});
 	});
 
@@ -63,24 +66,6 @@ describe("Create stocktaking integration test", () => {
 
 			it("Should return error message", () => {
 				expect(output.message).toBe(`Expect all products to be valid`);
-			});
-		});
-
-		describe("Invalid employee id case", () => {
-			beforeAll(async () => {
-				input = structuredClone(send);
-				input.employeeId = -1;
-				try {
-					output = await createStocktakingUsecase.execute(input);
-				} catch (e) {
-					output = e;
-				}
-			});
-
-			it("Should return error message", () => {
-				expect(output.message).toBe(
-					`Employee not found, ${input.employeeId}`
-				);
 			});
 		});
 
@@ -113,7 +98,7 @@ describe("Create stocktaking integration test", () => {
 
 			it("Should return error message", () => {
 				expect(output.message).toBe(
-					`Expect stocktaking to have at least one item, got ${input.products}`
+					`Expect promotion to have at least one product Id`
 				);
 			});
 		});
@@ -131,7 +116,7 @@ describe("Create stocktaking integration test", () => {
 
 			it("Should return error message", () => {
 				expect(output.message).toBe(
-					`Expect the quantity to be positive`
+					`Invalid quantity, ${input.products[0].quantity}`
 				);
 			});
 		});

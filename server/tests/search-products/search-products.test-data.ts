@@ -5,10 +5,10 @@ export const product = {
 	barcode: 12345,
 };
 
-let current = new Date();
-let startedAt = new Date();
+const current = new Date();
+const startedAt = new Date();
 startedAt.setDate(current.getDate() - 14);
-let endedAt = new Date();
+const endedAt = new Date();
 endedAt.setDate(current.getDate() + 14);
 
 export const promotion1 = {

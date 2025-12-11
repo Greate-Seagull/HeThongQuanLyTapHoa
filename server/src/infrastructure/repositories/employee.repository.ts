@@ -1,32 +1,41 @@
 import { PrismaClient } from "@prisma/client";
-import { EmployeeMapper } from "../mappers/employee.mapper";
 import { Employee } from "../../domain/employee";
+import { ChangeTracker } from "../cache/change-tracker";
+import {
+	fromPersistence,
+	toPersistenceObject,
+} from "../../domain/services/mapper.service";
+import { buildSafePrismaSelect } from "../../domain/services/query-builder.service";
 
 export class EmployeeRepository implements EmployeeRepository {
+	private tracker = new ChangeTracker<any>();
+
 	constructor(private readonly prisma: PrismaClient) {}
 
-	async getById(employeedId: number) {
+	async getById(id: number) {
 		const raw = await this.prisma.employee.findUnique({
-			where: { id: employeedId },
-			select: EmployeeRepository.baseQuery,
+			where: { id },
+			...EmployeeRepository.baseQuery,
 		});
 
-		return EmployeeMapper.toDomain(raw);
+		if (!raw) return null;
+
+		const savedEntity = fromPersistence(Employee, raw);
+		this.tracker.track(savedEntity.id, raw);
+		return savedEntity;
 	}
 
 	async add(tx: any, employee: Employee) {
 		const repo = tx ? tx : this.prisma;
 		const raw = await repo.employee.create({
-			data: EmployeeMapper.toPersistence(employee),
-			select: EmployeeRepository.baseQuery,
+			data: toPersistenceObject(employee),
+			...EmployeeRepository.baseQuery,
 		});
 
-		return EmployeeMapper.toDomain(raw);
+		const savedEntity = fromPersistence(Employee, raw);
+		this.tracker.track(savedEntity.id, raw);
+		return savedEntity;
 	}
 
-	static baseQuery = {
-		id: true,
-		name: true,
-		position: true,
-	};
+	static baseQuery = buildSafePrismaSelect(Employee);
 }

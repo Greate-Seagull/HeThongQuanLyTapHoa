@@ -1,11 +1,11 @@
-import { controlSignIn } from "../controllers/account.controller";
-import { controlSignUp } from "../controllers/account.controller";
+import { signInUsecase, signUpUsecase } from "../../composition-root";
 import { Router } from "express";
+import { controller } from "../controllers/controller";
 
 const router = Router();
 
 //Handlers
-router.post("/sign-in", controlSignIn);
-router.post("/", controlSignUp);
+router.post("/sign-in", controller(signInUsecase));
+router.post("/", controller(signUpUsecase));
 
 export default router;

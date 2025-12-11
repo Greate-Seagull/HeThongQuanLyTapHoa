@@ -1,5 +1,4 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { extendedDuration } from "zod/v4/core/regexes.cjs";
 
 export interface TransactionManager {
 	transaction(
@@ -23,7 +22,6 @@ export class TestTransactionManager {
 	async transaction(
 		callback: (tx: Prisma.TransactionClient) => Promise<any>
 	): Promise<any> {
-		console.log("go");
 		return await callback(this.transactionClient);
 	}
 }
