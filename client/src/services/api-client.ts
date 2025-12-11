@@ -63,27 +63,50 @@ class ApiClient {
   }
 
   async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    const response = await this.client.get<T>(url, config)
+    const response = await this.client.get<any>(url, config)
+    // Backend wraps response in { data: {...}, status: "success" }
+    // Unwrap it to get the actual data
+    if (response.data && response.data.data) {
+      return response.data.data as T
+    }
     return response.data
   }
 
   async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    const response = await this.client.post<T>(url, data, config)
+    console.log(url)
+    const response = await this.client.post<any>(url, data, config)
+    // Backend wraps response in { data: {...}, status: "success" }
+    // Unwrap it to get the actual data
+    if (response.data && response.data.data) {
+      return response.data.data as T
+    }
     return response.data
   }
 
   async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    const response = await this.client.put<T>(url, data, config)
+    const response = await this.client.put<any>(url, data, config)
+    // Backend wraps response in { data: {...}, status: "success" }
+    if (response.data && response.data.data) {
+      return response.data.data as T
+    }
     return response.data
   }
 
   async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    const response = await this.client.patch<T>(url, data, config)
+    const response = await this.client.patch<any>(url, data, config)
+    // Backend wraps response in { data: {...}, status: "success" }
+    if (response.data && response.data.data) {
+      return response.data.data as T
+    }
     return response.data
   }
 
   async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    const response = await this.client.delete<T>(url, config)
+    const response = await this.client.delete<any>(url, config)
+    // Backend wraps response in { data: {...}, status: "success" }
+    if (response.data && response.data.data) {
+      return response.data.data as T
+    }
     return response.data
   }
 }

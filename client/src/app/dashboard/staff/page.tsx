@@ -9,6 +9,7 @@ import { InvoiceManagement } from '@/components/management/InvoiceManagement'
 import { ClipboardCheck, PackagePlus, FileText, User } from 'lucide-react'
 import { useAuthStore } from '@/store/auth-store'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 export default function StaffDashboardPage() {
   const { user } = useAuthStore()
@@ -63,30 +64,46 @@ export default function StaffDashboardPage() {
   }, [user, router, activeMenu, menuItems])
 
   const renderContent = () => {
-    if (!user?.employeeData) return null
+    if (!user || !user.employeeData) {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <p className="text-gray-500">Đang tải thông tin nhân viên...</p>
+        </div>
+      )
+    }
+    
+    const employeeData = user.employeeData
     
     switch (activeMenu) {
       case 'inventory':
-        return <InventoryForm currentUser={user.employeeData} />
+        return <InventoryForm currentUser={employeeData} />
       case 'import':
-        return <ImportForm currentUser={user.employeeData} />
+        return <ImportForm currentUser={employeeData} />
       case 'invoice':
-        return <InvoiceManagement currentUser={user.employeeData} />
+        return <InvoiceManagement currentUser={employeeData} />
       case 'profile':
         return (
           <ProfilePage
             user={{
-              id: user.employeeData.id,
-              name: user.employeeData.name,
+              id: employeeData.id,
+              name: employeeData.name,
               username: user.username,
-              position: user.employeeData.position,
+              position: employeeData.position,
               loggedAt: new Date(),
             }}
             role="staff"
           />
         )
       default:
-        return <InventoryForm currentUser={user.employeeData} />
+        // Default to first available feature based on position
+        if (employeeData.position === 'INVENTORY') {
+          return <InventoryForm currentUser={employeeData} />
+        } else if (employeeData.position === 'RECEIVING') {
+          return <ImportForm currentUser={employeeData} />
+        } else if (employeeData.position === 'SALES') {
+          return <InvoiceManagement currentUser={employeeData} />
+        }
+        return <InvoiceManagement currentUser={employeeData} />
     }
   }
 

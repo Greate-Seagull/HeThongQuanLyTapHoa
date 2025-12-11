@@ -22,7 +22,7 @@ const config: runtime.GetPrismaClientConfig = {
       "value": "prisma-client"
     },
     "output": {
-      "value": "D:\\git-repo\\HeThongQuanLyTapHoa\\server\\src\\generated",
+      "value": "C:\\Users\\ASUS\\Downloads\\SE100\\DoAn\\HeThongQuanLyTapHoa\\server\\src\\generated",
       "fromEnvVar": null
     },
     "config": {
@@ -40,7 +40,7 @@ const config: runtime.GetPrismaClientConfig = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "D:\\git-repo\\HeThongQuanLyTapHoa\\server\\prisma\\schema.prisma",
+    "sourceFilePath": "C:\\Users\\ASUS\\Downloads\\SE100\\DoAn\\HeThongQuanLyTapHoa\\server\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativePath": "../../prisma",
