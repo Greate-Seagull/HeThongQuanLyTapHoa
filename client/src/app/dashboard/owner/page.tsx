@@ -44,8 +44,8 @@ export default function OwnerDashboardPage() {
         return (
           <ProfilePage
             user={{
-              id: 1,
-              name: 'Chủ cửa hàng',
+              id: user?.employeeData?.id || 1,
+              name: user?.employeeData?.name || 'Chủ cửa hàng',
               username: user?.username || 'admin',
               loggedAt: new Date(),
             }}

@@ -74,23 +74,27 @@ export default function LoginPage() {
           toast.warning('Đăng nhập thành công, nhưng thông tin nhân viên chưa đầy đủ')
         }
       } else if (selectedRole === 'owner') {
-        // ⚠️ CRITICAL: No owner endpoint exists yet
-        // This will throw error until backend implements it
-        try {
-          response = await ownerSignIn({
-            username: username,
-            password: password,
-          })
-          
-          userData = {
-            username: username,
-            role: 'owner' as UserRole,
-            userId: undefined,
-          }
-        } catch (error: any) {
-          toast.error('Chức năng đăng nhập chủ cửa hàng chưa được backend hỗ trợ')
+        // Owner uses the same endpoint as employee (MANAGER position)
+        response = await employeeSignIn({
+          username: username,
+          password: password,
+        })
+        
+        // Check if the employee has MANAGER position
+        if (response.employee?.position !== 'MANAGER') {
+          toast.error('Chỉ chủ cửa hàng (MANAGER) mới có thể đăng nhập với vai trò này')
           setIsLoading(false)
           return
+        }
+        
+        userData = {
+          username: username,
+          role: 'owner' as UserRole,
+          employeeData: response.employee,
+        }
+        
+        if (response.employee) {
+          toast.success(`Đăng nhập thành công! Chào mừng ${response.employee.name}`)
         }
       }
 
