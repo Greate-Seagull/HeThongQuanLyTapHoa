@@ -9,6 +9,7 @@ import { InvoiceManagement } from '@/components/management/InvoiceManagement'
 import { ClipboardCheck, PackagePlus, FileText, User } from 'lucide-react'
 import { useAuthStore } from '@/store/auth-store'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 export default function StaffDashboardPage() {
   const { user } = useAuthStore()
@@ -56,6 +57,13 @@ export default function StaffDashboardPage() {
       return
     }
     
+    // Show warning if employee data is missing
+    if (!user.employeeData) {
+      toast.warning('Thông tin nhân viên chưa đầy đủ', {
+        description: 'Một số tính năng có thể không hoạt động chính xác. Vui lòng liên hệ quản trị viên.',
+      })
+    }
+    
     // Set default active menu based on first menu item
     if (!activeMenu && menuItems.length > 0) {
       setActiveMenu(menuItems[0].id)
@@ -63,30 +71,38 @@ export default function StaffDashboardPage() {
   }, [user, router, activeMenu, menuItems])
 
   const renderContent = () => {
-    if (!user?.employeeData) return null
+    if (!user) return null
+    
+    // ⚠️ WORKAROUND: Backend doesn't return employee data on login
+    // Use mock data until backend is fixed
+    const mockEmployeeData = user.employeeData || {
+      id: 1,
+      name: user.username || 'Nhân viên',
+      position: 'SALES', // Default to SALES
+    }
     
     switch (activeMenu) {
       case 'inventory':
-        return <InventoryForm currentUser={user.employeeData} />
+        return <InventoryForm currentUser={mockEmployeeData} />
       case 'import':
-        return <ImportForm currentUser={user.employeeData} />
+        return <ImportForm currentUser={mockEmployeeData} />
       case 'invoice':
-        return <InvoiceManagement currentUser={user.employeeData} />
+        return <InvoiceManagement currentUser={mockEmployeeData} />
       case 'profile':
         return (
           <ProfilePage
             user={{
-              id: user.employeeData.id,
-              name: user.employeeData.name,
+              id: mockEmployeeData.id,
+              name: mockEmployeeData.name,
               username: user.username,
-              position: user.employeeData.position,
+              position: mockEmployeeData.position,
               loggedAt: new Date(),
             }}
             role="staff"
           />
         )
       default:
-        return <InventoryForm currentUser={user.employeeData} />
+        return <InvoiceManagement currentUser={mockEmployeeData} />
     }
   }
 

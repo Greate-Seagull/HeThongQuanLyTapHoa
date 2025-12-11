@@ -1,5 +1,6 @@
 import express from "express";
 import jsend from "jsend";
+import cors from "cors";
 import productRouter from "./presentation/routes/product.route";
 import promotionRouter from "./presentation/routes/promotion.route";
 import invoiceRouter from "./presentation/routes/invoice.route";
@@ -10,6 +11,21 @@ import employeeAccountRouter from "./presentation/routes/employee-account.route"
 
 const app = express();
 
+// CORS configuration - Allow frontend to access API
+const corsOptions = {
+  origin: [
+    'http://localhost:3000',      // Development - Frontend port 3000
+    'http://localhost:3001',      // Development - Frontend port 3001
+    'http://localhost:3002',      // Development - Frontend port 3002
+    // Add production URLs when deploying
+    // 'https://your-frontend.netlify.app',
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(jsend.middleware);
 app.use("/products", productRouter);

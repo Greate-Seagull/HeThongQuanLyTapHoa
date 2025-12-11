@@ -68,6 +68,7 @@ class ApiClient {
   }
 
   async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    console.log(url)
     const response = await this.client.post<T>(url, data, config)
     return response.data
   }

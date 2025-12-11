@@ -153,11 +153,13 @@ export default function LoginPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="username" className="text-blue-900">Tên đăng nhập</Label>
+            <Label htmlFor="username" className="text-blue-900">
+              {selectedRole === 'customer' ? 'Số điện thoại' : 'Tên đăng nhập'}
+            </Label>
             <Input
               id="username"
-              type="text"
-              placeholder="Nhập tên đăng nhập"
+              type={selectedRole === 'customer' ? 'tel' : 'text'}
+              placeholder={selectedRole === 'customer' ? 'Nhập số điện thoại' : 'Nhập tên đăng nhập'}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="border-blue-200 focus:border-blue-600"
