@@ -11,8 +11,17 @@ export function authenticationMiddleware(
 		console.log("Call authentication middleware");
 
 		const result = authenticate(req.headers.authorization);
+		
+		// Attach to req object for all request types (including DELETE with no body)
+		(req as any).authId = result.id;
+		(req as any).position = result.position;
+		
+		// Also keep in body for backward compatibility
+		req.body = req.body || {}; // Ensure body exists
 		req.body.authId = result.id;
 		req.body.position = result.position;
+		
+		console.log("Authenticated user - ID:", result.id, "Position:", result.position);
 
 		next();
 

@@ -8,6 +8,8 @@ import goodReceiptRouter from "./presentation/routes/good-receipt.route";
 import stocktakingRouter from "./presentation/routes/stocktaking.route";
 import accountRouter from "./presentation/routes/account.route";
 import employeeAccountRouter from "./presentation/routes/employee-account.route";
+import supplierRouter from "./presentation/routes/supplier.route";
+import productCategoryRouter from "./presentation/routes/product-category.route";
 
 const app = express();
 
@@ -35,5 +37,7 @@ app.use("/good-receipts", goodReceiptRouter);
 app.use("/stocktakings", stocktakingRouter);
 app.use("/accounts", accountRouter);
 app.use("/employee-accounts", employeeAccountRouter);
+app.use("/suppliers", supplierRouter);
+app.use("/product-categories", productCategoryRouter);
 
 export default app;

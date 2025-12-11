@@ -7,6 +7,8 @@
  *
  * 🟢 You can import this file directly.
  */
+export type * from './models/Supplier'
+export type * from './models/ProductCategory'
 export type * from './models/Product'
 export type * from './models/Promotion'
 export type * from './models/PromotionDetail'

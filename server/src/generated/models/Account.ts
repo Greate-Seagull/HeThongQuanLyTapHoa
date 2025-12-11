@@ -40,8 +40,8 @@ export type AccountMinAggregateOutputType = {
   userId: number | null
   phoneNumber: string | null
   passwordHash: string | null
-  salt: string | null
   loggedAt: Date | null
+  salt: string | null
 }
 
 export type AccountMaxAggregateOutputType = {
@@ -49,8 +49,8 @@ export type AccountMaxAggregateOutputType = {
   userId: number | null
   phoneNumber: string | null
   passwordHash: string | null
-  salt: string | null
   loggedAt: Date | null
+  salt: string | null
 }
 
 export type AccountCountAggregateOutputType = {
@@ -58,8 +58,8 @@ export type AccountCountAggregateOutputType = {
   userId: number
   phoneNumber: number
   passwordHash: number
-  salt: number
   loggedAt: number
+  salt: number
   _all: number
 }
 
@@ -79,8 +79,8 @@ export type AccountMinAggregateInputType = {
   userId?: true
   phoneNumber?: true
   passwordHash?: true
-  salt?: true
   loggedAt?: true
+  salt?: true
 }
 
 export type AccountMaxAggregateInputType = {
@@ -88,8 +88,8 @@ export type AccountMaxAggregateInputType = {
   userId?: true
   phoneNumber?: true
   passwordHash?: true
-  salt?: true
   loggedAt?: true
+  salt?: true
 }
 
 export type AccountCountAggregateInputType = {
@@ -97,8 +97,8 @@ export type AccountCountAggregateInputType = {
   userId?: true
   phoneNumber?: true
   passwordHash?: true
-  salt?: true
   loggedAt?: true
+  salt?: true
   _all?: true
 }
 
@@ -193,8 +193,8 @@ export type AccountGroupByOutputType = {
   userId: number
   phoneNumber: string
   passwordHash: string
-  salt: string
   loggedAt: Date
+  salt: string
   _count: AccountCountAggregateOutputType | null
   _avg: AccountAvgAggregateOutputType | null
   _sum: AccountSumAggregateOutputType | null
@@ -225,8 +225,8 @@ export type AccountWhereInput = {
   userId?: Prisma.IntFilter<"Account"> | number
   phoneNumber?: Prisma.StringFilter<"Account"> | string
   passwordHash?: Prisma.StringFilter<"Account"> | string
-  salt?: Prisma.StringFilter<"Account"> | string
   loggedAt?: Prisma.DateTimeFilter<"Account"> | Date | string
+  salt?: Prisma.StringFilter<"Account"> | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }
 
@@ -235,8 +235,8 @@ export type AccountOrderByWithRelationInput = {
   userId?: Prisma.SortOrder
   phoneNumber?: Prisma.SortOrder
   passwordHash?: Prisma.SortOrder
-  salt?: Prisma.SortOrder
   loggedAt?: Prisma.SortOrder
+  salt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
 }
 
@@ -248,8 +248,8 @@ export type AccountWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.AccountWhereInput | Prisma.AccountWhereInput[]
   userId?: Prisma.IntFilter<"Account"> | number
   passwordHash?: Prisma.StringFilter<"Account"> | string
-  salt?: Prisma.StringFilter<"Account"> | string
   loggedAt?: Prisma.DateTimeFilter<"Account"> | Date | string
+  salt?: Prisma.StringFilter<"Account"> | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }, "id" | "phoneNumber">
 
@@ -258,8 +258,8 @@ export type AccountOrderByWithAggregationInput = {
   userId?: Prisma.SortOrder
   phoneNumber?: Prisma.SortOrder
   passwordHash?: Prisma.SortOrder
-  salt?: Prisma.SortOrder
   loggedAt?: Prisma.SortOrder
+  salt?: Prisma.SortOrder
   _count?: Prisma.AccountCountOrderByAggregateInput
   _avg?: Prisma.AccountAvgOrderByAggregateInput
   _max?: Prisma.AccountMaxOrderByAggregateInput
@@ -275,15 +275,15 @@ export type AccountScalarWhereWithAggregatesInput = {
   userId?: Prisma.IntWithAggregatesFilter<"Account"> | number
   phoneNumber?: Prisma.StringWithAggregatesFilter<"Account"> | string
   passwordHash?: Prisma.StringWithAggregatesFilter<"Account"> | string
-  salt?: Prisma.StringWithAggregatesFilter<"Account"> | string
   loggedAt?: Prisma.DateTimeWithAggregatesFilter<"Account"> | Date | string
+  salt?: Prisma.StringWithAggregatesFilter<"Account"> | string
 }
 
 export type AccountCreateInput = {
   phoneNumber: string
   passwordHash: string
-  salt: string
   loggedAt?: Date | string
+  salt: string
   user: Prisma.UserCreateNestedOneWithoutAccountsInput
 }
 
@@ -292,15 +292,15 @@ export type AccountUncheckedCreateInput = {
   userId: number
   phoneNumber: string
   passwordHash: string
-  salt: string
   loggedAt?: Date | string
+  salt: string
 }
 
 export type AccountUpdateInput = {
   phoneNumber?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
-  salt?: Prisma.StringFieldUpdateOperationsInput | string
   loggedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  salt?: Prisma.StringFieldUpdateOperationsInput | string
   user?: Prisma.UserUpdateOneRequiredWithoutAccountsNestedInput
 }
 
@@ -309,8 +309,8 @@ export type AccountUncheckedUpdateInput = {
   userId?: Prisma.IntFieldUpdateOperationsInput | number
   phoneNumber?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
-  salt?: Prisma.StringFieldUpdateOperationsInput | string
   loggedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  salt?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type AccountCreateManyInput = {
@@ -318,15 +318,15 @@ export type AccountCreateManyInput = {
   userId: number
   phoneNumber: string
   passwordHash: string
-  salt: string
   loggedAt?: Date | string
+  salt: string
 }
 
 export type AccountUpdateManyMutationInput = {
   phoneNumber?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
-  salt?: Prisma.StringFieldUpdateOperationsInput | string
   loggedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  salt?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type AccountUncheckedUpdateManyInput = {
@@ -334,8 +334,8 @@ export type AccountUncheckedUpdateManyInput = {
   userId?: Prisma.IntFieldUpdateOperationsInput | number
   phoneNumber?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
-  salt?: Prisma.StringFieldUpdateOperationsInput | string
   loggedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  salt?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type AccountListRelationFilter = {
@@ -353,8 +353,8 @@ export type AccountCountOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   phoneNumber?: Prisma.SortOrder
   passwordHash?: Prisma.SortOrder
-  salt?: Prisma.SortOrder
   loggedAt?: Prisma.SortOrder
+  salt?: Prisma.SortOrder
 }
 
 export type AccountAvgOrderByAggregateInput = {
@@ -367,8 +367,8 @@ export type AccountMaxOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   phoneNumber?: Prisma.SortOrder
   passwordHash?: Prisma.SortOrder
-  salt?: Prisma.SortOrder
   loggedAt?: Prisma.SortOrder
+  salt?: Prisma.SortOrder
 }
 
 export type AccountMinOrderByAggregateInput = {
@@ -376,8 +376,8 @@ export type AccountMinOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   phoneNumber?: Prisma.SortOrder
   passwordHash?: Prisma.SortOrder
-  salt?: Prisma.SortOrder
   loggedAt?: Prisma.SortOrder
+  salt?: Prisma.SortOrder
 }
 
 export type AccountSumOrderByAggregateInput = {
@@ -430,16 +430,16 @@ export type AccountUncheckedUpdateManyWithoutUserNestedInput = {
 export type AccountCreateWithoutUserInput = {
   phoneNumber: string
   passwordHash: string
-  salt: string
   loggedAt?: Date | string
+  salt: string
 }
 
 export type AccountUncheckedCreateWithoutUserInput = {
   id?: number
   phoneNumber: string
   passwordHash: string
-  salt: string
   loggedAt?: Date | string
+  salt: string
 }
 
 export type AccountCreateOrConnectWithoutUserInput = {
@@ -476,39 +476,39 @@ export type AccountScalarWhereInput = {
   userId?: Prisma.IntFilter<"Account"> | number
   phoneNumber?: Prisma.StringFilter<"Account"> | string
   passwordHash?: Prisma.StringFilter<"Account"> | string
-  salt?: Prisma.StringFilter<"Account"> | string
   loggedAt?: Prisma.DateTimeFilter<"Account"> | Date | string
+  salt?: Prisma.StringFilter<"Account"> | string
 }
 
 export type AccountCreateManyUserInput = {
   id?: number
   phoneNumber: string
   passwordHash: string
-  salt: string
   loggedAt?: Date | string
+  salt: string
 }
 
 export type AccountUpdateWithoutUserInput = {
   phoneNumber?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
-  salt?: Prisma.StringFieldUpdateOperationsInput | string
   loggedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  salt?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type AccountUncheckedUpdateWithoutUserInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   phoneNumber?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
-  salt?: Prisma.StringFieldUpdateOperationsInput | string
   loggedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  salt?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type AccountUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   phoneNumber?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
-  salt?: Prisma.StringFieldUpdateOperationsInput | string
   loggedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  salt?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 
@@ -518,8 +518,8 @@ export type AccountSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   userId?: boolean
   phoneNumber?: boolean
   passwordHash?: boolean
-  salt?: boolean
   loggedAt?: boolean
+  salt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["account"]>
 
@@ -528,8 +528,8 @@ export type AccountSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   userId?: boolean
   phoneNumber?: boolean
   passwordHash?: boolean
-  salt?: boolean
   loggedAt?: boolean
+  salt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["account"]>
 
@@ -538,8 +538,8 @@ export type AccountSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   userId?: boolean
   phoneNumber?: boolean
   passwordHash?: boolean
-  salt?: boolean
   loggedAt?: boolean
+  salt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["account"]>
 
@@ -548,11 +548,11 @@ export type AccountSelectScalar = {
   userId?: boolean
   phoneNumber?: boolean
   passwordHash?: boolean
-  salt?: boolean
   loggedAt?: boolean
+  salt?: boolean
 }
 
-export type AccountOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "phoneNumber" | "passwordHash" | "salt" | "loggedAt", ExtArgs["result"]["account"]>
+export type AccountOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "phoneNumber" | "passwordHash" | "loggedAt" | "salt", ExtArgs["result"]["account"]>
 export type AccountInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -573,8 +573,8 @@ export type $AccountPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     userId: number
     phoneNumber: string
     passwordHash: string
-    salt: string
     loggedAt: Date
+    salt: string
   }, ExtArgs["result"]["account"]>
   composites: {}
 }
@@ -1003,8 +1003,8 @@ export interface AccountFieldRefs {
   readonly userId: Prisma.FieldRef<"Account", 'Int'>
   readonly phoneNumber: Prisma.FieldRef<"Account", 'String'>
   readonly passwordHash: Prisma.FieldRef<"Account", 'String'>
-  readonly salt: Prisma.FieldRef<"Account", 'String'>
   readonly loggedAt: Prisma.FieldRef<"Account", 'DateTime'>
+  readonly salt: Prisma.FieldRef<"Account", 'String'>
 }
     
 

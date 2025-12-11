@@ -239,9 +239,9 @@ export type StocktakingDetailWhereInput = {
   slotId?: Prisma.IntFilter<"StocktakingDetail"> | number
   status?: Prisma.EnumProductStatusFilter<"StocktakingDetail"> | $Enums.ProductStatus
   quantity?: Prisma.IntFilter<"StocktakingDetail"> | number
-  stocktaking?: Prisma.XOR<Prisma.StocktakingScalarRelationFilter, Prisma.StocktakingWhereInput>
   product?: Prisma.XOR<Prisma.ProductScalarRelationFilter, Prisma.ProductWhereInput>
   slot?: Prisma.XOR<Prisma.SlotScalarRelationFilter, Prisma.SlotWhereInput>
+  stocktaking?: Prisma.XOR<Prisma.StocktakingScalarRelationFilter, Prisma.StocktakingWhereInput>
 }
 
 export type StocktakingDetailOrderByWithRelationInput = {
@@ -251,9 +251,9 @@ export type StocktakingDetailOrderByWithRelationInput = {
   slotId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
-  stocktaking?: Prisma.StocktakingOrderByWithRelationInput
   product?: Prisma.ProductOrderByWithRelationInput
   slot?: Prisma.SlotOrderByWithRelationInput
+  stocktaking?: Prisma.StocktakingOrderByWithRelationInput
 }
 
 export type StocktakingDetailWhereUniqueInput = Prisma.AtLeast<{
@@ -266,9 +266,9 @@ export type StocktakingDetailWhereUniqueInput = Prisma.AtLeast<{
   slotId?: Prisma.IntFilter<"StocktakingDetail"> | number
   status?: Prisma.EnumProductStatusFilter<"StocktakingDetail"> | $Enums.ProductStatus
   quantity?: Prisma.IntFilter<"StocktakingDetail"> | number
-  stocktaking?: Prisma.XOR<Prisma.StocktakingScalarRelationFilter, Prisma.StocktakingWhereInput>
   product?: Prisma.XOR<Prisma.ProductScalarRelationFilter, Prisma.ProductWhereInput>
   slot?: Prisma.XOR<Prisma.SlotScalarRelationFilter, Prisma.SlotWhereInput>
+  stocktaking?: Prisma.XOR<Prisma.StocktakingScalarRelationFilter, Prisma.StocktakingWhereInput>
 }, "id">
 
 export type StocktakingDetailOrderByWithAggregationInput = {
@@ -300,9 +300,9 @@ export type StocktakingDetailScalarWhereWithAggregatesInput = {
 export type StocktakingDetailCreateInput = {
   status: $Enums.ProductStatus
   quantity: number
-  stocktaking: Prisma.StocktakingCreateNestedOneWithoutStocktakingDetailsInput
   product: Prisma.ProductCreateNestedOneWithoutStocktakingDetailsInput
   slot: Prisma.SlotCreateNestedOneWithoutStocktakingDetailsInput
+  stocktaking: Prisma.StocktakingCreateNestedOneWithoutStocktakingDetailsInput
 }
 
 export type StocktakingDetailUncheckedCreateInput = {
@@ -317,9 +317,9 @@ export type StocktakingDetailUncheckedCreateInput = {
 export type StocktakingDetailUpdateInput = {
   status?: Prisma.EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
-  stocktaking?: Prisma.StocktakingUpdateOneRequiredWithoutStocktakingDetailsNestedInput
   product?: Prisma.ProductUpdateOneRequiredWithoutStocktakingDetailsNestedInput
   slot?: Prisma.SlotUpdateOneRequiredWithoutStocktakingDetailsNestedInput
+  stocktaking?: Prisma.StocktakingUpdateOneRequiredWithoutStocktakingDetailsNestedInput
 }
 
 export type StocktakingDetailUncheckedUpdateInput = {
@@ -536,8 +536,8 @@ export type StocktakingDetailUncheckedUpdateManyWithoutStocktakingNestedInput = 
 export type StocktakingDetailCreateWithoutProductInput = {
   status: $Enums.ProductStatus
   quantity: number
-  stocktaking: Prisma.StocktakingCreateNestedOneWithoutStocktakingDetailsInput
   slot: Prisma.SlotCreateNestedOneWithoutStocktakingDetailsInput
+  stocktaking: Prisma.StocktakingCreateNestedOneWithoutStocktakingDetailsInput
 }
 
 export type StocktakingDetailUncheckedCreateWithoutProductInput = {
@@ -589,8 +589,8 @@ export type StocktakingDetailScalarWhereInput = {
 export type StocktakingDetailCreateWithoutSlotInput = {
   status: $Enums.ProductStatus
   quantity: number
-  stocktaking: Prisma.StocktakingCreateNestedOneWithoutStocktakingDetailsInput
   product: Prisma.ProductCreateNestedOneWithoutStocktakingDetailsInput
+  stocktaking: Prisma.StocktakingCreateNestedOneWithoutStocktakingDetailsInput
 }
 
 export type StocktakingDetailUncheckedCreateWithoutSlotInput = {
@@ -679,8 +679,8 @@ export type StocktakingDetailCreateManyProductInput = {
 export type StocktakingDetailUpdateWithoutProductInput = {
   status?: Prisma.EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
-  stocktaking?: Prisma.StocktakingUpdateOneRequiredWithoutStocktakingDetailsNestedInput
   slot?: Prisma.SlotUpdateOneRequiredWithoutStocktakingDetailsNestedInput
+  stocktaking?: Prisma.StocktakingUpdateOneRequiredWithoutStocktakingDetailsNestedInput
 }
 
 export type StocktakingDetailUncheckedUpdateWithoutProductInput = {
@@ -710,8 +710,8 @@ export type StocktakingDetailCreateManySlotInput = {
 export type StocktakingDetailUpdateWithoutSlotInput = {
   status?: Prisma.EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
-  stocktaking?: Prisma.StocktakingUpdateOneRequiredWithoutStocktakingDetailsNestedInput
   product?: Prisma.ProductUpdateOneRequiredWithoutStocktakingDetailsNestedInput
+  stocktaking?: Prisma.StocktakingUpdateOneRequiredWithoutStocktakingDetailsNestedInput
 }
 
 export type StocktakingDetailUncheckedUpdateWithoutSlotInput = {
@@ -770,9 +770,9 @@ export type StocktakingDetailSelect<ExtArgs extends runtime.Types.Extensions.Int
   slotId?: boolean
   status?: boolean
   quantity?: boolean
-  stocktaking?: boolean | Prisma.StocktakingDefaultArgs<ExtArgs>
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   slot?: boolean | Prisma.SlotDefaultArgs<ExtArgs>
+  stocktaking?: boolean | Prisma.StocktakingDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["stocktakingDetail"]>
 
 export type StocktakingDetailSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -782,9 +782,9 @@ export type StocktakingDetailSelectCreateManyAndReturn<ExtArgs extends runtime.T
   slotId?: boolean
   status?: boolean
   quantity?: boolean
-  stocktaking?: boolean | Prisma.StocktakingDefaultArgs<ExtArgs>
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   slot?: boolean | Prisma.SlotDefaultArgs<ExtArgs>
+  stocktaking?: boolean | Prisma.StocktakingDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["stocktakingDetail"]>
 
 export type StocktakingDetailSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -794,9 +794,9 @@ export type StocktakingDetailSelectUpdateManyAndReturn<ExtArgs extends runtime.T
   slotId?: boolean
   status?: boolean
   quantity?: boolean
-  stocktaking?: boolean | Prisma.StocktakingDefaultArgs<ExtArgs>
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   slot?: boolean | Prisma.SlotDefaultArgs<ExtArgs>
+  stocktaking?: boolean | Prisma.StocktakingDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["stocktakingDetail"]>
 
 export type StocktakingDetailSelectScalar = {
@@ -810,27 +810,27 @@ export type StocktakingDetailSelectScalar = {
 
 export type StocktakingDetailOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "stocktakingId" | "productId" | "slotId" | "status" | "quantity", ExtArgs["result"]["stocktakingDetail"]>
 export type StocktakingDetailInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  stocktaking?: boolean | Prisma.StocktakingDefaultArgs<ExtArgs>
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   slot?: boolean | Prisma.SlotDefaultArgs<ExtArgs>
+  stocktaking?: boolean | Prisma.StocktakingDefaultArgs<ExtArgs>
 }
 export type StocktakingDetailIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  stocktaking?: boolean | Prisma.StocktakingDefaultArgs<ExtArgs>
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   slot?: boolean | Prisma.SlotDefaultArgs<ExtArgs>
+  stocktaking?: boolean | Prisma.StocktakingDefaultArgs<ExtArgs>
 }
 export type StocktakingDetailIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  stocktaking?: boolean | Prisma.StocktakingDefaultArgs<ExtArgs>
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   slot?: boolean | Prisma.SlotDefaultArgs<ExtArgs>
+  stocktaking?: boolean | Prisma.StocktakingDefaultArgs<ExtArgs>
 }
 
 export type $StocktakingDetailPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "StocktakingDetail"
   objects: {
-    stocktaking: Prisma.$StocktakingPayload<ExtArgs>
     product: Prisma.$ProductPayload<ExtArgs>
     slot: Prisma.$SlotPayload<ExtArgs>
+    stocktaking: Prisma.$StocktakingPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -1233,9 +1233,9 @@ readonly fields: StocktakingDetailFieldRefs;
  */
 export interface Prisma__StocktakingDetailClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  stocktaking<T extends Prisma.StocktakingDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.StocktakingDefaultArgs<ExtArgs>>): Prisma.Prisma__StocktakingClient<runtime.Types.Result.GetResult<Prisma.$StocktakingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   product<T extends Prisma.ProductDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProductDefaultArgs<ExtArgs>>): Prisma.Prisma__ProductClient<runtime.Types.Result.GetResult<Prisma.$ProductPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   slot<T extends Prisma.SlotDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.SlotDefaultArgs<ExtArgs>>): Prisma.Prisma__SlotClient<runtime.Types.Result.GetResult<Prisma.$SlotPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  stocktaking<T extends Prisma.StocktakingDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.StocktakingDefaultArgs<ExtArgs>>): Prisma.Prisma__StocktakingClient<runtime.Types.Result.GetResult<Prisma.$StocktakingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.

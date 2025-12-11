@@ -33,6 +33,18 @@ import { SignUpUsecase } from "./application/customer-account/sign-up.usecase";
 import { CreateGoodReceiptUsecase } from "./application/good-receipt/create-good-receipt.usecase";
 import { CreateStocktakingUsecase } from "./application/stocktaking/create-stocktaking.usecase";
 import { EmployeeReadAccess } from "./infrastructure/read-accessors/employee.read-accessor";
+import { SupplierRepository } from "./infrastructure/repositories/supplier.repository";
+import { SupplierReadAccessor } from "./infrastructure/read-accessors/supplier.read-accessor";
+import { ProductCategoryRepository } from "./infrastructure/repositories/product-category.repository";
+import { ProductCategoryReadAccessor } from "./infrastructure/read-accessors/product-category.read-accessor";
+import { GetSuppliersUsecase } from "./application/supplier/get-suppliers.usecase";
+import { CreateSupplierUsecase } from "./application/supplier/create-supplier.usecase";
+import { UpdateSupplierUsecase } from "./application/supplier/update-supplier.usecase";
+import { DeleteSupplierUsecase } from "./application/supplier/delete-supplier.usecase";
+import { GetProductCategoriesUsecase } from "./application/product-category/get-product-categories.usecase";
+import { CreateProductCategoryUsecase } from "./application/product-category/create-product-category.usecase";
+import { UpdateProductCategoryUsecase } from "./application/product-category/update-product-category.usecase";
+import { DeleteProductCategoryUsecase } from "./application/product-category/delete-product-category.usecase";
 
 config;
 export const prisma = new PrismaClient({
@@ -94,6 +106,10 @@ export const invoiceRepo = new InvoiceRepository(prisma);
 export const goodReceiptRepo = new GoodReceiptRepository(prisma);
 const shelfReadAccessor = new ShelfReadAccessor(prisma);
 const stocktakingRepo = new StocktakingRepository(prisma);
+const supplierRepo = new SupplierRepository(prisma);
+const supplierReadAccessor = new SupplierReadAccessor(prisma);
+const productCategoryRepo = new ProductCategoryRepository(prisma);
+const productCategoryReadAccessor = new ProductCategoryReadAccessor(prisma);
 
 const promoPricing = new PromotionPricingService();
 const processSales = new SalesTransactionService();
@@ -132,3 +148,15 @@ export const createStocktakingUsecase = new CreateStocktakingUsecase(
 	shelfReadAccessor,
 	stocktakingRepo
 );
+
+// Supplier usecases
+export const getSuppliersUsecase = new GetSuppliersUsecase(supplierReadAccessor);
+export const createSupplierUsecase = new CreateSupplierUsecase(supplierRepo);
+export const updateSupplierUsecase = new UpdateSupplierUsecase(supplierRepo);
+export const deleteSupplierUsecase = new DeleteSupplierUsecase(supplierRepo);
+
+// Product Category usecases
+export const getProductCategoriesUsecase = new GetProductCategoriesUsecase(productCategoryReadAccessor);
+export const createProductCategoryUsecase = new CreateProductCategoryUsecase(productCategoryRepo);
+export const updateProductCategoryUsecase = new UpdateProductCategoryUsecase(productCategoryRepo);
+export const deleteProductCategoryUsecase = new DeleteProductCategoryUsecase(productCategoryRepo);

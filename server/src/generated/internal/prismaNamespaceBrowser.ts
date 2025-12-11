@@ -48,6 +48,8 @@ export const AnyNull = runtime.objectEnumValues.instances.AnyNull
 
 
 export const ModelName = {
+  Supplier: 'Supplier',
+  ProductCategory: 'ProductCategory',
   Product: 'Product',
   Promotion: 'Promotion',
   PromotionDetail: 'PromotionDetail',
@@ -83,14 +85,35 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
 
 
+export const SupplierScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  address: 'address',
+  phoneNumber: 'phoneNumber'
+} as const
+
+export type SupplierScalarFieldEnum = (typeof SupplierScalarFieldEnum)[keyof typeof SupplierScalarFieldEnum]
+
+
+export const ProductCategoryScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description'
+} as const
+
+export type ProductCategoryScalarFieldEnum = (typeof ProductCategoryScalarFieldEnum)[keyof typeof ProductCategoryScalarFieldEnum]
+
+
 export const ProductScalarFieldEnum = {
   id: 'id',
   name: 'name',
   unit: 'unit',
   price: 'price',
-  barcode: 'barcode',
   amount: 'amount',
-  status: 'status'
+  barcode: 'barcode',
+  status: 'status',
+  supplierId: 'supplierId',
+  categoryId: 'categoryId'
 } as const
 
 export type ProductScalarFieldEnum = (typeof ProductScalarFieldEnum)[keyof typeof ProductScalarFieldEnum]
@@ -132,8 +155,8 @@ export const AccountScalarFieldEnum = {
   userId: 'userId',
   phoneNumber: 'phoneNumber',
   passwordHash: 'passwordHash',
-  salt: 'salt',
-  loggedAt: 'loggedAt'
+  loggedAt: 'loggedAt',
+  salt: 'salt'
 } as const
 
 export type AccountScalarFieldEnum = (typeof AccountScalarFieldEnum)[keyof typeof AccountScalarFieldEnum]
