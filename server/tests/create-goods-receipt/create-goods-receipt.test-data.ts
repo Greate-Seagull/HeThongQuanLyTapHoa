@@ -12,7 +12,7 @@ export const product1 = {
 };
 
 export const send = {
-	employeeId: 10000,
+	authId: 10000,
 	items: [
 		{
 			productId: product1.id,

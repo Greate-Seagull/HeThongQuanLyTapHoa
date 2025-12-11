@@ -208,4 +208,5 @@ enum EmployeePosition {
   SALES
   INVENTORY
   RECEIVING
+  MANAGER
 }

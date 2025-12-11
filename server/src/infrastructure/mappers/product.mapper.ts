@@ -12,6 +12,6 @@ export class ProductMapper {
 	}
 
 	static toDomain(raw: any) {
-		return Product.rehydrate(raw);
+		return Product.fromPersistence(raw);
 	}
 }

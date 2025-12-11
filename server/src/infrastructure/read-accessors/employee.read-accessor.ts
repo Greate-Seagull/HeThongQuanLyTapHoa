@@ -17,4 +17,11 @@ export class EmployeeReadAccess {
 			select: { id: true, position: true },
 		});
 	}
+
+	async getNameById(id: number): Promise<{ id: string; name: string }> {
+		return await this.prisma.employee.findUnique({
+			where: { id },
+			select: { id: true, name: true },
+		});
+	}
 }

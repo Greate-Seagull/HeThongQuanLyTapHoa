@@ -1,106 +1,107 @@
-export class GoodReceipt {
-	private _id?: number;
-	private _employeeId!: number;
-	private _createdAt!: Date;
-	private _goodReceiptDetails: GoodReceiptDetail[];
+import { Read, Required, Type, Write } from "../types/decorators";
 
-	private constructor() {}
-
-	static create(
-		employeeId: number,
-		items: { productId: number; quantity: number; price: number }[]
-	) {
-		let e = new GoodReceipt();
-
-		e._employeeId = employeeId;
-		e._createdAt = new Date();
-		e.recordDetail(items);
-
-		return e;
-	}
-
-	static rehydrate(raw: any) {
-		let e = new GoodReceipt();
-
-		e._id = raw.id;
-		e._employeeId = raw.employeeId;
-		e._createdAt = raw.createdAt;
-		e._goodReceiptDetails = raw.goodReceiptDetails.map(
-			GoodReceiptDetail.rehydrate
-		);
-
-		return e;
-	}
-
-	private recordDetail(
-		items: { productId: number; quantity: number; price: number }[]
-	) {
-		this._goodReceiptDetails = items.map(GoodReceiptDetail.create);
-	}
-
-	get id(): number {
-		return this._id;
-	}
-	get employeeId(): number {
-		return this._employeeId;
-	}
-	get createdAt(): Date {
-		return this._createdAt;
-	}
-	get goodReceiptDetails(): GoodReceiptDetail[] {
-		return this._goodReceiptDetails;
-	}
-}
+export type GoodReceiptId = number | null;
 
 export class GoodReceiptDetail {
-	private _goodReceiptId?: number;
-	private _productId!: number;
-	private _quantity!: number;
-	private _price!: number;
+	private _goodReceiptId: GoodReceiptId = null;
+	private _productId: number = null;
+	private _quantity: number = null;
+	private _price: number = null;
 
 	private constructor() {}
 
-	static create({
-		productId,
-		quantity,
-		price,
-	}: {
-		productId: number;
-		quantity: number;
-		price: number;
-	}): GoodReceiptDetail {
-		let e = new GoodReceiptDetail();
+	// Setters
+	private set goodReceiptId(value: GoodReceiptId) {
+		if (value <= 0) throw Error(`Invalid good receipt id, ${value}`);
 
-		e._productId = productId;
-		e._quantity = quantity;
-		e.updateCost(price);
+		this._goodReceiptId = value;
+	}
+	private set productId(value: number) {
+		if (value <= 0) throw Error(`Invalid product id, ${value}`);
 
-		return e;
+		this._productId = value;
+	}
+	private set quantity(value: number) {
+		if (value <= 0) throw Error(`Invalid quantity, ${value}`);
+
+		this._quantity = value;
+	}
+	private set price(value: number) {
+		if (value <= 0) throw Error(`Invalid price, ${value}`);
+
+		this._price = value;
 	}
 
-	static rehydrate(raw: any) {
-		let e = new GoodReceiptDetail();
-
-		e._goodReceiptId = raw.goodReceiptId;
-		e._productId = raw.productId;
-		e._quantity = raw.quantity;
-		e._price = raw.price;
-
-		return e;
+	// Getters
+	@Read
+	@Type(Number)
+	get goodReceiptId(): GoodReceiptId {
+		return this._goodReceiptId;
 	}
-
-	private updateCost(price: number) {
-		if (price <= 0) throw Error(`Expect the import cost to be positive`);
-		this._price = price;
-	}
-
+	@Read
+	@Write
+	@Type(Number)
+	@Required
 	get productId(): number {
 		return this._productId;
 	}
+	@Read
+	@Write
+	@Type(Number)
+	@Required
 	get quantity(): number {
 		return this._quantity;
 	}
+	@Read
+	@Write
+	@Type(Number)
+	@Required
 	get price(): number {
 		return this._price;
+	}
+}
+
+export class GoodReceipt {
+	private _id: number = null;
+	private _employeeId: number = null;
+	private _createdAt: Date = new Date();
+	private _goodReceiptDetails: GoodReceiptDetail[] = [];
+
+	private constructor() {}
+
+	// Setters
+	private set employeeId(value: number) {
+		if (value < 0) throw Error(`Invalid employee id, ${value}`);
+		this._employeeId = value;
+	}
+	private set goodReceiptDetails(value: GoodReceiptDetail[]) {
+		this._goodReceiptDetails = value;
+	}
+
+	// Getters
+	@Read
+	@Type(Number)
+	get id(): number {
+		return this._id;
+	}
+	@Read
+	@Write
+	@Type(Number)
+	@Required
+	get employeeId(): number {
+		return this._employeeId;
+	}
+	@Read
+	@Write
+	@Type(Date)
+	get createdAt(): Date {
+		return this._createdAt;
+	}
+	@Read
+	@Write
+	@Type(GoodReceiptDetail)
+	@Required
+	get goodReceiptDetails(): GoodReceiptDetail[] {
+		return this._goodReceiptDetails;
 	}
 }

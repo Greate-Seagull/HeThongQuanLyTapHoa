@@ -1,117 +1,112 @@
-import e from "express";
+import { Read, Required, Type, Write } from "../types/decorators";
 
-export class Product {
-	private _id?: number;
-	private _name!: string;
-	private _price!: number;
-	private _unit!: ProductUnit;
-	private _barcode!: number;
-	private _amount!: number;
-
-	static create({
-		name,
-		price,
-		unit,
-		barcode,
-	}: {
-		name: string;
-		price: number;
-		unit: string;
-		barcode: number;
-	}) {
-		let e = new Product();
-
-		e.updateName(name);
-		e.updatePrice(price);
-		e.updateUnit(unit);
-		e.updateBarcode(barcode);
-		e._amount = 0;
-
-		return e;
-	}
-
-	updateBarcode(barcode: number) {
-		if (barcode <= 0) throw Error(`Expect the barcode to be positive`);
-		this._barcode = barcode;
-	}
-
-	updateUnit(unit: string) {
-		const types = Object.keys(ProductUnit);
-		if (!types.includes(unit))
-			throw Error(`Expect a valid unit in [${types}], got ${unit}`);
-
-		this._unit = unit as ProductUnit;
-	}
-
-	updatePrice(price: number) {
-		if (price <= 0) throw Error(`Expect the price to be positive`);
-		this._price = price;
-	}
-
-	updateName(name: string) {
-		this._name = name;
-	}
-
-	static rehydrate(raw: ProductRehydrateProps) {
-		let entity = new Product();
-
-		entity._id = raw.id;
-		entity._name = raw.name;
-		entity._price = raw.price;
-		entity._unit = raw.unit as ProductUnit;
-		entity._barcode = raw.barcode;
-		entity._amount = raw.amount;
-
-		return entity;
-	}
-
-	sellStock(quantity: number) {
-		if (quantity > this._amount)
-			throw Error(
-				`The bought quantity is exceed the product's quantity ${this._amount}`
-			);
-
-		this._amount -= quantity;
-	}
-
-	receiveStock(quantity: any) {
-		if (quantity <= 0) throw Error(`The received quantity is under 0`);
-		this._amount += quantity;
-	}
-
-	public get id(): number {
-		return this._id;
-	}
-	public get price(): number {
-		return this._price;
-	}
-	public get amount(): number {
-		return this._amount;
-	}
-	public get name() {
-		return this._name;
-	}
-	public get unit() {
-		return this._unit;
-	}
-	public get barcode() {
-		return this._barcode;
-	}
-
-	private constructor() {}
-}
-
-export interface ProductRehydrateProps {
-	id: number;
-	name: string;
-	unit: string;
-	price: number;
-	barcode: number;
-	amount: number;
-}
+export type ProductId = number | null;
+export type ProductBarcode = number | null;
 
 export enum ProductUnit {
 	UNKNOWN = "UNKNOWN",
+}
+
+export class Product {
+	private _id: ProductId = null;
+	private _name: string = null;
+	private _price: number = 0;
+	private _unit: ProductUnit = ProductUnit.UNKNOWN;
+	private _barcode: number = null;
+	private _amount: number = 0;
+
+	private constructor() {}
+
+	updateBarcode(barcode: number) {
+		this.barcode = barcode;
+	}
+
+	updateUnit(unit: string) {
+		this.unit = unit as ProductUnit;
+	}
+
+	updatePrice(price: number) {
+		this.price = price;
+	}
+
+	updateName(name: string) {
+		this.name = name;
+	}
+
+	sellStock(quantity: number) {
+		if (quantity <= 0) throw Error(`Invalid sold quantity, ${quantity}`);
+		this.amount -= quantity;
+	}
+
+	receiveStock(quantity: any) {
+		if (quantity <= 0)
+			throw Error(`Invalid received quantity, ${quantity}`);
+		this.amount += quantity;
+	}
+
+	// Setters
+	private set price(value: ProductId) {
+		if (value <= 0) throw Error(`Invalid price, ${value}`);
+		this._price = value;
+	}
+	private set amount(value: number) {
+		if (value < 0) throw Error(`Invalid quantity, ${value}`);
+		this._amount = value;
+	}
+	private set name(value: string) {
+		this._name = value;
+	}
+	private set unit(value: ProductUnit) {
+		const types = Object.keys(ProductUnit);
+		if (!types.includes(value)) throw Error(`Invalid unit, ${value}`);
+
+		this._unit = value as ProductUnit;
+	}
+	private set barcode(value: number) {
+		if (value <= 0) throw Error(`Invalid barcode, ${value}`);
+		this._barcode = value;
+	}
+
+	// Getters
+	@Read
+	@Type(Number)
+	public get id(): ProductId {
+		return this._id;
+	}
+	@Read
+	@Write
+	@Required
+	@Type(Number)
+	public get price(): number {
+		return this._price;
+	}
+	@Read
+	@Write
+	@Type(Number)
+	public get amount(): number {
+		return this._amount;
+	}
+	@Read
+	@Write
+	@Required
+	@Type(String)
+	public get name(): string {
+		return this._name;
+	}
+	@Read
+	@Write
+	@Required
+	@Type(ProductUnit)
+	public get unit(): ProductUnit {
+		return this._unit;
+	}
+	@Read
+	@Write
+	@Required
+	@Type(Number)
+	public get barcode(): number {
+		return this._barcode;
+	}
 }
 
 export enum ProductStatus {

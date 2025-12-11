@@ -8,10 +8,13 @@ import { authenticationMiddleware } from "../middlewares/authentication.middlewa
 import { authorizationMiddleware } from "../middlewares/authorization.middleware";
 
 const router = Router();
-router.use(authenticationMiddleware);
-router.use(authorizationMiddleware("ADMIN"));
-router.get("/:productId", controlSearchProduct);
-router.put("/bulk", controlUpdateProducts);
 router.get("/", controlGetProducts);
+router.get("/:productId", controlSearchProduct);
+router.put(
+	"/bulk",
+	authenticationMiddleware,
+	authorizationMiddleware("ADMIN"),
+	controlUpdateProducts
+);
 
 export default router;

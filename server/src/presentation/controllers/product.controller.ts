@@ -1,4 +1,4 @@
-import { SearchProductsUsecaseInput } from "../../application/search-products.usecase";
+import { SearchProductsUsecaseInput } from "../../application/product/search-products.usecase";
 import {
 	getProductsUsecase,
 	searchProductsUsecase,

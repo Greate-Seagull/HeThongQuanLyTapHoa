@@ -1,8 +1,4 @@
-import { ProductReadAccessor } from "../infrastructure/read-accessors/product.read-accessor";
-
-export interface GetProductsUsecaseOutput {
-	products: any[];
-}
+import { ProductReadAccessor } from "../../infrastructure/read-accessors/product.read-accessor";
 
 export class GetProductsUsecase {
 	constructor(private readonly productReadAccess: ProductReadAccessor) {}

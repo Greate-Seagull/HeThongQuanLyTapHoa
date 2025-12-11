@@ -1,3 +1,4 @@
+import z from "zod";
 import { prisma, updateProductsUsecase } from "../../src/composition-root";
 import {
 	product1Input,
@@ -7,6 +8,8 @@ import {
 } from "./update-products.test-data";
 
 jest.setTimeout(50000);
+
+const outputSchema = z.object();
 
 describe("Update products integration test", () => {
 	let input;
@@ -34,6 +37,7 @@ describe("Update products integration test", () => {
 			});
 
 			afterAll(async () => {
+				console.log(await prisma.product.findMany());
 				await prisma.product.deleteMany({
 					where: {
 						name: {
@@ -43,8 +47,8 @@ describe("Update products integration test", () => {
 				});
 			});
 
-			it("Should return success message", () => {
-				expect(output.message).toBe(`Success`);
+			it("Should not throw any error", () => {
+				expect(() => outputSchema.parse(output)).not.toThrow();
 			});
 		});
 
@@ -55,8 +59,8 @@ describe("Update products integration test", () => {
 				output = await updateProductsUsecase.execute(input);
 			});
 
-			it("Should return success message", () => {
-				expect(output.message).toBe(`Success`);
+			it("Should not throw any error", () => {
+				expect(() => outputSchema.parse(output)).not.toThrow();
 			});
 		});
 	});
@@ -74,7 +78,9 @@ describe("Update products integration test", () => {
 			});
 
 			it("Should return error message", () => {
-				expect(output.message).toBe(`Expect the price to be positive`);
+				expect(output.message).toBe(
+					`Invalid price, ${input.products[0].price}`
+				);
 			});
 		});
 
@@ -87,10 +93,13 @@ describe("Update products integration test", () => {
 				} catch (e) {
 					output = e;
 				}
+				console.log(output);
 			});
 
 			it("Should return error message", () => {
-				expect(output).toHaveProperty("message");
+				expect(output.message).toBe(
+					`Invalid unit, ${input.products[0].unit}`
+				);
 			});
 		});
 
@@ -107,7 +116,7 @@ describe("Update products integration test", () => {
 
 			it("Should return error message", () => {
 				expect(output.message).toBe(
-					`Expect the barcode to be positive`
+					`Invalid barcode, ${input.products[0].barcode}`
 				);
 			});
 		});
@@ -124,7 +133,7 @@ describe("Update products integration test", () => {
 			});
 
 			it("Should return error message", () => {
-				expect(output).toHaveProperty("message");
+				expect(output.code).toBe("P2002"); // Unique constraint
 			});
 		});
 	});

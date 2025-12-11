@@ -1,43 +1,56 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { UserMapper } from "../mappers/user.mapper";
 import { User } from "../../domain/user";
+import { ChangeTracker } from "../cache/change-tracker";
+import {
+	fromPersistence,
+	toPersistenceObject,
+} from "../../domain/services/mapper.service";
+import { buildSafePrismaSelect } from "../../domain/services/query-builder.service";
 
 export class UserRepository implements UserRepository {
+	private tracker = new ChangeTracker<any>();
+
 	constructor(private readonly prisma: PrismaClient) {}
 
-	async getById(userId: any) {
+	async getById(id: any) {
 		const raw = await this.prisma.user.findUnique({
 			where: {
-				id: userId,
+				id,
 			},
-			select: UserRepository.baseQuery,
+			...UserRepository.baseQuery,
 		});
 
-		return UserMapper.toDomain(raw);
+		if (!raw) return raw;
+
+		let entity = fromPersistence(User, raw);
+		this.tracker.track(entity.id, raw);
+		return entity;
 	}
 
 	async save(transaction: Prisma.TransactionClient, user: User) {
-		const raw = await transaction.user.update({
+		const repo = transaction ? transaction : this.prisma;
+		const raw = await repo.user.update({
 			where: { id: user.id },
-			data: UserMapper.toPersistence(user),
-			select: UserRepository.baseQuery,
+			data: this.tracker.diff(user.id, toPersistenceObject(user)),
+			...UserRepository.baseQuery,
 		});
 
-		return UserMapper.toDomain(raw);
+		let entity = fromPersistence(User, raw);
+		this.tracker.track(entity.id, raw);
+		return entity;
 	}
 
 	async add(transaction: Prisma.TransactionClient, user: User) {
-		const raw = await transaction.user.create({
-			data: UserMapper.toPersistence(user),
-			select: UserRepository.baseQuery,
+		const repo = transaction ? transaction : this.prisma;
+		const raw = await repo.user.create({
+			data: this.tracker.diff(user.id, toPersistenceObject(user)),
+			...UserRepository.baseQuery,
 		});
 
-		return UserMapper.toDomain(raw);
+		let entity = fromPersistence(User, raw);
+		this.tracker.track(entity.id, raw);
+		return entity;
 	}
 
-	static baseQuery = {
-		id: true,
-		name: true,
-		point: true,
-	};
+	static baseQuery = buildSafePrismaSelect(User);
 }

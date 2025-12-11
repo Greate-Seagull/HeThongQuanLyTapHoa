@@ -1,4 +1,4 @@
-import { CreatePromotionUsecaseInput } from "../../application/create-promotion.usecase";
+import { CreatePromotionUsecaseInput } from "../../application/promotion/create-promotion.usecase";
 import { createPromotionUsecase } from "../../composition-root";
 
 export async function controlCreatePromotion(req, res) {

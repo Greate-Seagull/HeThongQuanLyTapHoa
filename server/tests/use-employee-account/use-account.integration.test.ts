@@ -1,7 +1,12 @@
+import z from "zod";
 import { prisma, useAccountUsecase } from "../../src/composition-root";
 import { account, employee, send } from "./use-account.test-data";
 
 jest.setTimeout(20000);
+
+const outputSchema = z.object({
+	token: z.string(),
+});
 
 describe("Use account integration test", () => {
 	let input;
@@ -24,12 +29,12 @@ describe("Use account integration test", () => {
 		});
 
 		it("Should return jwt", () => {
-			expect(output).toHaveProperty("token");
+			expect(() => outputSchema.parse(output)).not.toThrow();
 		});
 	});
 
 	describe("Abnormal case", () => {
-		describe("Invalid phone number case", () => {
+		describe("Invalid username case", () => {
 			beforeAll(async () => {
 				input = structuredClone(send);
 				input.username = "-1";

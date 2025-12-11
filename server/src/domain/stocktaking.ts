@@ -1,163 +1,139 @@
 import { ProductStatus } from "../generated/enums";
+import { Read, Required, Type, Write } from "../types/decorators";
+import { EmployeeId } from "./employee";
+import { ProductId } from "./product";
 
-export class Stocktaking {
-	private _id: number;
-	private _employeeId: number;
-	private _createdAt: Date;
-	private _stocktakingDetails: StocktakingDetail[];
-
-	private constructor() {}
-
-	static create(
-		employeeId: number,
-		products: StocktakingDetailCreateInput[]
-	) {
-		let e = new Stocktaking();
-
-		e._employeeId = employeeId;
-		e._createdAt = new Date();
-		e.recordDetail(products);
-
-		return e;
-	}
-
-	static rehydrate({
-		id,
-		employeeId,
-		createdAt,
-		stocktakingDetails,
-	}: {
-		id: number;
-		employeeId: number;
-		createdAt: string;
-		stocktakingDetails: StocktakingDetailRehydrateInput[];
-	}) {
-		let e = new Stocktaking();
-
-		e._id = id;
-		e._employeeId = employeeId;
-		e._createdAt = new Date(createdAt);
-		e._stocktakingDetails = stocktakingDetails.map(
-			StocktakingDetail.rehydrate
-		);
-
-		return e;
-	}
-
-	recordDetail(products: StocktakingDetailCreateInput[]) {
-		if (products.length < 1)
-			throw Error(
-				`Expect stocktaking to have at least one item, got ${products}`
-			);
-
-		this._stocktakingDetails = products.map(StocktakingDetail.create);
-	}
-
-	get id(): number {
-		return this._id;
-	}
-
-	get employeeId(): number {
-		return this._employeeId;
-	}
-
-	get createdAt(): Date {
-		return this._createdAt;
-	}
-
-	get stocktakingDetails(): StocktakingDetail[] {
-		return this._stocktakingDetails;
-	}
-}
-
-type StocktakingDetailCreateInput = {
-	productId: number;
-	slotId: number;
-	status: string;
-	quantity: number;
-};
-
-type StocktakingDetailRehydrateInput = {
-	id: number;
-	stocktakingId: number;
-	productId: number;
-	slotId: number;
-	status: string;
-	quantity: number;
-};
+export type StocktakingDetailId = number | null;
 
 export class StocktakingDetail {
-	private _id: number;
-	private _stocktakingId: number;
-	private _productId: number;
-	private _slotId: number;
-	private _status: ProductStatus;
-	private _quantity: number;
+	private _id: StocktakingDetailId = null;
+	private _stocktakingId: StocktakingId = null;
+	private _productId: ProductId = null;
+	private _slotId: number = null;
+	private _status: ProductStatus = ProductStatus.GOOD;
+	private _quantity: number = 0;
 
 	private constructor() {}
 
-	static create({
-		productId,
-		slotId,
-		status,
-		quantity,
-	}: StocktakingDetailCreateInput) {
-		let e = new StocktakingDetail();
-
-		e._productId = productId;
-		e._slotId = slotId;
-		e.updateStatus(status);
-		e.updateQuantity(quantity);
-
-		return e;
+	// Setters
+	private set id(value: StocktakingDetailId) {
+		this._id = value;
 	}
-
-	static rehydrate({
-		id,
-		stocktakingId,
-		productId,
-		slotId,
-		status,
-		quantity,
-	}: StocktakingDetailRehydrateInput): StocktakingDetail {
-		let e = new StocktakingDetail();
-
-		e._id = id;
-		e._stocktakingId = stocktakingId;
-		e._productId = productId;
-		e._slotId = slotId;
-		e._status = status as ProductStatus;
-		e._quantity = quantity;
-
-		return e;
+	private set stocktakingId(value: StocktakingId) {
+		this._stocktakingId = value;
 	}
-
-	updateQuantity(quantity: number) {
-		if (quantity < 0) throw Error(`Expect the quantity to be positive`);
-		this._quantity = quantity;
+	private set productId(value: ProductId) {
+		this._productId = value;
 	}
-
-	updateStatus(status: string) {
+	private set slotId(value: number) {
+		this._slotId = value;
+	}
+	private set status(value: ProductStatus) {
 		const statuses = Object.keys(ProductStatus);
-		if (!statuses.includes(status))
-			throw Error(`Expect a status in [${statuses}], got ${status}`);
+		if (!statuses.includes(value))
+			throw Error(`Expect a status in [${statuses}], got ${value}`);
 
-		this._status = status as ProductStatus;
+		this._status = value;
+	}
+	private set quantity(value: number) {
+		if (value < 0) throw Error(`Invalid quantity, ${value}`);
+		this._quantity = value;
 	}
 
+	// Getters
+	@Read
+	@Type(Number)
+	get id(): StocktakingDetailId {
+		return this._id;
+	}
+	@Read
+	@Type(Number)
+	get stocktakingId(): StocktakingId {
+		return this._stocktakingId;
+	}
+	@Read
+	@Write
+	@Required
+	@Type(Number)
 	get productId(): number {
 		return this._productId;
 	}
-
+	@Read
+	@Write
+	@Required
+	@Type(Number)
 	get slotId(): number {
 		return this._slotId;
 	}
-
+	@Read
+	@Write
+	@Required
+	@Type(ProductStatus)
 	get status(): ProductStatus {
 		return this._status;
 	}
-
+	@Read
+	@Write
+	@Required
+	@Type(Number)
 	get quantity(): number {
 		return this._quantity;
+	}
+}
+
+export type StocktakingId = number | null;
+
+export class Stocktaking {
+	private _id: StocktakingId = null;
+	private _employeeId: EmployeeId = null;
+	private _createdAt: Date = new Date();
+	private _stocktakingDetails: StocktakingDetail[] = [];
+
+	private constructor() {}
+
+	// Setters
+	private set id(value: StocktakingId) {
+		this._id = value;
+	}
+
+	private set employeeId(value: EmployeeId) {
+		this._employeeId = value;
+	}
+
+	private set createdAt(value: Date) {
+		this._createdAt = value;
+	}
+
+	private set stocktakingDetails(value: StocktakingDetail[]) {
+		if (value.length < 1)
+			throw Error(`Expect promotion to have at least one product Id`);
+		this._stocktakingDetails = value;
+	}
+
+	// Getters
+	@Read
+	@Type(Number)
+	get id(): StocktakingId {
+		return this._id;
+	}
+	@Read
+	@Write
+	@Required
+	@Type(Number)
+	get employeeId(): number {
+		return this._employeeId;
+	}
+	@Read
+	@Write
+	@Type(Date)
+	get createdAt(): Date {
+		return this._createdAt;
+	}
+	@Read
+	@Write
+	@Required
+	@Type(StocktakingDetail)
+	get stocktakingDetails(): StocktakingDetail[] {
+		return this._stocktakingDetails;
 	}
 }

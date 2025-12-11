@@ -1,83 +1,80 @@
+import { Read, Required, Type, Write } from "../types/decorators";
+
+export type AccountId = number | null;
+
 export class Account {
-	private _id: number;
-	private _userId: number;
-	private _phoneNumber: string;
-	private _passwordHash: string;
-	private _salt: string;
-	private _loggedAt: Date;
+	private _id: AccountId = null;
+	private _phoneNumber: string = null;
+	private _passwordHash: string = null;
+	private _salt: string = null;
+	private _loggedAt: Date = new Date();
+	private _userId: number = null;
 
 	private constructor() {}
 
-	static create(input: AccountCreateInput): Account {
-		let entity = new Account();
-
-		entity._userId = input.userId;
-		entity._phoneNumber = input.phoneNumber;
-		entity._passwordHash = input.passwordHash;
-		entity._salt = input.salt;
-		entity._loggedAt = new Date();
-
-		return entity;
-	}
-
-	static rehydrate(raw: AccountRehydrateInput): Account {
-		let entity = new Account();
-
-		entity._id = raw.id;
-		entity._userId = raw.userId;
-		entity._phoneNumber = raw.phoneNumber;
-		entity._passwordHash = raw.passwordHash;
-		entity._salt = raw.salt;
-		entity._loggedAt = raw.loggedAt;
-
-		return entity;
-	}
-
 	signIn() {
-		this._loggedAt = new Date();
+		this.loggedAt = new Date();
 	}
 
-	validate(passwordHash: string) {
-		return this._passwordHash === passwordHash;
+	// Setters
+	private set id(value: AccountId) {
+		if (value < 0) throw Error(`Invalid id, ${value}`);
+		this._id = value;
+	}
+	private set phoneNumber(value: string) {
+		this._phoneNumber = value;
+	}
+	private set passwordHash(value: string) {
+		this._passwordHash = value;
+	}
+	private set salt(value: string) {
+		this._salt = value;
+	}
+	private set loggedAt(value: Date) {
+		this._loggedAt = value;
+	}
+	private set userId(value: number) {
+		if (value < 0) throw Error(`Invalid id, ${value}`);
+		this._userId = value;
 	}
 
-	get id(): number {
+	// Getters
+	@Read
+	@Type(Number)
+	get id(): AccountId {
 		return this._id;
 	}
-
-	get userId(): number {
-		return this._userId;
-	}
-
+	@Read
+	@Write
+	@Required
+	@Type(String)
 	get phoneNumber(): string {
 		return this._phoneNumber;
 	}
-
-	get passwordHash(): string {
+	@Read
+	@Write
+	@Required
+	@Type(String)
+	private get passwordHash(): string {
 		return this._passwordHash;
 	}
-
-	get salt(): string {
+	@Write
+	@Required
+	@Type(String)
+	private get salt(): string {
 		return this._salt;
 	}
-
+	@Read
+	@Write
+	@Type(Date)
 	get loggedAt(): Date {
 		return this._loggedAt;
 	}
-}
-
-export interface AccountCreateInput {
-	userId: number;
-	phoneNumber: string;
-	passwordHash: string;
-	salt: string;
-}
-
-export interface AccountRehydrateInput {
-	id: number;
-	userId: number;
-	phoneNumber: string;
-	passwordHash: string;
-	salt: string;
-	loggedAt: Date;
+	@Read
+	@Write
+	@Required
+	@Type(String)
+	get userId(): number {
+		return this._userId;
+	}
 }

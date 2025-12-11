@@ -1,60 +1,55 @@
+import { Read, Required, Type, Write } from "../types/decorators";
+
+export type UserId = number | null;
+
 export class User {
-	private _id: number;
-	private _name: string;
-	private _point: number;
+	private _id: UserId = null;
+	private _name: string = null;
+	private _point: number = 0;
 
 	private constructor() {}
 
-	static create(name: string) {
-		let entity = new User();
-
-		entity._name = name;
-		entity._point = 0;
-
-		return entity;
-	}
-
-	static rehydrate(input: UserRehydrateProps) {
-		let entity = new User();
-
-		entity._id = input.id;
-		entity._name = input.name;
-		entity._point = input.point;
-
-		return entity;
-	}
-
 	usePoints(usedPoint: number) {
-		if (!usedPoint) usedPoint = 0;
-		if (usedPoint > this._point)
-			throw Error(
-				`The used points are exceed the current user's points: ${this._point}`
-			);
-
-		this._point -= usedPoint;
-		return usedPoint;
+		if (usedPoint < 0) throw Error(`Invalid used points: ${usedPoint}`);
+		this.point -= usedPoint;
+		console.log(this._point);
 	}
 
 	earnPoints(totalValue: number) {
-		if (totalValue < 0)
-			throw Error(`The total value is invalid ${totalValue}`);
-
-		this._point += Math.floor(totalValue / 100);
+		if (totalValue < 0) throw Error(`Invalid earn points: ${totalValue}`);
+		this.point += Math.floor(totalValue / 100);
 	}
 
-	get id() {
+	// Setters
+	private set id(value: UserId) {
+		if (value < 0) throw Error(`Invalid id, ${value}`);
+		this._id = value;
+	}
+	private set name(value: string) {
+		this._name = value;
+	}
+	private set point(value: number) {
+		if (value < 0) throw Error(`Invalid point, ${value}`);
+		this._point = value;
+	}
+
+	// Getters
+	@Read
+	@Type(Number)
+	get id(): UserId {
 		return this._id;
 	}
-	get name() {
+	@Read
+	@Write
+	@Required
+	@Type(String)
+	get name(): string {
 		return this._name;
 	}
-	get point() {
+	@Read
+	@Write
+	@Type(Number)
+	get point(): number {
 		return this._point;
 	}
-}
-
-export interface UserRehydrateProps {
-	id: number;
-	name: string;
-	point: number;
 }

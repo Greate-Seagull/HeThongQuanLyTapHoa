@@ -4,7 +4,7 @@ export class EmployeeAccountMapper {
 	static toDomain(raw: any): EmployeeAccount {
 		if (!raw) return raw;
 
-		return EmployeeAccount.rehydrate(raw);
+		return EmployeeAccount.fromPersistence(raw);
 	}
 
 	static toPersistence(entity: EmployeeAccount) {

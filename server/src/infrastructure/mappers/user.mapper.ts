@@ -9,6 +9,6 @@ export class UserMapper {
 	}
 
 	static toDomain(raw: any) {
-		return User.rehydrate(raw);
+		return User.fromPersistence(raw);
 	}
 }

@@ -1,5 +1,23 @@
 import { product, promotion1, promotion2 } from "./search-products.test-data";
 import { prisma, searchProductsUsecase } from "../../src/composition-root";
+import z from "zod";
+
+jest.setTimeout(20000);
+
+const outputSchema = z.object({
+	product: z.object({
+		id: z.literal(product.id),
+		name: z.literal(product.name),
+		price: z.literal(product.price),
+		unit: z.literal("UNKNOWN"),
+	}),
+	promotion: z.object({
+		id: z.literal(promotion2.id),
+		name: z.literal(promotion2.name),
+		value: z.literal(promotion2.value),
+		type: z.literal(promotion2.promotionType),
+	}),
+});
 
 describe("Search products integration test", () => {
 	let input;
@@ -29,36 +47,8 @@ describe("Search products integration test", () => {
 			output = await searchProductsUsecase.execute(input);
 		});
 
-		it("Should return correct product id", () => {
-			expect(output.product.id).toBe(product.id);
-		});
-
-		it("Should return correct product name", () => {
-			expect(output.product.name).toBe(product.name);
-		});
-
-		it("Should return correct product price", () => {
-			expect(output.product.price).toBe(product.price);
-		});
-
-		it("Should return correct product unit", () => {
-			expect(output.product.unit).toBe("UNKNOWN");
-		});
-
-		it("Should return correct promotion id", () => {
-			expect(output.promotion.id).toBe(promotion2.id);
-		});
-
-		it("Should return correct promotion name", () => {
-			expect(output.promotion.name).toBe(promotion2.name);
-		});
-
-		it("Should return correct promotion price", () => {
-			expect(output.promotion.value).toBe(promotion2.value);
-		});
-
-		it("Should return correct promotion unit", () => {
-			expect(output.promotion.type).toBe(promotion2.promotionType);
+		it("Should return correct product & promotion data", () => {
+			expect(() => outputSchema.parse(output)).not.toThrow();
 		});
 	});
 
@@ -73,7 +63,9 @@ describe("Search products integration test", () => {
 		});
 
 		it("Should return error message", () => {
-			expect(output.message).toBe(`Product not found. ${-1}`);
+			expect(output.message).toBe(
+				`Invalid product id, ${input.productId}`
+			);
 		});
 	});
 });

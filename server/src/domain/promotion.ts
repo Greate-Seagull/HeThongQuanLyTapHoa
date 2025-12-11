@@ -1,67 +1,61 @@
-import { Product } from "./product";
+import { Optional, Read, Required, Type, Write } from "../types/decorators";
+import { Product, ProductId } from "./product";
+import { create } from "./services/factory.service";
 
-export class Promotion {
-	private _id?: number;
-	private _name!: string;
-	private _description!: string;
-	private _startedAt!: Date;
-	private _endedAt!: Date;
-	private _condition!: string;
-	private _value!: number;
-	private _promotionType!: PromotionType;
-	private _promotionDetails: PromotionDetail[];
+export enum PromotionType {
+	PERCENTAGE = "PERCENTAGE",
+	FIXED = "FIXED",
+}
+
+export class PromotionDetail {
+	private _promotionId: PromotionId;
+	private _productId: ProductId;
 
 	private constructor() {}
 
-	static create(input: PromotionCreateProps) {
-		let output = new Promotion();
-
-		output._name = input.name;
-		output._description = input.description;
-		output.updateDates(input.startedAt, input.endedAt);
-		output._condition = input.condition;
-		output.updateValue(input.value);
-		output.updatePromotionType(input.promotionType);
-		output.applyPromotionTo(input.productIds);
-
-		return output;
+	// Setters
+	private set promotionId(value: PromotionId) {
+		this._promotionId = value;
+	}
+	private set productId(value: ProductId) {
+		this._productId = value;
 	}
 
-	static rehydrate(input: PromotionRehydrateProps) {
-		let output = new Promotion();
-
-		output._id = input.id;
-		output._name = input.name;
-		output._description = input.description;
-		output._startedAt = input.startedAt;
-		output._endedAt = input.endedAt;
-		output._condition = input.condition;
-		output._value = input.value;
-		output._promotionType = input.promotionType as PromotionType;
-		output._promotionDetails = input.promotionDetails.map(
-			PromotionDetail.rehydrate
-		);
-
-		return output;
+	// Getters
+	@Read
+	@Type(Number)
+	get promotionId(): PromotionId {
+		return this._promotionId;
 	}
-
-	private updatePromotionType(promotionType: string) {
-		let promotionTypes = Object.values(PromotionType);
-		if (!promotionTypes.includes(promotionType as PromotionType))
-			throw Error(
-				`Expect promotion type in ${promotionTypes}, got ${promotionType}`
-			);
-
-		this._promotionType = promotionType as PromotionType;
+	@Read
+	@Write
+	@Required
+	@Type(Number)
+	get productId(): ProductId {
+		return this._productId;
 	}
+}
 
-	private updateValue(value: number) {
-		if (value <= 0)
-			throw Error(
-				`Expect promotion value to be greater than zero, got ${value}`
-			);
+export type PromotionId = number | null;
 
-		this._value = value;
+export class Promotion {
+	private _id: PromotionId = null;
+	private _name: string = null;
+	private _description: string = null;
+	private _startedAt: Date = new Date();
+	private _endedAt: Date = new Date();
+	private _condition: string = null;
+	private _value: number = 0;
+	private _promotionType: PromotionType = PromotionType.FIXED;
+	private _promotionDetails: PromotionDetail[] = [];
+
+	private constructor() {}
+
+	static create(input: any) {
+		let entity = create(Promotion, input);
+		entity.updateDates(entity.startedAt, entity.endedAt);
+
+		return entity;
 	}
 
 	private updateDates(startedAt: Date, endedAt: Date) {
@@ -91,15 +85,6 @@ export class Promotion {
 		}
 	}
 
-	private applyPromotionTo(productIds: number[]): void {
-		if (productIds.length < 1)
-			throw Error(
-				`Expect promotion to have at least one product Id, got ${productIds}`
-			);
-
-		this._promotionDetails = productIds.map(PromotionDetail.create);
-	}
-
 	public applyDiscount(product: Product): number {
 		const searchedDetails = this._promotionDetails.filter(
 			(pd) => pd.productId == product.id
@@ -112,88 +97,110 @@ export class Promotion {
 		return product.price - this.calculateDiscount(product.price);
 	}
 
-	get id() {
+	// Setters
+	private set id(value: PromotionId) {
+		this._id = value;
+	}
+
+	private set name(value: string) {
+		this._name = value;
+	}
+
+	private set description(value: string) {
+		this._description = value;
+	}
+
+	private set startedAt(value: Date) {
+		this._startedAt = value;
+	}
+
+	private set endedAt(value: Date) {
+		this._endedAt = value;
+	}
+
+	private set condition(value: string) {
+		this._condition = value;
+	}
+
+	private set value(value: number) {
+		if (value < 0) throw Error(`Invalid value, ${value}`);
+		this._value = value;
+	}
+
+	private set promotionType(value: PromotionType) {
+		const types = Object.keys(PromotionType);
+		if (!types.includes(value))
+			throw Error(`Invalid promotion type, ${value}`);
+		this._promotionType = value;
+	}
+
+	private set promotionDetails(value: PromotionDetail[]) {
+		if (value.length < 1)
+			throw Error(`Expect promotion to have at least one product Id`);
+		this._promotionDetails = value;
+	}
+
+	// Getters
+	@Read
+	@Type(Number)
+	get id(): PromotionId {
 		return this._id;
 	}
+	@Read
+	@Write
+	@Required
+	@Type(String)
 	get name(): string {
 		return this._name;
 	}
+	@Read
+	@Write
+	@Optional
+	@Type(String)
 	get description(): string {
 		return this._description;
 	}
+	@Read
+	@Write
+	@Required
+	@Type(Date)
 	get startedAt(): Date {
 		return this._startedAt;
 	}
+	@Read
+	@Write
+	@Required
+	@Type(Date)
 	get endedAt(): Date {
 		return this._endedAt;
 	}
+	@Read
+	@Write
+	@Optional
+	@Type(String)
 	get condition(): string {
 		return this._condition;
 	}
+	@Read
+	@Write
+	@Required
+	@Type(Number)
 	get value(): number {
 		return this._value;
 	}
+	@Read
+	@Write
+	@Required
+	@Type(PromotionType)
 	get promotionType(): PromotionType {
 		return this._promotionType;
 	}
+	@Read
+	@Write
+	@Required
+	@Type(PromotionDetail)
 	get promotionDetails(): PromotionDetail[] {
 		// Return a shallow copy to protect internal mutation
 		return [...this._promotionDetails];
 	}
-}
-
-export enum PromotionType {
-	PERCENTAGE = "PERCENTAGE",
-	FIXED = "FIXED",
-}
-
-export class PromotionDetail {
-	private _productId: number;
-	private _promotionId: number;
-
-	private constructor() {}
-
-	static create(input) {
-		let output = new PromotionDetail();
-
-		output._productId = input;
-
-		return output;
-	}
-
-	static rehydrate(input) {
-		let output = new PromotionDetail();
-
-		output._productId = input.productId;
-		output._promotionId = input.promotionId;
-
-		return output;
-	}
-
-	get productId() {
-		return this._productId;
-	}
-}
-
-export interface PromotionCreateProps {
-	name: string;
-	description: string;
-	startedAt: Date;
-	endedAt: Date;
-	condition: string;
-	value: number;
-	promotionType: string;
-	productIds: number[];
-}
-
-export interface PromotionRehydrateProps {
-	id: number;
-	name: string;
-	description: string;
-	startedAt: Date;
-	endedAt: Date;
-	condition: string;
-	value: number;
-	promotionType: string;
-	promotionDetails: [];
 }

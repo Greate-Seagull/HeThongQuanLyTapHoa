@@ -2,7 +2,7 @@ import { GoodReceipt, GoodReceiptDetail } from "../../domain/good-receipt";
 
 export class GoodReceiptMapper {
 	static toDomain(raw: any) {
-		return GoodReceipt.rehydrate(raw);
+		return GoodReceipt.fromPersistence(raw);
 	}
 
 	static toPersistence(entity: GoodReceipt) {

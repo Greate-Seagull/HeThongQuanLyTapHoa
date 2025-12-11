@@ -1,17 +1,27 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { EmployeeAccountMapper } from "../mappers/employee-account.mapper";
 import { EmployeeAccount } from "../../domain/employee-account";
+import {
+	fromPersistence,
+	toPersistenceObject,
+} from "../../domain/services/mapper.service";
+import { ChangeTracker } from "../cache/change-tracker";
+import { buildSafePrismaSelect } from "../../domain/services/query-builder.service";
 
 export class EmployeeAccountRepository implements EmployeeAccountRepository {
+	private tracker = new ChangeTracker<any>();
+
 	constructor(private readonly prisma: PrismaClient) {}
 
 	async add(transaction: Prisma.TransactionClient, account: EmployeeAccount) {
-		const raw = await transaction.employeeAccount.create({
-			data: EmployeeAccountMapper.toPersistence(account),
-			select: EmployeeAccountRepository.baseQuery,
+		const repo = transaction ? transaction : this.prisma;
+		const raw = await repo.employeeAccount.create({
+			data: this.tracker.diff(account.id, toPersistenceObject(account)),
+			...EmployeeAccountRepository.baseQuery,
 		});
 
-		return EmployeeAccountMapper.toDomain(raw);
+		const savedEntity = fromPersistence(EmployeeAccount, raw);
+		this.tracker.track(savedEntity.id, raw);
+		return savedEntity;
 	}
 
 	async getByUsername(username: string) {
@@ -19,10 +29,14 @@ export class EmployeeAccountRepository implements EmployeeAccountRepository {
 			where: {
 				username,
 			},
-			select: EmployeeAccountRepository.baseQuery,
+			...EmployeeAccountRepository.baseQuery,
 		});
 
-		return EmployeeAccountMapper.toDomain(raw);
+		if (!raw) return null;
+
+		const savedEntity = fromPersistence(EmployeeAccount, raw);
+		this.tracker.track(savedEntity.id, raw);
+		return savedEntity;
 	}
 
 	async save(
@@ -32,19 +46,14 @@ export class EmployeeAccountRepository implements EmployeeAccountRepository {
 		const repo = transaction ? transaction : this.prisma;
 		const raw = await repo.employeeAccount.update({
 			where: { id: account.id },
-			data: EmployeeAccountMapper.toPersistence(account),
-			select: EmployeeAccountRepository.baseQuery,
+			data: this.tracker.diff(account.id, toPersistenceObject(account)),
+			...EmployeeAccountRepository.baseQuery,
 		});
 
-		return EmployeeAccountMapper.toDomain(raw);
+		const savedEntity = fromPersistence(EmployeeAccount, raw);
+		this.tracker.track(savedEntity.id, raw);
+		return savedEntity;
 	}
 
-	static baseQuery = {
-		id: true,
-		employeeId: true,
-		username: true,
-		passwordHash: true,
-		salt: true,
-		loggedAt: true,
-	};
+	static baseQuery = buildSafePrismaSelect(EmployeeAccount);
 }

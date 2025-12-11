@@ -1,7 +1,12 @@
+import z from "zod";
 import { prisma, signUpUsecase } from "../../src/composition-root";
 import { account, send, user } from "./sign-up.test-data";
 
 jest.setTimeout(20000);
+
+const outputSchema = z.object({
+	token: z.string(),
+});
 
 describe("Sign up integration test", () => {
 	let input;
@@ -27,7 +32,7 @@ describe("Sign up integration test", () => {
 		});
 
 		it("Should return jwt", () => {
-			expect(output).toHaveProperty("token");
+			expect(() => outputSchema.parse(output)).not.toThrow();
 		});
 	});
 

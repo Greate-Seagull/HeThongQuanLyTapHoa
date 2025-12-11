@@ -3,6 +3,7 @@ export const product2 = {
 	name: "update products",
 	price: 100000,
 	barcode: 234567,
+	amount: 200,
 };
 
 export const product1Input = {
@@ -20,4 +21,4 @@ export const product2Input = {
 	barcode: 234568,
 };
 
-export const send = { products: [product1Input, product2Input] };
+export const send = { authId: 1, products: [product1Input, product2Input] };
