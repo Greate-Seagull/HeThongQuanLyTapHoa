@@ -1,0 +1,1050 @@
+import { apiClient } from './api-client';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
+
+// Report types
+export interface InventoryReportData {
+  summary: {
+    totalProducts: number;
+    lowStockProducts: number;
+    outOfStockProducts: number;
+    totalValue: number;
+  };
+  products: any[];
+}
+
+export interface GoodsReceiptReportData {
+  summary: {
+    totalGoodReceipts: number;
+    totalAmount: number;
+    totalQuantity: number;
+    averageAmount: number;
+  };
+  goodReceipts: any[];
+}
+
+export interface SalesReportData {
+  summary: {
+    totalInvoices: number;
+    totalRevenue: number;
+    totalQuantity: number;
+    averageInvoiceValue: number;
+    totalPointsUsed: number;
+  };
+  sales: any[];
+}
+
+export interface CustomerReportData {
+  summary: {
+    totalCustomers: number;
+    totalPoints: number;
+    totalSpent: number;
+    totalPointsUsed: number;
+    averageSpent: number;
+  };
+  customers: any[];
+}
+
+export interface StocktakingReportData {
+  summary: {
+    totalStocktakings: number;
+    totalProductsChecked: number;
+    totalDiscrepancies: number;
+    totalDiscrepancyAmount: number;
+  };
+  stocktakings: any[];
+}
+
+export interface RevenueProfitReportData {
+  totalRevenue: number;
+  totalCost: number;
+  totalProfit: number;
+  profitMargin: string;
+  groupBy: string;
+  data?: any[];
+  totalInvoices?: number;
+  totalGoodReceipts?: number;
+  averageInvoiceValue?: number;
+}
+
+// API calls
+export const getInventoryReport = async (
+  lowStockThreshold?: number
+): Promise<InventoryReportData> => {
+  try {
+    const params = new URLSearchParams();
+    if (lowStockThreshold !== undefined) {
+      params.append('lowStockThreshold', lowStockThreshold.toString());
+    }
+    
+    const response: any = await apiClient.get(`/reports/inventory?${params.toString()}`);
+    console.log('Inventory report FULL response:', response);
+    console.log('Inventory report response.data:', response.data);
+    console.log('Inventory report response type:', typeof response);
+    
+    // Return response directly (not response.data)
+    return response;
+  } catch (error) {
+    console.error('Error in getInventoryReport:', error);
+    throw error;
+  }
+};
+
+export const getGoodsReceiptReport = async (params: {
+  startDate?: string;
+  endDate?: string;
+  supplierId?: number;
+}): Promise<GoodsReceiptReportData> => {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    if (params.supplierId) queryParams.append('supplierId', params.supplierId.toString());
+    
+    const response: any = await apiClient.get(`/reports/goods-receipt?${queryParams.toString()}`);
+    console.log('Goods receipt report response:', response);
+    
+    return response;
+  } catch (error) {
+    console.error('Error in getGoodsReceiptReport:', error);
+    throw error;
+  }
+};
+
+export const getSalesReport = async (params: {
+  startDate?: string;
+  endDate?: string;
+  employeeId?: number;
+  userId?: number;
+}): Promise<SalesReportData> => {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    if (params.employeeId) queryParams.append('employeeId', params.employeeId.toString());
+    if (params.userId) queryParams.append('userId', params.userId.toString());
+    
+    const response: any = await apiClient.get(`/reports/sales?${queryParams.toString()}`);
+    console.log('Sales report response:', response);
+    
+    return response;
+  } catch (error) {
+    console.error('Error in getSalesReport:', error);
+    throw error;
+  }
+};
+
+export const getCustomerReport = async (
+  orderBy?: 'point' | 'totalSpent'
+): Promise<CustomerReportData> => {
+  try {
+    const params = new URLSearchParams();
+    if (orderBy) params.append('orderBy', orderBy);
+    
+    const response: any = await apiClient.get(`/reports/customer?${params.toString()}`);
+    console.log('Customer report response:', response);
+    
+    return response;
+  } catch (error) {
+    console.error('Error in getCustomerReport:', error);
+    throw error;
+  }
+};
+
+export const getStocktakingReport = async (params: {
+  startDate?: string;
+  endDate?: string;
+  hasDiscrepancy?: boolean;
+}): Promise<StocktakingReportData> => {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    if (params.hasDiscrepancy !== undefined) {
+      queryParams.append('hasDiscrepancy', params.hasDiscrepancy.toString());
+    }
+    
+    const response: any = await apiClient.get(`/reports/stocktaking?${queryParams.toString()}`);
+    console.log('Stocktaking report response:', response);
+    
+    return response;
+  } catch (error) {
+    console.error('Error in getStocktakingReport:', error);
+    throw error;
+  }
+};
+
+export const getRevenueProfitReport = async (params: {
+  startDate?: string;
+  endDate?: string;
+  groupBy?: 'product' | 'category' | 'time';
+}): Promise<RevenueProfitReportData> => {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    if (params.groupBy) queryParams.append('groupBy', params.groupBy);
+    
+    const response: any = await apiClient.get(`/reports/revenue-profit?${queryParams.toString()}`);
+    console.log('Revenue/Profit report response:', response);
+    
+    return response;
+  } catch (error) {
+    console.error('Error in getRevenueProfitReport:', error);
+    throw error;
+  }
+};
+
+// Excel export functions
+export const exportInventoryToExcel = async (data: InventoryReportData) => {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Báo Cáo Tồn Kho');
+
+  // Title
+  worksheet.mergeCells('A1:J1');
+  const titleCell = worksheet.getCell('A1');
+  titleCell.value = 'BÁO CÁO TỒN KHO';
+  titleCell.font = { size: 16, bold: true, color: { argb: 'FF0066CC' } };
+  titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+  // Export date
+  worksheet.mergeCells('A2:J2');
+  const dateCell = worksheet.getCell('A2');
+  dateCell.value = `Ngày xuất: ${new Date().toLocaleString('vi-VN')}`;
+  dateCell.font = { italic: true };
+  dateCell.alignment = { horizontal: 'center' };
+
+  worksheet.addRow([]);
+
+  // Summary section with borders and formatting
+  worksheet.mergeCells('A4:B4');
+  const summaryTitle = worksheet.getCell('A4');
+  summaryTitle.value = 'TỔNG KẾT:';
+  summaryTitle.font = { bold: true, size: 12 };
+  summaryTitle.border = {
+    top: { style: 'thin' },
+    left: { style: 'thin' },
+    bottom: { style: 'thin' },
+    right: { style: 'thin' }
+  };
+
+  const summaryRows = [
+    ['Tổng số sản phẩm:', data.summary.totalProducts],
+    ['Sản phẩm sắp hết:', data.summary.lowStockProducts],
+    ['Sản phẩm hết hàng:', data.summary.outOfStockProducts],
+    ['Tổng giá trị kho:', data.summary.totalValue.toLocaleString('vi-VN') + 'đ']
+  ];
+
+  summaryRows.forEach(rowData => {
+    const row = worksheet.addRow(rowData);
+    row.eachCell((cell, colNumber) => {
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+      if (colNumber === 1) {
+        cell.font = { bold: true };
+        cell.alignment = { wrapText: true, vertical: 'middle' };
+      }
+      if (colNumber === 2) {
+        cell.alignment = { horizontal: 'right', vertical: 'middle' };
+      }
+    });
+  });
+
+  // DON'T set widths here - will be set at the end
+  worksheet.addRow([]);
+
+  // Headers
+  const headerRow = worksheet.addRow([
+    'Mã SP',
+    'Tên sản phẩm',
+    'Mã vạch',
+    'Số lượng',
+    'Đơn vị',
+    'Giá',
+    'Trạng thái',
+    'Nhà cung cấp',
+    'Loại SP',
+    'Vị trí'
+  ]);
+
+  // Style header - only color cells that have data
+  headerRow.eachCell((cell) => {
+    cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF4472C4' }
+    };
+    cell.alignment = { horizontal: 'center', vertical: 'middle' };
+    cell.border = {
+      top: { style: 'thin' },
+      left: { style: 'thin' },
+      bottom: { style: 'thin' },
+      right: { style: 'thin' }
+    };
+  });
+  headerRow.height = 20;
+
+  // Add data with borders
+  const startRow = headerRow.number;
+  data.products.forEach((product: any) => {
+    // Backend trả: locations[] với shelf, rack, slot
+    // supplier là string "N/A" hoặc tên NCC
+    const locations = product.locations && product.locations.length > 0
+      ? product.locations.map((l: any) => l.fullLocation || `${l.shelf}-${l.rack}-${l.slot}`).join(', ')
+      : 'Chưa xếp kho';
+
+    const row = worksheet.addRow([
+      product.id,
+      product.name,
+      product.barcode,
+      product.amount,
+      product.unit,
+      product.price.toLocaleString('vi-VN'),
+      product.status,
+      product.supplier || 'N/A',  // Backend trả string
+      product.category || 'N/A',  // Backend trả string
+      locations
+    ]);
+    
+    // Align numbers to center/right
+    row.getCell(4).alignment = { horizontal: 'center' };
+    row.getCell(6).alignment = { horizontal: 'right' };
+  });
+
+  // Add borders to all data cells
+  const endRow = worksheet.lastRow?.number || startRow;
+  for (let i = startRow; i <= endRow; i++) {
+    for (let j = 1; j <= 10; j++) {
+      const cell = worksheet.getRow(i).getCell(j);
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+    }
+  }
+
+  // Set all column widths at the end
+  worksheet.getColumn(1).width = 35;  // Wide enough for summary labels
+  worksheet.getColumn(2).width = 30;  // Tên sản phẩm / Value
+  worksheet.getColumn(3).width = 15;  // Mã vạch
+  worksheet.getColumn(4).width = 12;  // Số lượng
+  worksheet.getColumn(5).width = 12;  // Đơn vị
+  worksheet.getColumn(6).width = 15;  // Giá
+  worksheet.getColumn(7).width = 15;  // Trạng thái
+  worksheet.getColumn(8).width = 20;  // NCC
+  worksheet.getColumn(9).width = 18;  // Loại
+  worksheet.getColumn(10).width = 30; // Vị trí
+
+  // Export
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  });
+  saveAs(blob, `bao-cao-ton-kho-${new Date().getTime()}.xlsx`);
+};
+
+export const exportGoodsReceiptToExcel = async (data: GoodsReceiptReportData) => {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Báo Cáo Nhập Hàng');
+
+  // Title
+  worksheet.mergeCells('A1:E1');
+  const titleCell = worksheet.getCell('A1');
+  titleCell.value = 'BÁO CÁO NHẬP HÀNG';
+  titleCell.font = { size: 16, bold: true, color: { argb: 'FF70AD47' } };
+  titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+  worksheet.mergeCells('A2:E2');
+  const dateCell = worksheet.getCell('A2');
+  dateCell.value = `Ngày xuất: ${new Date().toLocaleString('vi-VN')}`;
+  dateCell.font = { italic: true };
+  dateCell.alignment = { horizontal: 'center' };
+
+  worksheet.addRow([]);
+
+  // Summary section with borders
+  worksheet.mergeCells('A4:B4');
+  const summaryTitle = worksheet.getCell('A4');
+  summaryTitle.value = 'TỔNG KẾT:';
+  summaryTitle.font = { bold: true, size: 12 };
+  summaryTitle.border = {
+    top: { style: 'thin' },
+    left: { style: 'thin' },
+    bottom: { style: 'thin' },
+    right: { style: 'thin' }
+  };
+
+  const summaryRows = [
+    ['Tổng số phiếu:', data.summary.totalGoodReceipts],
+    ['Tổng số lượng:', data.summary.totalQuantity],
+    ['Tổng tiền:', data.summary.totalAmount.toLocaleString('vi-VN') + 'đ'],
+    ['Trung bình/phiếu:', data.summary.averageAmount.toLocaleString('vi-VN') + 'đ']
+  ];
+
+  summaryRows.forEach(rowData => {
+    const row = worksheet.addRow(rowData);
+    row.eachCell((cell, colNumber) => {
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+      if (colNumber === 1) {
+        cell.font = { bold: true };
+        cell.alignment = { wrapText: true, vertical: 'middle' };
+      }
+      if (colNumber === 2) {
+        cell.alignment = { horizontal: 'right', vertical: 'middle' };
+      }
+    });
+  });
+
+  worksheet.addRow([]);
+
+  const headerRow = worksheet.addRow(['Mã phiếu', 'Ngày nhập', 'Nhân viên', 'Sản phẩm', 'NCC', 'SL', 'Giá nhập', 'Thành tiền']);
+  
+  headerRow.eachCell((cell) => {
+    cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF70AD47' }
+    };
+    cell.alignment = { horizontal: 'center', vertical: 'middle' };
+    cell.border = {
+      top: { style: 'thin' },
+      left: { style: 'thin' },
+      bottom: { style: 'thin' },
+      right: { style: 'thin' }
+    };
+  });
+  headerRow.alignment = { horizontal: 'center', vertical: 'middle' };
+  headerRow.height = 20;
+
+  const startRow = headerRow.number;
+  data.goodReceipts.forEach((gr: any) => {
+    // Backend trả: details[] với productName, supplier, quantity, price, totalPrice
+    if (gr.details && gr.details.length > 0) {
+      gr.details.forEach((detail: any, index: number) => {
+        const row = worksheet.addRow([
+          index === 0 ? gr.id : '',  // Chỉ hiện mã phiếu ở dòng đầu
+          index === 0 ? new Date(gr.createdAt).toLocaleString('vi-VN') : '',
+          index === 0 ? gr.employee : '',
+          detail.productName || 'N/A',
+          detail.supplier || 'N/A',
+          detail.quantity || 0,
+          (detail.price || 0).toLocaleString('vi-VN') + 'đ',
+          (detail.totalPrice || 0).toLocaleString('vi-VN') + 'đ'
+        ]);
+        row.getCell(6).alignment = { horizontal: 'center' };
+        row.getCell(7).alignment = { horizontal: 'right' };
+        row.getCell(8).alignment = { horizontal: 'right' };
+      });
+    } else {
+      // Nếu không có chi tiết, hiển thị tổng hợp
+      const row = worksheet.addRow([
+        gr.id,
+        new Date(gr.createdAt).toLocaleString('vi-VN'),
+        gr.employee,
+        `${gr.details?.length || 0} sản phẩm`,
+        '',
+        gr.totalQuantity,
+        '',
+        gr.totalAmount.toLocaleString('vi-VN') + 'đ'
+      ]);
+      row.getCell(6).alignment = { horizontal: 'center' };
+      row.getCell(8).alignment = { horizontal: 'right' };
+    }
+  });
+
+  const endRow = worksheet.lastRow?.number || startRow;
+  for (let i = startRow; i <= endRow; i++) {
+    for (let j = 1; j <= 8; j++) {
+      const cell = worksheet.getRow(i).getCell(j);
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+    }
+  }
+
+  // Set column widths at the end
+  worksheet.getColumn(1).width = 35;  // Wide for summary labels + data
+  worksheet.getColumn(2).width = 20;  // Ngày nhập
+  worksheet.getColumn(3).width = 20;  // Nhân viên
+  worksheet.getColumn(4).width = 30;  // Sản phẩm
+  worksheet.getColumn(5).width = 25;  // NCC
+  worksheet.getColumn(6).width = 10;  // SL
+  worksheet.getColumn(7).width = 15;  // Giá nhập
+  worksheet.getColumn(8).width = 18;  // Thành tiền
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  });
+  saveAs(blob, `bao-cao-nhap-hang-${new Date().getTime()}.xlsx`);
+};
+
+export const exportSalesToExcel = async (data: SalesReportData) => {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Báo Cáo Bán Hàng');
+
+  worksheet.mergeCells('A1:F1');
+  const titleCell = worksheet.getCell('A1');
+  titleCell.value = 'BÁO CÁO BÁN HÀNG';
+  titleCell.font = { size: 16, bold: true, color: { argb: 'FFFFC000' } };
+  titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+  worksheet.mergeCells('A2:F2');
+  const dateCell = worksheet.getCell('A2');
+  dateCell.value = `Ngày xuất: ${new Date().toLocaleString('vi-VN')}`;
+  dateCell.font = { italic: true };
+  dateCell.alignment = { horizontal: 'center' };
+
+  worksheet.addRow([]);
+
+  // Summary with borders
+  worksheet.mergeCells('A4:B4');
+  const summaryTitle = worksheet.getCell('A4');
+  summaryTitle.value = 'TỔNG KẾT:';
+  summaryTitle.font = { bold: true, size: 12 };
+  summaryTitle.border = {
+    top: { style: 'thin' },
+    left: { style: 'thin' },
+    bottom: { style: 'thin' },
+    right: { style: 'thin' }
+  };
+
+  const summaryRows = [
+    ['Tổng hóa đơn:', data.summary.totalInvoices],
+    ['Tổng doanh thu:', data.summary.totalRevenue.toLocaleString('vi-VN') + 'đ'],
+    ['Tổng số lượng:', data.summary.totalQuantity],
+    ['Trung bình/HĐ:', data.summary.averageInvoiceValue.toLocaleString('vi-VN') + 'đ'],
+    ['Tổng điểm dùng:', data.summary.totalPointsUsed]
+  ];
+
+  summaryRows.forEach(rowData => {
+    const row = worksheet.addRow(rowData);
+    row.eachCell((cell, colNumber) => {
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+      if (colNumber === 1) {
+        cell.font = { bold: true };
+        cell.alignment = { wrapText: true, vertical: 'middle' };
+      }
+      if (colNumber === 2) {
+        cell.alignment = { horizontal: 'right', vertical: 'middle' };
+      }
+    });
+  });
+
+  worksheet.addRow([]);
+
+  const headerRow = worksheet.addRow(['Mã HĐ', 'Nhân viên', 'Khách hàng', 'SL SP', 'Điểm dùng', 'Tổng tiền']);
+  
+  headerRow.eachCell((cell) => {
+    cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFFFC000' }
+    };
+    cell.alignment = { horizontal: 'center', vertical: 'middle' };
+    cell.border = {
+      top: { style: 'thin' },
+      left: { style: 'thin' },
+      bottom: { style: 'thin' },
+      right: { style: 'thin' }
+    };
+  });
+  headerRow.alignment = { horizontal: 'center', vertical: 'middle' };
+  headerRow.height = 20;
+
+  const startRow = headerRow.number;
+  data.sales.forEach((sale: any) => {
+    const row = worksheet.addRow([
+      sale.id,
+      sale.employee,
+      sale.customer,
+      sale.totalQuantity,
+      sale.usedPoint,
+      sale.total.toLocaleString('vi-VN') + 'đ'
+    ]);
+    row.getCell(4).alignment = { horizontal: 'center' };
+    row.getCell(5).alignment = { horizontal: 'center' };
+    row.getCell(6).alignment = { horizontal: 'right' };
+  });
+
+  const endRow = worksheet.lastRow?.number || startRow;
+  for (let i = startRow; i <= endRow; i++) {
+    for (let j = 1; j <= 6; j++) {
+      const cell = worksheet.getRow(i).getCell(j);
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+    }
+  }
+
+  // Set column widths at the end
+  worksheet.getColumn(1).width = 35;  // Wide for summary labels
+  worksheet.getColumn(2).width = 25;  // Nhân viên
+  worksheet.getColumn(3).width = 25;  // Khách hàng
+  worksheet.getColumn(4).width = 12;  // SL SP
+  worksheet.getColumn(5).width = 12;  // Điểm dùng
+  worksheet.getColumn(6).width = 18;  // Tổng tiền
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  });
+  saveAs(blob, `bao-cao-ban-hang-${new Date().getTime()}.xlsx`);
+};
+
+export const exportCustomerToExcel = async (data: CustomerReportData) => {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Báo Cáo Khách Hàng');
+
+  worksheet.mergeCells('A1:G1');
+  const titleCell = worksheet.getCell('A1');
+  titleCell.value = 'BÁO CÁO KHÁCH HÀNG THÀNH VIÊN';
+  titleCell.font = { size: 16, bold: true, color: { argb: 'FF5B9BD5' } };
+  titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+  worksheet.mergeCells('A2:G2');
+  const dateCell = worksheet.getCell('A2');
+  dateCell.value = `Ngày xuất: ${new Date().toLocaleString('vi-VN')}`;
+  dateCell.font = { italic: true };
+  dateCell.alignment = { horizontal: 'center' };
+
+  worksheet.addRow([]);
+  
+  // Summary with borders
+  worksheet.mergeCells('A4:B4');
+  const summaryTitle = worksheet.getCell('A4');
+  summaryTitle.value = 'TỔNG KẾT:';
+  summaryTitle.font = { bold: true, size: 12 };
+  summaryTitle.border = {
+    top: { style: 'thin' },
+    left: { style: 'thin' },
+    bottom: { style: 'thin' },
+    right: { style: 'thin' }
+  };
+
+  const summaryRows = [
+    ['Tổng khách hàng:', data.summary.totalCustomers],
+    ['Tổng điểm hiện tại:', data.summary.totalPoints],
+    ['Tổng chi tiêu:', data.summary.totalSpent.toLocaleString('vi-VN') + 'đ'],
+    ['Tổng điểm đã dùng:', data.summary.totalPointsUsed],
+    ['TB chi tiêu/KH:', data.summary.averageSpent.toLocaleString('vi-VN') + 'đ']
+  ];
+
+  summaryRows.forEach(rowData => {
+    const row = worksheet.addRow(rowData);
+    row.eachCell((cell, colNumber) => {
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+      if (colNumber === 1) {
+        cell.font = { bold: true };
+        cell.alignment = { wrapText: true, vertical: 'middle' };
+      }
+      if (colNumber === 2) {
+        cell.alignment = { horizontal: 'right', vertical: 'middle' };
+      }
+    });
+  });
+
+  worksheet.addRow([]);
+
+  const headerRow = worksheet.addRow(['Mã KH', 'Tên KH', 'SĐT', 'Điểm hiện tại', 'Điểm đã dùng', 'Tổng chi tiêu', 'Số đơn']);
+  
+  headerRow.eachCell((cell) => {
+    cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF5B9BD5' }
+    };
+    cell.alignment = { horizontal: 'center', vertical: 'middle' };
+    cell.border = {
+      top: { style: 'thin' },
+      left: { style: 'thin' },
+      bottom: { style: 'thin' },
+      right: { style: 'thin' }
+    };
+  });
+  headerRow.height = 20;
+
+  const startRow = headerRow.number;
+  data.customers.forEach((customer) => {
+    const row = worksheet.addRow([
+      customer.id,
+      customer.name,
+      customer.phoneNumber,
+      customer.currentPoints,
+      customer.totalPointsUsed,
+      customer.totalSpent.toLocaleString('vi-VN') + 'đ',
+      customer.totalPurchases
+    ]);
+    row.getCell(4).alignment = { horizontal: 'center' };
+    row.getCell(5).alignment = { horizontal: 'center' };
+    row.getCell(6).alignment = { horizontal: 'right' };
+    row.getCell(7).alignment = { horizontal: 'center' };
+  });
+
+  const endRow = worksheet.lastRow?.number || startRow;
+  for (let i = startRow; i <= endRow; i++) {
+    for (let j = 1; j <= 7; j++) {
+      worksheet.getRow(i).getCell(j).border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+    }
+  }
+
+  // Set column widths at the end
+  worksheet.getColumn(1).width = 35;  // Wide for summary labels
+  worksheet.getColumn(2).width = 25;
+  worksheet.getColumn(3).width = 15;
+  worksheet.getColumn(4).width = 15;
+  worksheet.getColumn(5).width = 15;
+  worksheet.getColumn(6).width = 18;
+  worksheet.getColumn(7).width = 12;
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  });
+  saveAs(blob, `bao-cao-khach-hang-${new Date().getTime()}.xlsx`);
+};
+
+export const exportStocktakingToExcel = async (data: StocktakingReportData) => {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Báo Cáo Kiểm Kê');
+
+  worksheet.mergeCells('A1:E1');
+  const titleCell = worksheet.getCell('A1');
+  titleCell.value = 'BÁO CÁO KIỂM KÊ';
+  titleCell.font = { size: 16, bold: true, color: { argb: 'FFED7D31' } };
+  titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+  worksheet.mergeCells('A2:E2');
+  const dateCell = worksheet.getCell('A2');
+  dateCell.value = `Ngày xuất: ${new Date().toLocaleString('vi-VN')}`;
+  dateCell.font = { italic: true };
+  dateCell.alignment = { horizontal: 'center' };
+
+  worksheet.addRow([]);
+  
+  // Summary with borders
+  worksheet.mergeCells('A4:B4');
+  const summaryTitle = worksheet.getCell('A4');
+  summaryTitle.value = 'TỔNG KẾT:';
+  summaryTitle.font = { bold: true, size: 12 };
+  summaryTitle.border = {
+    top: { style: 'thin' },
+    left: { style: 'thin' },
+    bottom: { style: 'thin' },
+    right: { style: 'thin' }
+  };
+
+  const summaryRows = [
+    ['Tổng phiếu kiểm kê:', data.summary.totalStocktakings],
+    ['Tổng SP đã kiểm:', data.summary.totalProductsChecked],
+    ['Tổng chênh lệch:', data.summary.totalDiscrepancies],
+    ['Tổng SL chênh lệch:', data.summary.totalDiscrepancyAmount]
+  ];
+
+  summaryRows.forEach(rowData => {
+    const row = worksheet.addRow(rowData);
+    row.eachCell((cell, colNumber) => {
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+      if (colNumber === 1) {
+        cell.font = { bold: true };
+        cell.alignment = { wrapText: true, vertical: 'middle' };
+      }
+      if (colNumber === 2) {
+        cell.alignment = { horizontal: 'right', vertical: 'middle' };
+      }
+    });
+  });
+
+  worksheet.addRow([]);
+
+  const headerRow = worksheet.addRow(['Mã phiếu', 'Ngày kiểm', 'Nhân viên', 'Sản phẩm', 'Vị trí', 'HT', 'TT', 'Chênh lệch']);
+  
+  headerRow.eachCell((cell) => {
+    cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFED7D31' }
+    };
+    cell.alignment = { horizontal: 'center', vertical: 'middle' };
+    cell.border = {
+      top: { style: 'thin' },
+      left: { style: 'thin' },
+      bottom: { style: 'thin' },
+      right: { style: 'thin' }
+    };
+  });
+  headerRow.alignment = { horizontal: 'center', vertical: 'middle' };
+  headerRow.height = 20;
+
+  const startRow = headerRow.number;
+  data.stocktakings.forEach((st: any) => {
+    // Backend trả: details[] với productName, location, systemQuantity, actualQuantity, discrepancy
+    if (st.details && st.details.length > 0) {
+      st.details.forEach((detail: any, index: number) => {
+        const row = worksheet.addRow([
+          index === 0 ? st.id : '',
+          index === 0 ? new Date(st.createdAt).toLocaleString('vi-VN') : '',
+          index === 0 ? st.employee : '',
+          detail.productName || 'N/A',
+          detail.location || 'N/A',
+          detail.systemQuantity || 0,
+          detail.actualQuantity || 0,
+          detail.discrepancy || 0
+        ]);
+        row.getCell(6).alignment = { horizontal: 'center' };
+        row.getCell(7).alignment = { horizontal: 'center' };
+        row.getCell(8).alignment = { horizontal: 'center' };
+        // Highlight discrepancy
+        if (detail.discrepancy !== 0) {
+          row.getCell(8).font = { bold: true, color: { argb: 'FFFF0000' } };
+        }
+      });
+    } else {
+      const row = worksheet.addRow([
+        st.id,
+        new Date(st.createdAt).toLocaleString('vi-VN'),
+        st.employee,
+        `${st.totalProducts || 0} sản phẩm`,
+        '',
+        '',
+        '',
+        st.totalDiscrepancy || 0
+      ]);
+      row.getCell(8).alignment = { horizontal: 'center' };
+    }
+  });
+
+  const endRow = worksheet.lastRow?.number || startRow;
+  for (let i = startRow; i <= endRow; i++) {
+    for (let j = 1; j <= 8; j++) {
+      worksheet.getRow(i).getCell(j).border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+    }
+  }
+
+  // Set column widths at the end
+  worksheet.getColumn(1).width = 35;  // Wide for summary labels
+  worksheet.getColumn(2).width = 20;  // Ngày kiểm
+  worksheet.getColumn(3).width = 20;  // Nhân viên
+  worksheet.getColumn(4).width = 30;  // Sản phẩm
+  worksheet.getColumn(5).width = 25;  // Vị trí
+  worksheet.getColumn(6).width = 10;  // Hệ thống
+  worksheet.getColumn(7).width = 10;  // Thực tế
+  worksheet.getColumn(8).width = 12;  // Chênh lệch
+  worksheet.getColumn(5).width = 15;
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  });
+  saveAs(blob, `bao-cao-kiem-ke-${new Date().getTime()}.xlsx`);
+};
+
+export const exportRevenueProfitToExcel = async (data: RevenueProfitReportData) => {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Báo Cáo Doanh Thu - Lợi Nhuận');
+
+  worksheet.mergeCells('A1:E1');
+  const titleCell = worksheet.getCell('A1');
+  titleCell.value = 'BÁO CÁO DOANH THU VÀ LỢI NHUẬN';
+  titleCell.font = { size: 16, bold: true, color: { argb: 'FF00B050' } };
+  titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+  worksheet.mergeCells('A2:E2');
+  const dateCell = worksheet.getCell('A2');
+  dateCell.value = `Ngày xuất: ${new Date().toLocaleString('vi-VN')}`;
+  dateCell.font = { italic: true };
+  dateCell.alignment = { horizontal: 'center' };
+
+  worksheet.addRow([]);
+  
+  // Summary with borders
+  worksheet.mergeCells('A4:B4');
+  const summaryTitle = worksheet.getCell('A4');
+  summaryTitle.value = 'TỔNG KẾT:';
+  summaryTitle.font = { bold: true, size: 12 };
+  summaryTitle.border = {
+    top: { style: 'thin' },
+    left: { style: 'thin' },
+    bottom: { style: 'thin' },
+    right: { style: 'thin' }
+  };
+
+  const summaryRows = [
+    ['Tổng doanh thu:', data.totalRevenue.toLocaleString('vi-VN') + 'đ'],
+    ['Tổng chi phí:', data.totalCost.toLocaleString('vi-VN') + 'đ'],
+    ['Lợi nhuận:', data.totalProfit.toLocaleString('vi-VN') + 'đ'],
+    ['Tỷ suất lợi nhuận:', data.profitMargin + '%']
+  ];
+
+  summaryRows.forEach(rowData => {
+    const row = worksheet.addRow(rowData);
+    row.eachCell((cell, colNumber) => {
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+      if (colNumber === 1) {
+        cell.font = { bold: true };
+        // NO wrapText for revenue-profit - single table only
+      }
+      if (colNumber === 2) {
+        cell.alignment = { horizontal: 'right', vertical: 'middle' };
+      }
+    });
+  });
+
+  worksheet.addRow([]);
+
+  let headerRow;
+  let startRow = 0;
+  let numColumns = 0;
+  
+  if (data.groupBy === 'product' && data.data) {
+    headerRow = worksheet.addRow(['Tên sản phẩm', 'Mã vạch', 'Loại SP', 'SL bán', 'Doanh thu']);
+    numColumns = 5;
+    
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF00B050' }
+      };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+    });
+    headerRow.height = 20;
+    
+    startRow = headerRow.number;
+    data.data.forEach((item: any) => {
+      const row = worksheet.addRow([
+        item.productName,
+        item.barcode,
+        item.category,
+        item.quantity,
+        item.revenue.toLocaleString('vi-VN') + 'đ'
+      ]);
+      row.getCell(4).alignment = { horizontal: 'center' };
+      row.getCell(5).alignment = { horizontal: 'right' };
+    });
+  } else if (data.groupBy === 'category' && data.data) {
+    headerRow = worksheet.addRow(['Loại sản phẩm', 'SL bán', 'Doanh thu']);
+    numColumns = 3;
+    
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF00B050' }
+      };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+    });
+    headerRow.height = 20;
+    
+    startRow = headerRow.number;
+    data.data.forEach((item: any) => {
+      const row = worksheet.addRow([
+        item.category,
+        item.quantity,
+        item.revenue.toLocaleString('vi-VN') + 'đ'
+      ]);
+      row.getCell(2).alignment = { horizontal: 'center' };
+      row.getCell(3).alignment = { horizontal: 'right' };
+    });
+  }
+
+  // Add borders to all data cells
+  if (headerRow && numColumns > 0) {
+    const endRow = worksheet.lastRow?.number || startRow;
+    for (let i = startRow; i <= endRow; i++) {
+      for (let j = 1; j <= numColumns; j++) {
+        worksheet.getRow(i).getCell(j).border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+      }
+    }
+
+    // Set fixed column widths (single table, no data below)
+    if (data.groupBy === 'product') {
+      worksheet.getColumn(1).width = 30; // Tên SP
+      worksheet.getColumn(2).width = 15; // Mã vạch
+      worksheet.getColumn(3).width = 18; // Loại
+      worksheet.getColumn(4).width = 12; // SL
+      worksheet.getColumn(5).width = 18; // Doanh thu
+    } else if (data.groupBy === 'category') {
+      worksheet.getColumn(1).width = 25; // Loại SP
+      worksheet.getColumn(2).width = 12; // SL
+      worksheet.getColumn(3).width = 18; // Doanh thu
+    }
+  }
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  });
+  saveAs(blob, `bao-cao-doanh-thu-loi-nhuan-${new Date().getTime()}.xlsx`);
+};

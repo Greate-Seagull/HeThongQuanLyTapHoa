@@ -195,15 +195,15 @@ export type SlotDetailWhereInput = {
   NOT?: Prisma.SlotDetailWhereInput | Prisma.SlotDetailWhereInput[]
   slotId?: Prisma.IntFilter<"SlotDetail"> | number
   productId?: Prisma.IntFilter<"SlotDetail"> | number
-  slot?: Prisma.XOR<Prisma.SlotScalarRelationFilter, Prisma.SlotWhereInput>
   product?: Prisma.XOR<Prisma.ProductScalarRelationFilter, Prisma.ProductWhereInput>
+  slot?: Prisma.XOR<Prisma.SlotScalarRelationFilter, Prisma.SlotWhereInput>
 }
 
 export type SlotDetailOrderByWithRelationInput = {
   slotId?: Prisma.SortOrder
   productId?: Prisma.SortOrder
-  slot?: Prisma.SlotOrderByWithRelationInput
   product?: Prisma.ProductOrderByWithRelationInput
+  slot?: Prisma.SlotOrderByWithRelationInput
 }
 
 export type SlotDetailWhereUniqueInput = Prisma.AtLeast<{
@@ -213,8 +213,8 @@ export type SlotDetailWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.SlotDetailWhereInput | Prisma.SlotDetailWhereInput[]
   slotId?: Prisma.IntFilter<"SlotDetail"> | number
   productId?: Prisma.IntFilter<"SlotDetail"> | number
-  slot?: Prisma.XOR<Prisma.SlotScalarRelationFilter, Prisma.SlotWhereInput>
   product?: Prisma.XOR<Prisma.ProductScalarRelationFilter, Prisma.ProductWhereInput>
+  slot?: Prisma.XOR<Prisma.SlotScalarRelationFilter, Prisma.SlotWhereInput>
 }, "slotId_productId">
 
 export type SlotDetailOrderByWithAggregationInput = {
@@ -236,8 +236,8 @@ export type SlotDetailScalarWhereWithAggregatesInput = {
 }
 
 export type SlotDetailCreateInput = {
-  slot: Prisma.SlotCreateNestedOneWithoutSlotDetailsInput
   product: Prisma.ProductCreateNestedOneWithoutSlotDetailsInput
+  slot: Prisma.SlotCreateNestedOneWithoutSlotDetailsInput
 }
 
 export type SlotDetailUncheckedCreateInput = {
@@ -246,8 +246,8 @@ export type SlotDetailUncheckedCreateInput = {
 }
 
 export type SlotDetailUpdateInput = {
-  slot?: Prisma.SlotUpdateOneRequiredWithoutSlotDetailsNestedInput
   product?: Prisma.ProductUpdateOneRequiredWithoutSlotDetailsNestedInput
+  slot?: Prisma.SlotUpdateOneRequiredWithoutSlotDetailsNestedInput
 }
 
 export type SlotDetailUncheckedUpdateInput = {
@@ -506,22 +506,22 @@ export type SlotDetailUncheckedUpdateManyWithoutSlotInput = {
 export type SlotDetailSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   slotId?: boolean
   productId?: boolean
-  slot?: boolean | Prisma.SlotDefaultArgs<ExtArgs>
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
+  slot?: boolean | Prisma.SlotDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["slotDetail"]>
 
 export type SlotDetailSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   slotId?: boolean
   productId?: boolean
-  slot?: boolean | Prisma.SlotDefaultArgs<ExtArgs>
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
+  slot?: boolean | Prisma.SlotDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["slotDetail"]>
 
 export type SlotDetailSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   slotId?: boolean
   productId?: boolean
-  slot?: boolean | Prisma.SlotDefaultArgs<ExtArgs>
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
+  slot?: boolean | Prisma.SlotDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["slotDetail"]>
 
 export type SlotDetailSelectScalar = {
@@ -531,23 +531,23 @@ export type SlotDetailSelectScalar = {
 
 export type SlotDetailOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"slotId" | "productId", ExtArgs["result"]["slotDetail"]>
 export type SlotDetailInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  slot?: boolean | Prisma.SlotDefaultArgs<ExtArgs>
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
+  slot?: boolean | Prisma.SlotDefaultArgs<ExtArgs>
 }
 export type SlotDetailIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  slot?: boolean | Prisma.SlotDefaultArgs<ExtArgs>
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
+  slot?: boolean | Prisma.SlotDefaultArgs<ExtArgs>
 }
 export type SlotDetailIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  slot?: boolean | Prisma.SlotDefaultArgs<ExtArgs>
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
+  slot?: boolean | Prisma.SlotDefaultArgs<ExtArgs>
 }
 
 export type $SlotDetailPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "SlotDetail"
   objects: {
-    slot: Prisma.$SlotPayload<ExtArgs>
     product: Prisma.$ProductPayload<ExtArgs>
+    slot: Prisma.$SlotPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     slotId: number
@@ -946,8 +946,8 @@ readonly fields: SlotDetailFieldRefs;
  */
 export interface Prisma__SlotDetailClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  slot<T extends Prisma.SlotDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.SlotDefaultArgs<ExtArgs>>): Prisma.Prisma__SlotClient<runtime.Types.Result.GetResult<Prisma.$SlotPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   product<T extends Prisma.ProductDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProductDefaultArgs<ExtArgs>>): Prisma.Prisma__ProductClient<runtime.Types.Result.GetResult<Prisma.$ProductPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  slot<T extends Prisma.SlotDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.SlotDefaultArgs<ExtArgs>>): Prisma.Prisma__SlotClient<runtime.Types.Result.GetResult<Prisma.$SlotPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.

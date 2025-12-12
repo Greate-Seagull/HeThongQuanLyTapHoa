@@ -9,7 +9,9 @@ import { ProductManagement } from '@/components/management/ProductManagement'
 import { LocationManagement } from '@/components/management/LocationManagement'
 import { CustomerManagement } from '@/components/management/CustomerManagement'
 import { Reports } from '@/components/management/Reports'
-import { Users, Tag, Package, MapPin, UserCircle, BarChart3, User } from 'lucide-react'
+import { SupplierManagement } from '@/components/management/SupplierManagement'
+import { ProductCategoryManagement } from '@/components/management/ProductCategoryManagement'
+import { Users, Tag, Package, MapPin, UserCircle, BarChart3, User, Building2, FolderOpen } from 'lucide-react'
 import { useAuthStore } from '@/store/auth-store'
 
 export default function OwnerDashboardPage() {
@@ -20,6 +22,8 @@ export default function OwnerDashboardPage() {
     { id: 'employees', label: 'Nhân viên', icon: <Users className="h-4 w-4" /> },
     { id: 'promotions', label: 'Khuyến mãi', icon: <Tag className="h-4 w-4" /> },
     { id: 'products', label: 'Sản phẩm', icon: <Package className="h-4 w-4" /> },
+    { id: 'suppliers', label: 'Nhà cung cấp', icon: <Building2 className="h-4 w-4" /> },
+    { id: 'categories', label: 'Loại sản phẩm', icon: <FolderOpen className="h-4 w-4" /> },
     { id: 'locations', label: 'Vị trí', icon: <MapPin className="h-4 w-4" /> },
     { id: 'customers', label: 'Khách hàng', icon: <UserCircle className="h-4 w-4" /> },
     { id: 'reports', label: 'Báo cáo', icon: <BarChart3 className="h-4 w-4" /> },
@@ -34,6 +38,10 @@ export default function OwnerDashboardPage() {
         return <PromotionManagement />
       case 'products':
         return <ProductManagement />
+      case 'suppliers':
+        return <SupplierManagement />
+      case 'categories':
+        return <ProductCategoryManagement />
       case 'locations':
         return <LocationManagement />
       case 'customers':

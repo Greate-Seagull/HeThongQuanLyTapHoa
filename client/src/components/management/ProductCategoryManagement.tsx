@@ -1,0 +1,263 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Plus, Edit, Trash2, Search, FolderOpen } from 'lucide-react'
+import { toast } from 'sonner'
+import {
+  getProductCategories,
+  createProductCategory,
+  updateProductCategory,
+  deleteProductCategory,
+  ProductCategory,
+  CreateProductCategoryRequest,
+  UpdateProductCategoryRequest,
+} from '@/services/product-category.service'
+
+export function ProductCategoryManagement() {
+  const [categories, setCategories] = useState<ProductCategory[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [editingCategory, setEditingCategory] = useState<ProductCategory | null>(null)
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+  })
+
+  // Load categories on mount
+  useEffect(() => {
+    loadCategories()
+  }, [])
+
+  const loadCategories = async () => {
+    try {
+      setIsLoading(true)
+      const data = await getProductCategories()
+      setCategories(data)
+    } catch (error: any) {
+      toast.error(error.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const filteredCategories = categories.filter(category =>
+    category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    category.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  const handleOpenDialog = (category?: ProductCategory) => {
+    if (category) {
+      setEditingCategory(category)
+      setFormData({
+        name: category.name,
+        description: category.description || '',
+      })
+    } else {
+      setEditingCategory(null)
+      setFormData({ name: '', description: '' })
+    }
+    setIsDialogOpen(true)
+  }
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false)
+    setEditingCategory(null)
+    setFormData({ name: '', description: '' })
+  }
+
+  const handleSubmit = async () => {
+    if (!formData.name.trim()) {
+      toast.error('Vui lòng nhập tên loại sản phẩm')
+      return
+    }
+
+    try {
+      setIsLoading(true)
+
+      if (editingCategory) {
+        // Update existing category
+        const updateData: UpdateProductCategoryRequest = {
+          id: editingCategory.id,
+          name: formData.name,
+          description: formData.description || undefined,
+        }
+        await updateProductCategory(updateData)
+        toast.success('Cập nhật loại sản phẩm thành công!')
+      } else {
+        // Create new category
+        const createData: CreateProductCategoryRequest = {
+          name: formData.name,
+          description: formData.description || undefined,
+        }
+        await createProductCategory(createData)
+        toast.success('Thêm loại sản phẩm thành công!')
+      }
+
+      handleCloseDialog()
+      loadCategories()
+    } catch (error: any) {
+      toast.error(error.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleDelete = async (id: number, name: string) => {
+    if (!confirm(`Bạn có chắc muốn xóa loại sản phẩm "${name}"?`)) {
+      return
+    }
+
+    try {
+      setIsLoading(true)
+      await deleteProductCategory(id)
+      toast.success('Xóa loại sản phẩm thành công!')
+      loadCategories()
+    } catch (error: any) {
+      toast.error(error.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <FolderOpen className="h-5 w-5" />
+            Quản Lý Loại Sản Phẩm
+          </CardTitle>
+          <Button onClick={() => handleOpenDialog()} disabled={isLoading}>
+            <Plus className="mr-2 h-4 w-4" />
+            Thêm Loại Sản Phẩm
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Search */}
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Tìm kiếm loại sản phẩm (tên, mô tả)..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px]">ID</TableHead>
+                  <TableHead>Tên Loại</TableHead>
+                  <TableHead>Mô Tả</TableHead>
+                  <TableHead className="text-center">Số Sản Phẩm</TableHead>
+                  <TableHead className="text-right">Thao Tác</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8">
+                      Đang tải...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredCategories.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                      Không tìm thấy loại sản phẩm nào
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredCategories.map((category) => (
+                    <TableRow key={category.id}>
+                      <TableCell>{category.id}</TableCell>
+                      <TableCell className="font-medium">{category.name}</TableCell>
+                      <TableCell className="max-w-md truncate">
+                        {category.description || '-'}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {category._count?.products || 0}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenDialog(category)}
+                            disabled={isLoading}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDelete(category.id, category.name)}
+                            disabled={isLoading}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Add/Edit Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingCategory ? 'Cập Nhật Loại Sản Phẩm' : 'Thêm Loại Sản Phẩm Mới'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Tên Loại Sản Phẩm *</Label>
+              <Input
+                id="name"
+                placeholder="Nhập tên loại sản phẩm"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Mô Tả</Label>
+              <Textarea
+                id="description"
+                placeholder="Nhập mô tả"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={4}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCloseDialog} disabled={isLoading}>
+              Hủy
+            </Button>
+            <Button onClick={handleSubmit} disabled={isLoading}>
+              {isLoading ? 'Đang xử lý...' : editingCategory ? 'Cập Nhật' : 'Thêm'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}

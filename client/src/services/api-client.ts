@@ -35,7 +35,7 @@ class ApiClient {
           // Handle unauthorized access
           this.clearToken()
           if (typeof window !== 'undefined') {
-            window.location.href = '/sign-in'
+            window.location.href = '/auth/login' // Fixed: was '/sign-in'
           }
         }
         return Promise.reject(error)

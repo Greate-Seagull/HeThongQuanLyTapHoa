@@ -479,14 +479,6 @@ export type InvoiceUncheckedUpdateManyWithoutEmployeeNestedInput = {
   deleteMany?: Prisma.InvoiceScalarWhereInput | Prisma.InvoiceScalarWhereInput[]
 }
 
-export type NullableIntFieldUpdateOperationsInput = {
-  set?: number | null
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type InvoiceCreateNestedOneWithoutInvoiceDetailsInput = {
   create?: Prisma.XOR<Prisma.InvoiceCreateWithoutInvoiceDetailsInput, Prisma.InvoiceUncheckedCreateWithoutInvoiceDetailsInput>
   connectOrCreate?: Prisma.InvoiceCreateOrConnectWithoutInvoiceDetailsInput

@@ -168,10 +168,7 @@ export function ImportForm({ currentUser }: ImportFormProps) {
     }
 
     // Kiểm tra nhân viên có quyền nhập hàng không (position = RECEIVING)
-    const employee = receivingStaff.find(e => 
-      e.id === currentUser.id && e.position === EmployeePosition.RECEIVING
-    );
-    if (!employee) {
+    if (currentUser.position !== 'RECEIVING') {
       toast.error('Nhân viên không có quyền nhập hàng. Chỉ nhân viên "Nhập kho" mới có quyền tạo phiếu nhập.');
       return;
     }
@@ -200,6 +197,12 @@ export function ImportForm({ currentUser }: ImportFormProps) {
     }
 
     // Tạo phiếu nhập hàng
+    const employee = receivingStaff.find(e => e.id === currentUser.id) || {
+      id: currentUser.id,
+      name: 'Nhân viên',
+      position: EmployeePosition.RECEIVING
+    };
+    
     const newId = Math.max(...goodReceipts.map(r => r.id), 0) + 1;
     const newReceipt: GoodReceipt = {
       id: newId,

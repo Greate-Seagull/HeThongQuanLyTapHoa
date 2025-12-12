@@ -295,11 +295,17 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
       return;
     }
 
-    const employee = salesStaff.find(e => e.id === currentUser.id && e.position === EmployeePosition.SALES);
-    if (!employee) {
+    // Kiểm tra position của currentUser
+    if (currentUser.position !== 'SALES') {
       toast.error('Chỉ nhân viên "Bán hàng" mới có quyền thanh toán');
       return;
     }
+
+    const employee = salesStaff.find(e => e.id === currentUser.id) || {
+      id: currentUser.id,
+      name: 'Nhân viên',
+      position: EmployeePosition.SALES
+    };
 
     // Kiểm tra mã khách hàng (nếu có)
     let customer: Customer | null = null;

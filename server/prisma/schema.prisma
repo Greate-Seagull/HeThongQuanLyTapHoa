@@ -9,17 +9,36 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Supplier {
+  id          Int       @id @default(autoincrement())
+  name        String
+  address     String?
+  phoneNumber String?
+  products    Product[]
+}
+
+model ProductCategory {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  products    Product[]
+}
+
 model Product {
   id                 Int                 @id @default(autoincrement())
   name               String?
   unit               ProductUnit         @default(UNKNOWN)
   price              Int
-  barcode            Int                 @unique
   amount             Int                 @default(0)
+  barcode            Int                 @unique
   status             ProductStatus       @default(GOOD)
-  promotionDetails   PromotionDetail[]
-  invoiceDetails     InvoiceDetail[]
+  supplierId         Int?
+  categoryId         Int?
+  supplier           Supplier?           @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  category           ProductCategory?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   goodReceiptDetails GoodReceiptDetail[]
+  invoiceDetails     InvoiceDetail[]
+  promotionDetails   PromotionDetail[]
   slotDetails        SlotDetail[]
   stocktakingDetails StocktakingDetail[]
 }
@@ -33,8 +52,8 @@ model Promotion {
   condition        String?
   value            Float
   promotionType    PromotionType
-  promotionDetails PromotionDetail[]
   invoiceDetails   InvoiceDetail[]
+  promotionDetails PromotionDetail[]
 }
 
 model PromotionDetail {
@@ -50,8 +69,8 @@ model User {
   id       Int       @id @default(autoincrement())
   name     String
   point    Int       @default(0)
-  invoices Invoice[]
   accounts Account[]
+  invoices Invoice[]
 }
 
 model Account {
@@ -59,21 +78,19 @@ model Account {
   userId       Int
   phoneNumber  String   @unique
   passwordHash String
-  salt         String
   loggedAt     DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id])
+  salt         String
+  user         User     @relation(fields: [userId], references: [id])
 }
 
 model Employee {
-  id       Int              @id @default(autoincrement())
-  name     String
-  position EmployeePosition
-
-  invoices         Invoice[]
-  goodReceipts     GoodReceipt[]
-  stocktakings     Stocktaking[]
+  id               Int               @id @default(autoincrement())
+  name             String
+  position         EmployeePosition
   employeeAccounts EmployeeAccount[]
+  goodReceipts     GoodReceipt[]
+  invoices         Invoice[]
+  stocktakings     Stocktaking[]
 }
 
 model EmployeeAccount {
@@ -83,17 +100,15 @@ model EmployeeAccount {
   passwordHash String
   salt         String
   loggedAt     DateTime @default(now())
-
-  employee Employee @relation(fields: [employeeId], references: [id])
+  employee     Employee @relation(fields: [employeeId], references: [id])
 }
 
 model Invoice {
-  id         Int  @id @default(autoincrement())
-  employeeId Int
-  userId     Int?
-  usedPoint  Int  @default(0)
-  total      Int
-
+  id             Int             @id @default(autoincrement())
+  employeeId     Int
+  userId         Int?
+  usedPoint      Int             @default(0)
+  total          Int
   employee       Employee        @relation(fields: [employeeId], references: [id])
   user           User?           @relation(fields: [userId], references: [id])
   invoiceDetails InvoiceDetail[]
@@ -104,19 +119,17 @@ model InvoiceDetail {
   productId   Int
   quantity    Int
   promotionId Int?
-
-  invoice   Invoice    @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  product   Product    @relation(fields: [productId], references: [id])
-  promotion Promotion? @relation(fields: [promotionId], references: [id])
+  invoice     Invoice    @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product     Product    @relation(fields: [productId], references: [id])
+  promotion   Promotion? @relation(fields: [promotionId], references: [id])
 
   @@id([invoiceId, productId])
 }
 
 model GoodReceipt {
-  id         Int      @id @default(autoincrement())
-  employeeId Int
-  createdAt  DateTime
-
+  id                 Int                 @id @default(autoincrement())
+  employeeId         Int
+  createdAt          DateTime
   employee           Employee            @relation(fields: [employeeId], references: [id])
   goodReceiptDetails GoodReceiptDetail[]
 }
@@ -126,9 +139,8 @@ model GoodReceiptDetail {
   productId     Int
   quantity      Int
   price         Int
-
-  goodReceipt GoodReceipt @relation(fields: [goodReceiptId], references: [id], onDelete: Cascade)
-  product     Product     @relation(fields: [productId], references: [id])
+  goodReceipt   GoodReceipt @relation(fields: [goodReceiptId], references: [id], onDelete: Cascade)
+  product       Product     @relation(fields: [productId], references: [id])
 
   @@id([goodReceiptId, productId])
 }
@@ -143,16 +155,14 @@ model Rack {
   id      Int    @id @default(autoincrement())
   name    String
   shelfId Int
-
-  shelf Shelf  @relation(fields: [shelfId], references: [id], onDelete: Cascade)
-  slots Slot[]
+  shelf   Shelf  @relation(fields: [shelfId], references: [id], onDelete: Cascade)
+  slots   Slot[]
 }
 
 model Slot {
-  id     Int    @id @default(autoincrement())
-  name   String
-  rackId Int
-
+  id                 Int                 @id @default(autoincrement())
+  name               String
+  rackId             Int
   rack               Rack                @relation(fields: [rackId], references: [id], onDelete: Cascade)
   slotDetails        SlotDetail[]
   stocktakingDetails StocktakingDetail[]
@@ -161,18 +171,16 @@ model Slot {
 model SlotDetail {
   slotId    Int
   productId Int
-
-  slot    Slot    @relation(fields: [slotId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  slot      Slot    @relation(fields: [slotId], references: [id], onDelete: Cascade)
 
   @@id([slotId, productId])
 }
 
 model Stocktaking {
-  id         Int      @id @default(autoincrement())
-  employeeId Int
-  createdAt  DateTime @default(now())
-
+  id                 Int                 @id @default(autoincrement())
+  employeeId         Int
+  createdAt          DateTime            @default(now())
   employee           Employee            @relation(fields: [employeeId], references: [id])
   stocktakingDetails StocktakingDetail[]
 }
@@ -184,10 +192,9 @@ model StocktakingDetail {
   slotId        Int
   status        ProductStatus
   quantity      Int
-
-  stocktaking Stocktaking @relation(fields: [stocktakingId], references: [id], onDelete: Cascade)
-  product     Product     @relation(fields: [productId], references: [id])
-  slot        Slot        @relation(fields: [slotId], references: [id])
+  product       Product       @relation(fields: [productId], references: [id])
+  slot          Slot          @relation(fields: [slotId], references: [id])
+  stocktaking   Stocktaking   @relation(fields: [stocktakingId], references: [id], onDelete: Cascade)
 }
 
 enum PromotionType {

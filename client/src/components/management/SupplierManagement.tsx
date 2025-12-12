@@ -1,0 +1,275 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Plus, Edit, Trash2, Search, Building2 } from 'lucide-react'
+import { toast } from 'sonner'
+import {
+  getSuppliers,
+  createSupplier,
+  updateSupplier,
+  deleteSupplier,
+  Supplier,
+  CreateSupplierRequest,
+  UpdateSupplierRequest,
+} from '@/services/supplier.service'
+
+export function SupplierManagement() {
+  const [suppliers, setSuppliers] = useState<Supplier[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null)
+  const [formData, setFormData] = useState({
+    name: '',
+    address: '',
+    phoneNumber: '',
+  })
+
+  // Load suppliers on mount
+  useEffect(() => {
+    loadSuppliers()
+  }, [])
+
+  const loadSuppliers = async () => {
+    try {
+      setIsLoading(true)
+      const data = await getSuppliers()
+      setSuppliers(data)
+    } catch (error: any) {
+      toast.error(error.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const filteredSuppliers = suppliers.filter(supplier =>
+    supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    supplier.phoneNumber?.includes(searchTerm) ||
+    supplier.address?.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  const handleOpenDialog = (supplier?: Supplier) => {
+    if (supplier) {
+      setEditingSupplier(supplier)
+      setFormData({
+        name: supplier.name,
+        address: supplier.address || '',
+        phoneNumber: supplier.phoneNumber || '',
+      })
+    } else {
+      setEditingSupplier(null)
+      setFormData({ name: '', address: '', phoneNumber: '' })
+    }
+    setIsDialogOpen(true)
+  }
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false)
+    setEditingSupplier(null)
+    setFormData({ name: '', address: '', phoneNumber: '' })
+  }
+
+  const handleSubmit = async () => {
+    if (!formData.name.trim()) {
+      toast.error('Vui lòng nhập tên nhà cung cấp')
+      return
+    }
+
+    try {
+      setIsLoading(true)
+
+      if (editingSupplier) {
+        // Update existing supplier
+        const updateData: UpdateSupplierRequest = {
+          id: editingSupplier.id,
+          name: formData.name,
+          address: formData.address || undefined,
+          phoneNumber: formData.phoneNumber || undefined,
+        }
+        await updateSupplier(updateData)
+        toast.success('Cập nhật nhà cung cấp thành công!')
+      } else {
+        // Create new supplier
+        const createData: CreateSupplierRequest = {
+          name: formData.name,
+          address: formData.address || undefined,
+          phoneNumber: formData.phoneNumber || undefined,
+        }
+        await createSupplier(createData)
+        toast.success('Thêm nhà cung cấp thành công!')
+      }
+
+      handleCloseDialog()
+      loadSuppliers()
+    } catch (error: any) {
+      toast.error(error.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleDelete = async (id: number, name: string) => {
+    if (!confirm(`Bạn có chắc muốn xóa nhà cung cấp "${name}"?`)) {
+      return
+    }
+
+    try {
+      setIsLoading(true)
+      await deleteSupplier(id)
+      toast.success('Xóa nhà cung cấp thành công!')
+      loadSuppliers()
+    } catch (error: any) {
+      toast.error(error.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Building2 className="h-5 w-5" />
+            Quản Lý Nhà Cung Cấp
+          </CardTitle>
+          <Button onClick={() => handleOpenDialog()} disabled={isLoading}>
+            <Plus className="mr-2 h-4 w-4" />
+            Thêm Nhà Cung Cấp
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Search */}
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Tìm kiếm nhà cung cấp (tên, SĐT, địa chỉ)..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px]">ID</TableHead>
+                  <TableHead>Tên Nhà Cung Cấp</TableHead>
+                  <TableHead>Địa Chỉ</TableHead>
+                  <TableHead>Số Điện Thoại</TableHead>
+                  <TableHead className="text-center">Số Sản Phẩm</TableHead>
+                  <TableHead className="text-right">Thao Tác</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8">
+                      Đang tải...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredSuppliers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                      Không tìm thấy nhà cung cấp nào
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredSuppliers.map((supplier) => (
+                    <TableRow key={supplier.id}>
+                      <TableCell>{supplier.id}</TableCell>
+                      <TableCell className="font-medium">{supplier.name}</TableCell>
+                      <TableCell>{supplier.address || '-'}</TableCell>
+                      <TableCell>{supplier.phoneNumber || '-'}</TableCell>
+                      <TableCell className="text-center">
+                        {supplier._count?.products || 0}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenDialog(supplier)}
+                            disabled={isLoading}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDelete(supplier.id, supplier.name)}
+                            disabled={isLoading}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Add/Edit Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingSupplier ? 'Cập Nhật Nhà Cung Cấp' : 'Thêm Nhà Cung Cấp Mới'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Tên Nhà Cung Cấp *</Label>
+              <Input
+                id="name"
+                placeholder="Nhập tên nhà cung cấp"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="address">Địa Chỉ</Label>
+              <Input
+                id="address"
+                placeholder="Nhập địa chỉ"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phoneNumber">Số Điện Thoại</Label>
+              <Input
+                id="phoneNumber"
+                placeholder="Nhập số điện thoại"
+                value={formData.phoneNumber}
+                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCloseDialog} disabled={isLoading}>
+              Hủy
+            </Button>
+            <Button onClick={handleSubmit} disabled={isLoading}>
+              {isLoading ? 'Đang xử lý...' : editingSupplier ? 'Cập Nhật' : 'Thêm'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
