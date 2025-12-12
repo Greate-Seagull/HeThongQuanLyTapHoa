@@ -45,6 +45,13 @@ import { GetProductCategoriesUsecase } from "./application/product-category/get-
 import { CreateProductCategoryUsecase } from "./application/product-category/create-product-category.usecase";
 import { UpdateProductCategoryUsecase } from "./application/product-category/update-product-category.usecase";
 import { DeleteProductCategoryUsecase } from "./application/product-category/delete-product-category.usecase";
+import { ReportReadAccessor } from "./infrastructure/read-accessors/report.read-accessor";
+import { GetInventoryReportUsecase } from "./application/get-inventory-report.usecase";
+import { GetGoodsReceiptReportUsecase } from "./application/get-goods-receipt-report.usecase";
+import { GetSalesReportUsecase } from "./application/get-sales-report.usecase";
+import { GetCustomerReportUsecase } from "./application/get-customer-report.usecase";
+import { GetStocktakingReportUsecase } from "./application/get-stocktaking-report.usecase";
+import { GetRevenueProfitReportUsecase } from "./application/get-revenue-profit-report.usecase";
 
 config;
 export const prisma = new PrismaClient({
@@ -110,6 +117,7 @@ const supplierRepo = new SupplierRepository(prisma);
 const supplierReadAccessor = new SupplierReadAccessor(prisma);
 const productCategoryRepo = new ProductCategoryRepository(prisma);
 const productCategoryReadAccessor = new ProductCategoryReadAccessor(prisma);
+const reportReadAccessor = new ReportReadAccessor(prisma);
 
 const promoPricing = new PromotionPricingService();
 const processSales = new SalesTransactionService();
@@ -160,3 +168,11 @@ export const getProductCategoriesUsecase = new GetProductCategoriesUsecase(produ
 export const createProductCategoryUsecase = new CreateProductCategoryUsecase(productCategoryRepo);
 export const updateProductCategoryUsecase = new UpdateProductCategoryUsecase(productCategoryRepo);
 export const deleteProductCategoryUsecase = new DeleteProductCategoryUsecase(productCategoryRepo);
+
+// Report usecases
+export const getInventoryReportUsecase = new GetInventoryReportUsecase(reportReadAccessor);
+export const getGoodsReceiptReportUsecase = new GetGoodsReceiptReportUsecase(reportReadAccessor);
+export const getSalesReportUsecase = new GetSalesReportUsecase(reportReadAccessor);
+export const getCustomerReportUsecase = new GetCustomerReportUsecase(reportReadAccessor);
+export const getStocktakingReportUsecase = new GetStocktakingReportUsecase(reportReadAccessor);
+export const getRevenueProfitReportUsecase = new GetRevenueProfitReportUsecase(reportReadAccessor);

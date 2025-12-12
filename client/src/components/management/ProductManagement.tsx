@@ -26,6 +26,14 @@ interface Product {
   barcode: number;
   amount: number;
   status: ProductStatus;
+  supplier?: {
+    id: number;
+    name: string;
+  } | null;
+  category?: {
+    id: number;
+    name: string;
+  } | null;
 }
 
 interface PendingProduct {
@@ -38,14 +46,89 @@ interface PendingProduct {
   amount: number;
   status: ProductStatus;
   isNew: boolean;
+  supplier?: {
+    id: number;
+    name: string;
+  } | null;
+  category?: {
+    id: number;
+    name: string;
+  } | null;
 }
 
 const mockProducts: Product[] = [
-  { id: 1, name: 'Coca Cola 330ml', unit: ProductUnit.UNKNOWN, price: 10000, barcode: 8934673123456, amount: 150, status: ProductStatus.GOOD },
-  { id: 2, name: 'Pepsi 330ml', unit: ProductUnit.UNKNOWN, price: 9500, barcode: 8934673123457, amount: 200, status: ProductStatus.GOOD },
-  { id: 3, name: 'Bánh Oreo', unit: ProductUnit.UNKNOWN, price: 15000, barcode: 8934673123458, amount: 80, status: ProductStatus.GOOD },
-  { id: 4, name: 'Mì Hảo Hảo', unit: ProductUnit.UNKNOWN, price: 4000, barcode: 8934673123459, amount: 300, status: ProductStatus.GOOD },
-  { id: 5, name: 'Sữa TH True Milk', unit: ProductUnit.UNKNOWN, price: 28000, barcode: 8934673123460, amount: 50, status: ProductStatus.GOOD },
+  { 
+    id: 1, 
+    name: 'Coca Cola 330ml', 
+    unit: ProductUnit.UNKNOWN, 
+    price: 10000, 
+    barcode: 8934673123456, 
+    amount: 150, 
+    status: ProductStatus.GOOD,
+    supplier: { id: 1, name: 'Công ty Nước Giải Khát Coca-Cola' },
+    category: { id: 1, name: 'Nước giải khát' }
+  },
+  { 
+    id: 2, 
+    name: 'Pepsi 330ml', 
+    unit: ProductUnit.UNKNOWN, 
+    price: 9500, 
+    barcode: 8934673123457, 
+    amount: 200, 
+    status: ProductStatus.GOOD,
+    supplier: { id: 2, name: 'Công ty PepsiCo Việt Nam' },
+    category: { id: 1, name: 'Nước giải khát' }
+  },
+  { 
+    id: 3, 
+    name: 'Bánh Oreo', 
+    unit: ProductUnit.UNKNOWN, 
+    price: 15000, 
+    barcode: 8934673123458, 
+    amount: 80, 
+    status: ProductStatus.GOOD,
+    supplier: { id: 3, name: 'Mondelez Kinh Đô' },
+    category: { id: 2, name: 'Bánh kẹo' }
+  },
+  { 
+    id: 4, 
+    name: 'Mì Hảo Hảo', 
+    unit: ProductUnit.UNKNOWN, 
+    price: 4000, 
+    barcode: 8934673123459, 
+    amount: 300, 
+    status: ProductStatus.GOOD,
+    supplier: { id: 4, name: 'Công ty Acecook Việt Nam' },
+    category: { id: 3, name: 'Mì ăn liền' }
+  },
+  { 
+    id: 5, 
+    name: 'Sữa TH True Milk', 
+    unit: ProductUnit.UNKNOWN, 
+    price: 28000, 
+    barcode: 8934673123460, 
+    amount: 50, 
+    status: ProductStatus.GOOD,
+    supplier: { id: 5, name: 'TH True Milk' },
+    category: { id: 4, name: 'Sữa' }
+  },
+];
+
+// Mock Suppliers
+const mockSuppliers = [
+  { id: 1, name: 'Công ty Nước Giải Khát Coca-Cola' },
+  { id: 2, name: 'Công ty PepsiCo Việt Nam' },
+  { id: 3, name: 'Mondelez Kinh Đô' },
+  { id: 4, name: 'Công ty Acecook Việt Nam' },
+  { id: 5, name: 'TH True Milk' },
+];
+
+// Mock Categories
+const mockCategories = [
+  { id: 1, name: 'Nước giải khát' },
+  { id: 2, name: 'Bánh kẹo' },
+  { id: 3, name: 'Mì ăn liền' },
+  { id: 4, name: 'Sữa' },
 ];
 
 export function ProductManagement() {
@@ -58,10 +141,11 @@ export function ProductManagement() {
     unit: ProductUnit.UNKNOWN,
     price: 0,
     barcode: 0,
-    amount: 0,
+    amount: 0, // Always 0 when creating, increased via goods receipt
     status: ProductStatus.GOOD,
+    supplierId: 0,
+    categoryId: 0,
   });
-  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -70,33 +154,18 @@ export function ProductManagement() {
 
   // Bước 1: Mở màn hình thêm hàng hóa
   const handleOpenAddDialog = () => {
-    setFormData({ name: '', unit: ProductUnit.UNKNOWN, price: 0, barcode: 0, amount: 0, status: ProductStatus.GOOD });
-    setSelectedProductId(null);
+    setFormData({ 
+      name: '', 
+      unit: ProductUnit.UNKNOWN, 
+      price: 0, 
+      barcode: 0, 
+      amount: 0, 
+      status: ProductStatus.GOOD,
+      supplierId: 0,
+      categoryId: 0,
+    });
+    setPendingProducts([]);
     setIsDialogOpen(true);
-  };
-
-  // Bước 2-3: Chọn hàng hóa từ danh mục và tự động điền thông tin
-  const handleSelectExistingProduct = (productId: string) => {
-    const id = parseInt(productId);
-    if (id === 0) {
-      // Nhập mới
-      setSelectedProductId(null);
-      setFormData({ name: '', unit: ProductUnit.UNKNOWN, price: 0, barcode: 0, amount: 0, status: ProductStatus.GOOD });
-    } else {
-      const product = products.find(p => p.id === id);
-      if (product) {
-        setSelectedProductId(id);
-        // Tự động điền thông tin
-        setFormData({
-          name: product.name,
-          unit: product.unit,
-          price: product.price,
-          barcode: product.barcode,
-          amount: product.amount,
-          status: product.status,
-        });
-      }
-    }
   };
 
   // Bước 4-5: Thêm hàng hóa vào danh sách tạm
@@ -118,22 +187,29 @@ export function ProductManagement() {
     const tempId = `temp_${Date.now()}_${Math.random()}`;
     const newPending: PendingProduct = {
       tempId,
-      id: selectedProductId || undefined,
       name: formData.name,
       unit: formData.unit,
       price: formData.price,
       barcode: formData.barcode,
       amount: formData.amount,
       status: formData.status,
-      isNew: !selectedProductId,
+      isNew: true,
     };
 
     setPendingProducts([...pendingProducts, newPending]);
     toast.success('Đã thêm vào danh sách');
     
     // Reset form
-    setFormData({ name: '', unit: ProductUnit.UNKNOWN, price: 0, barcode: 0, amount: 0, status: ProductStatus.GOOD });
-    setSelectedProductId(null);
+    setFormData({ 
+      name: '', 
+      unit: ProductUnit.UNKNOWN, 
+      price: 0, 
+      barcode: 0, 
+      amount: 0, 
+      status: ProductStatus.GOOD,
+      supplierId: 0,
+      categoryId: 0,
+    });
   };
 
   // Xóa khỏi danh sách tạm
@@ -270,8 +346,10 @@ export function ProductManagement() {
                 <TableRow className="bg-blue-50">
                   <TableHead className="text-blue-900">Mã vạch</TableHead>
                   <TableHead className="text-blue-900">Tên sản phẩm</TableHead>
-                  <TableHead className="text-blue-900">Giá</TableHead>
+                  <TableHead className="text-blue-900">Mã loại SP</TableHead>
+                  <TableHead className="text-blue-900">Nhà cung cấp</TableHead>
                   <TableHead className="text-blue-900">Số lượng</TableHead>
+                  <TableHead className="text-blue-900">Giá</TableHead>
                   <TableHead className="text-blue-900">Trạng thái</TableHead>
                 </TableRow>
               </TableHeader>
@@ -280,8 +358,22 @@ export function ProductManagement() {
                   <TableRow key={product.id} className="hover:bg-blue-50">
                     <TableCell>{product.barcode}</TableCell>
                     <TableCell>{product.name}</TableCell>
+                    <TableCell>
+                      {product.category ? (
+                        <span className="px-2 py-1 rounded text-sm bg-purple-100 text-purple-700">
+                          {product.category.id}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {product.supplier ? product.supplier.name : <span className="text-gray-400">Chưa có</span>}
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-medium">{product.amount}</span>
+                    </TableCell>
                     <TableCell>{product.price.toLocaleString('vi-VN')}đ</TableCell>
-                    <TableCell>{product.amount}</TableCell>
                     <TableCell>
                       <span className={`px-2 py-1 rounded text-sm ${
                         product.status === ProductStatus.GOOD 
@@ -310,28 +402,8 @@ export function ProductManagement() {
           </DialogHeader>
           
           <div className="space-y-6">
-            {/* Bước 2: Chọn hàng hóa từ danh mục hoặc nhập tên */}
+            {/* Bước 2-3: Form nhập thông tin */}
             <div className="space-y-4 p-4 border border-blue-200 rounded-lg bg-blue-50">
-              <div className="space-y-2">
-                <Label htmlFor="select-product">Chọn hàng hóa có sẵn</Label>
-                <Select 
-                  value={selectedProductId?.toString() || '0'} 
-                  onValueChange={handleSelectExistingProduct}
-                >
-                  <SelectTrigger className="border-blue-200 bg-white">
-                    <SelectValue placeholder="Chọn hàng hóa hoặc nhập mới" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">-- Nhập hàng hóa mới --</SelectItem>
-                    {products.map(product => (
-                      <SelectItem key={product.id} value={product.id.toString()}>
-                        {product.name} - {product.barcode}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
               {/* Bước 3-4: Form nhập/chỉnh sửa thông tin */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -385,15 +457,43 @@ export function ProductManagement() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Số lượng</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    value={formData.amount || ''}
-                    onChange={(e) => setFormData({ ...formData, amount: parseInt(e.target.value) || 0 })}
-                    className="border-blue-200 bg-white"
-                    placeholder="Nhập số lượng"
-                  />
+                  <Label htmlFor="supplier">Nhà cung cấp</Label>
+                  <Select
+                    value={formData.supplierId.toString()}
+                    onValueChange={(value) => setFormData({ ...formData, supplierId: parseInt(value) })}
+                  >
+                    <SelectTrigger className="border-blue-200 bg-white">
+                      <SelectValue placeholder="Chọn nhà cung cấp" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">-- Không chọn --</SelectItem>
+                      {mockSuppliers.map(supplier => (
+                        <SelectItem key={supplier.id} value={supplier.id.toString()}>
+                          {supplier.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="category">Loại sản phẩm</Label>
+                  <Select
+                    value={formData.categoryId.toString()}
+                    onValueChange={(value) => setFormData({ ...formData, categoryId: parseInt(value) })}
+                  >
+                    <SelectTrigger className="border-blue-200 bg-white">
+                      <SelectValue placeholder="Chọn loại sản phẩm" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">-- Không chọn --</SelectItem>
+                      {mockCategories.map(category => (
+                        <SelectItem key={category.id} value={category.id.toString()}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
@@ -412,15 +512,16 @@ export function ProductManagement() {
                   </Select>
                 </div>
               </div>
-
-              <Button 
-                onClick={handleAddToPendingList} 
-                className="w-full bg-green-600 hover:bg-green-700"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Thêm vào danh sách
-              </Button>
             </div>
+
+            <Button 
+              onClick={handleAddToPendingList} 
+              className="w-full bg-green-600 hover:bg-green-700"
+              disabled={!formData.name || !formData.barcode || !formData.price}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Thêm vào danh sách
+            </Button>
 
             {/* Bước 5: Hiển thị danh sách chờ */}
             {pendingProducts.length > 0 && (

@@ -10,14 +10,12 @@ export function controller(usecase: any) {
 			}
 		}
 
-		const input = {
-			...(req.body || {}),
-			...parsedParams,
-			...(req.query || {}),
-			authId: req.authId,
-		};
-
-		try {
+	const input = {
+		...(req.body || {}),
+		...parsedParams,
+		...(req.query || {}),
+		authId: (req as any).authId || req.body?.authId,
+	};		try {
 			const result = await usecase.execute(input);
 			res.jsend.success(result);
 		} catch (error: any) {
