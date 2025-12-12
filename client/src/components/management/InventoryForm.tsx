@@ -195,13 +195,16 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
     }
 
     // Kiểm tra nhân viên có quyền kiểm kê không (position = INVENTORY)
-    const employee = inventoryStaff.find(e => 
-      e.id === currentUser.id && e.position === EmployeePosition.INVENTORY
-    );
-    if (!employee) {
+    if (currentUser.position !== 'INVENTORY') {
       toast.error('Nhân viên không có quyền kiểm kê. Chỉ nhân viên "Kiểm kê" mới có quyền lập phiếu kiểm kê.');
       return;
     }
+
+    const employee = inventoryStaff.find(e => e.id === currentUser.id) || {
+      id: currentUser.id,
+      name: 'Nhân viên',
+      position: EmployeePosition.INVENTORY
+    };
 
     // Kiểm tra phiếu có dữ liệu không
     if (stocktakingDetails.length === 0) {

@@ -14,7 +14,7 @@ router.post("/sign-in", controller(useAccountUsecase));
 router.post(
 	"/",
 	authenticationMiddleware,
-	authorizationMiddleware("ADMIN"),
+	authorizationMiddleware("MANAGER"),
 	controller(createAccountUsecase)
 );
 
