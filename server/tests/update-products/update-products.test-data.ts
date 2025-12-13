@@ -9,7 +9,7 @@ export const product2 = {
 export const product1Input = {
 	name: "update products 1",
 	price: 100000,
-	unit: "UNKNOWN",
+	unit: "PIECE",
 	barcode: 123456,
 };
 
@@ -17,7 +17,7 @@ export const product2Input = {
 	id: 10001,
 	name: "update products 2",
 	price: 200000,
-	unit: "UNKNOWN",
+	unit: "PIECE",
 	barcode: 234568,
 };
 

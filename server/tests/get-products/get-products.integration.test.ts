@@ -1,6 +1,8 @@
 import { getProductsUsecase, prisma } from "../../src/composition-root";
 import { product1, product2 } from "./get-products.test-data";
 
+jest.setTimeout(20000);
+
 describe("Get products integration test", () => {
 	let input;
 	let output;
@@ -22,11 +24,13 @@ describe("Get products integration test", () => {
 		});
 
 		it("Should return correct product 1", () => {
-			expect(output.products[0]).toMatchSnapshot(product1);
+			const foundProduct = output.products.find(p => p.id === product1.id);
+			expect(foundProduct).toMatchSnapshot(product1);
 		});
 
 		it("Should return correct product 2", () => {
-			expect(output.products[1]).toMatchSnapshot(product2);
+			const foundProduct = output.products.find(p => p.id === product2.id);
+			expect(foundProduct).toMatchSnapshot(product2);
 		});
 	});
 

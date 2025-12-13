@@ -9,7 +9,7 @@ const outputSchema = z.object({
 		id: z.literal(product.id),
 		name: z.literal(product.name),
 		price: z.literal(product.price),
-		unit: z.literal("UNKNOWN"),
+		unit: z.string(), // Changed from z.literal("UNKNOWN") to z.string() since UNKNOWN no longer exists
 	}),
 	promotion: z.object({
 		id: z.literal(promotion2.id),

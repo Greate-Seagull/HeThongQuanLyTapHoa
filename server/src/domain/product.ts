@@ -4,14 +4,23 @@ export type ProductId = number | null;
 export type ProductBarcode = number | null;
 
 export enum ProductUnit {
-	UNKNOWN = "UNKNOWN",
+	PIECE = "PIECE",      // Cái, chiếc (xà phòng, kem đánh răng, v.v.)
+	BOX = "BOX",          // Hộp (sữa hộp, snack hộp)
+	BOTTLE = "BOTTLE",    // Chai (nước ngọt, dầu gội, nước suối)
+	CAN = "CAN",          // Lon (bia, nước ngọt lon)
+	PACKAGE = "PACKAGE",  // Gói (mì gói, snack gói)
+	BAG = "BAG",          // Túi, bao (gạo, đường)
+	KG = "KG",            // Kilogram (trái cây, thịt, cá)
+	GRAM = "GRAM",        // Gram (gia vị, bánh kẹo lẻ)
+	LITER = "LITER",      // Lít (dầu ăn, nước mắm)
+	ML = "ML",            // Milliliter (sữa chua uống nhỏ)
 }
 
 export class Product {
 	private _id: ProductId = null;
 	private _name: string = null;
 	private _price: number = 0;
-	private _unit: ProductUnit = ProductUnit.UNKNOWN;
+	private _unit: ProductUnit = ProductUnit.PIECE;
 	private _barcode: number = null;
 	private _amount: number = 0;
 
@@ -57,7 +66,7 @@ export class Product {
 		this._name = value;
 	}
 	private set unit(value: ProductUnit) {
-		const types = Object.keys(ProductUnit);
+		const types = Object.values(ProductUnit);
 		if (!types.includes(value)) throw Error(`Invalid unit, ${value}`);
 
 		this._unit = value as ProductUnit;
