@@ -58,11 +58,11 @@ export class ReportReadAccessor {
 
 		const goodReceipts = await this.prisma.goodReceipt.findMany({
 			where: {
-				...(startDate && endDate
+				...(startDate || endDate
 					? {
 							createdAt: {
-								gte: startDate,
-								lte: endDate,
+								...(startDate ? { gte: startDate } : {}),
+								...(endDate ? { lte: endDate } : {}),
 							},
 					  }
 					: {}),
@@ -130,6 +130,14 @@ export class ReportReadAccessor {
 			where: {
 				...(employeeId ? { employeeId } : {}),
 				...(userId ? { userId } : {}),
+				...(startDate || endDate
+					? {
+							createdAt: {
+								...(startDate ? { gte: startDate } : {}),
+								...(endDate ? { lte: endDate } : {}),
+							},
+					  }
+					: {}),
 			},
 			include: {
 				employee: true,
@@ -235,11 +243,11 @@ export class ReportReadAccessor {
 
 		const stocktakings = await this.prisma.stocktaking.findMany({
 			where: {
-				...(startDate && endDate
+				...(startDate || endDate
 					? {
 							createdAt: {
-								gte: startDate,
-								lte: endDate,
+								...(startDate ? { gte: startDate } : {}),
+								...(endDate ? { lte: endDate } : {}),
 							},
 					  }
 					: {}),
@@ -317,6 +325,16 @@ export class ReportReadAccessor {
 
 		// Get sales data
 		const invoices = await this.prisma.invoice.findMany({
+			where: {
+				...(startDate || endDate
+					? {
+							createdAt: {
+								...(startDate ? { gte: startDate } : {}),
+								...(endDate ? { lte: endDate } : {}),
+							},
+					  }
+					: {}),
+			},
 			include: {
 				invoiceDetails: {
 					include: {
@@ -334,11 +352,11 @@ export class ReportReadAccessor {
 		// Get cost data from good receipts
 		const goodReceipts = await this.prisma.goodReceipt.findMany({
 			where: {
-				...(startDate && endDate
+				...(startDate || endDate
 					? {
 							createdAt: {
-								gte: startDate,
-								lte: endDate,
+								...(startDate ? { gte: startDate } : {}),
+								...(endDate ? { lte: endDate } : {}),
 							},
 					  }
 					: {}),
