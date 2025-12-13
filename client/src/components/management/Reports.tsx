@@ -86,9 +86,32 @@ export function Reports() {
   const handleReportTypeChange = (value: ReportType) => {
     setReportType(value);
     setReportData(null); // Force user to view report again
+    
+    // Always reset date filters when switching report types
+    setStartDate('');
+    setEndDate('');
+  };
+
+  // Reset report data when date filters change
+  const handleStartDateChange = (value: string) => {
+    setStartDate(value);
+    setReportData(null); // Force user to view report again with new filter
+  };
+
+  const handleEndDateChange = (value: string) => {
+    setEndDate(value);
+    setReportData(null); // Force user to view report again with new filter
   };
 
   const fetchReport = async () => {
+    // Validate date range for reports that use filters
+    if (['goods-receipt', 'sales', 'stocktaking', 'revenue-profit'].includes(reportType)) {
+      if (startDate && endDate && startDate > endDate) {
+        toast.error('Ngày bắt đầu không được sau ngày kết thúc!');
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       let data: ReportData = null;
@@ -997,8 +1020,8 @@ export function Reports() {
                     id="startDate"
                     type="date"
                     value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="border-blue-200"
+                    onChange={(e) => handleStartDateChange(e.target.value)}
+                    className={`border-blue-200 ${startDate && endDate && startDate > endDate ? 'border-red-500' : ''}`}
                   />
                 </div>
                 <div>
@@ -1009,9 +1032,12 @@ export function Reports() {
                     id="endDate"
                     type="date"
                     value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="border-blue-200"
+                    onChange={(e) => handleEndDateChange(e.target.value)}
+                    className={`border-blue-200 ${startDate && endDate && startDate > endDate ? 'border-red-500' : ''}`}
                   />
+                  {startDate && endDate && startDate > endDate && (
+                    <p className="text-red-500 text-sm mt-1">Ngày bắt đầu không được sau ngày kết thúc</p>
+                  )}
                 </div>
               </>
             )}
