@@ -17,7 +17,16 @@ export type PromotionType = (typeof PromotionType)[keyof typeof PromotionType]
 
 
 export const ProductUnit = {
-  UNKNOWN: 'UNKNOWN'
+  PIECE: 'PIECE',
+  BOX: 'BOX',
+  BOTTLE: 'BOTTLE',
+  CAN: 'CAN',
+  PACKAGE: 'PACKAGE',
+  BAG: 'BAG',
+  KG: 'KG',
+  GRAM: 'GRAM',
+  LITER: 'LITER',
+  ML: 'ML'
 } as const
 
 export type ProductUnit = (typeof ProductUnit)[keyof typeof ProductUnit]

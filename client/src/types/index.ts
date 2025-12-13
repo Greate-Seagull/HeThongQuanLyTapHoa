@@ -116,6 +116,7 @@ export interface Invoice {
   userId: number | null
   usedPoint: number
   total: number
+  createdAt: string
 }
 
 export interface InvoiceWithDetails extends Invoice {

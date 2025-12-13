@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Plus, Edit, Trash2, Search } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -96,6 +97,11 @@ export function EmployeeManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<EmployeeWithAccount | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: number; name: string }>({
+    open: false,
+    id: 0,
+    name: '',
+  });
   const [formData, setFormData] = useState({
     name: '',
     position: EmployeePosition.SALES,
@@ -123,10 +129,12 @@ export function EmployeeManagement() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id: number) => {
-    if (confirm('Bạn có chắc chắn muốn xóa nhân viên này?')) {
-      setEmployees(employees.filter(employee => employee.id !== id));
-    }
+  const handleDelete = (id: number, name: string) => {
+    setDeleteConfirm({ open: true, id, name });
+  };
+
+  const confirmDelete = () => {
+    setEmployees(employees.filter(employee => employee.id !== deleteConfirm.id));
   };
 
   const handleSave = () => {
@@ -238,7 +246,7 @@ export function EmployeeManagement() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDelete(employee.id)}
+                        onClick={() => handleDelete(employee.id, employee.name)}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -309,6 +317,18 @@ export function EmployeeManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) => setDeleteConfirm({ ...deleteConfirm, open })}
+        title="Xác nhận xóa"
+        description={`Bạn có chắc chắn muốn xóa nhân viên "${deleteConfirm.name}"? Hành động này không thể hoàn tác.`}
+        onConfirm={confirmDelete}
+        confirmText="Xóa"
+        cancelText="Hủy"
+        variant="destructive"
+      />
     </div>
   );
 }

@@ -152,6 +152,7 @@ export class ReportReadAccessor {
 
 		return invoices.map((invoice) => ({
 			id: invoice.id,
+			createdAt: invoice.createdAt, // Add createdAt field
 			employee: invoice.employee.name,
 			employeePosition: invoice.employee.position,
 			customer: invoice.user?.name || "Khách vãng lai",

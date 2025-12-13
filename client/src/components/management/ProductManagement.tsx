@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Plus, Edit, Trash2, Search, Save, X } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
@@ -136,6 +137,7 @@ export function ProductManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [pendingProducts, setPendingProducts] = useState<PendingProduct[]>([]);
+  const [cancelConfirm, setCancelConfirm] = useState({ open: false });
   const [formData, setFormData] = useState({
     name: '',
     unit: ProductUnit.UNKNOWN,
@@ -306,13 +308,15 @@ export function ProductManagement() {
   // Hủy bỏ
   const handleCancelBatch = () => {
     if (pendingProducts.length > 0) {
-      if (confirm('Bạn có chắc chắn muốn hủy? Danh sách chờ sẽ bị xóa.')) {
-        setPendingProducts([]);
-        setIsDialogOpen(false);
-      }
+      setCancelConfirm({ open: true });
     } else {
       setIsDialogOpen(false);
     }
+  };
+
+  const confirmCancel = () => {
+    setPendingProducts([]);
+    setIsDialogOpen(false);
   };
 
   return (
@@ -590,6 +594,15 @@ export function ProductManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={cancelConfirm.open}
+        onOpenChange={(open) => !open && setCancelConfirm({ open: false })}
+        title="Hủy thêm hàng hóa?"
+        description="Bạn có chắc chắn muốn hủy? Danh sách chờ sẽ bị xóa."
+        onConfirm={confirmCancel}
+        variant="destructive"
+      />
     </div>
   );
 }

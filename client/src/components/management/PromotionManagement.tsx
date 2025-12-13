@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Edit, Trash2, Search } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -63,6 +64,11 @@ export function PromotionManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPromotion, setEditingPromotion] = useState<Promotion | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: number; name: string }>({
+    open: false,
+    id: 0,
+    name: '',
+  });
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -105,10 +111,12 @@ export function PromotionManagement() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id: number) => {
-    if (confirm('Bạn có chắc chắn muốn xóa khuyến mãi này?')) {
-      setPromotions(promotions.filter(promo => promo.id !== id));
-    }
+  const handleDelete = (id: number, name: string) => {
+    setDeleteConfirm({ open: true, id, name });
+  };
+
+  const confirmDelete = () => {
+    setPromotions(promotions.filter(promo => promo.id !== deleteConfirm.id));
   };
 
   const handleSave = () => {
@@ -215,7 +223,7 @@ export function PromotionManagement() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDelete(promo.id)}
+                        onClick={() => handleDelete(promo.id, promo.name)}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -331,6 +339,18 @@ export function PromotionManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) => setDeleteConfirm({ ...deleteConfirm, open })}
+        title="Xác nhận xóa"
+        description={`Bạn có chắc chắn muốn xóa khuyến mãi "${deleteConfirm.name}"? Hành động này không thể hoàn tác.`}
+        onConfirm={confirmDelete}
+        confirmText="Xóa"
+        cancelText="Hủy"
+        variant="destructive"
+      />
     </div>
   );
 }
