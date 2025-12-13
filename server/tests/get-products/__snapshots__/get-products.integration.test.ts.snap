@@ -3,19 +3,19 @@
 exports[`Get products integration test Normal case Should return correct product 1 1`] = `
 {
   "barcode": 123456,
-  "id": 10000,
-  "name": "update products 1",
+  "id": 20002,
+  "name": "get products test 1",
   "price": 100000,
-  "unit": "UNKNOWN",
+  "unit": "PIECE",
 }
 `;
 
 exports[`Get products integration test Normal case Should return correct product 2 1`] = `
 {
   "barcode": 234567,
-  "id": 10001,
-  "name": "update products 2",
+  "id": 20003,
+  "name": "get products test 2",
   "price": 100000,
-  "unit": "UNKNOWN",
+  "unit": "PIECE",
 }
 `;

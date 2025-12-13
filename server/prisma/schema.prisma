@@ -27,11 +27,12 @@ model ProductCategory {
 model Product {
   id                 Int                 @id @default(autoincrement())
   name               String?
-  unit               ProductUnit         @default(UNKNOWN)
+  unit               ProductUnit         @default(PIECE)
   price              Int
   amount             Int                 @default(0)
   barcode            Int                 @unique
   status             ProductStatus       @default(GOOD)
+  expiryDate         DateTime?
   supplierId         Int?
   categoryId         Int?
   supplier           Supplier?           @relation(fields: [supplierId], references: [id], onDelete: SetNull)
@@ -109,6 +110,7 @@ model Invoice {
   userId         Int?
   usedPoint      Int             @default(0)
   total          Int
+  createdAt      DateTime        @default(now())
   employee       Employee        @relation(fields: [employeeId], references: [id])
   user           User?           @relation(fields: [userId], references: [id])
   invoiceDetails InvoiceDetail[]
@@ -203,7 +205,16 @@ enum PromotionType {
 }
 
 enum ProductUnit {
-  UNKNOWN
+  PIECE      // Cái, chiếc
+  BOX        // Hộp
+  BOTTLE     // Chai
+  CAN        // Lon
+  PACKAGE    // Gói
+  BAG        // Túi
+  KG         // Kilogram
+  GRAM       // Gram
+  LITER      // Lít
+  ML         // Mililít
 }
 
 enum ProductStatus {

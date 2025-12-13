@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Plus, Edit, Trash2, Search, ChevronRight } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -63,6 +64,19 @@ export function LocationManagement() {
   const [editingRack, setEditingRack] = useState<Rack | null>(null);
   const [editingSlot, setEditingSlot] = useState<Slot | null>(null);
   
+  const [deleteConfirm, setDeleteConfirm] = useState<{ 
+    open: boolean; 
+    type: 'shelf' | 'rack' | 'slot'; 
+    id: number; 
+    name: string;
+    warning?: string;
+  }>({
+    open: false,
+    type: 'shelf',
+    id: 0,
+    name: '',
+  });
+  
   const [shelfFormData, setShelfFormData] = useState({ name: '' });
   const [rackFormData, setRackFormData] = useState({ name: '', shelfId: 0 });
   const [slotFormData, setSlotFormData] = useState({ name: '', rackId: 0 });
@@ -80,12 +94,48 @@ export function LocationManagement() {
     setIsShelfDialogOpen(true);
   };
 
-  const handleDeleteShelf = (id: number) => {
-    if (confirm('Bạn có chắc chắn muốn xóa kệ này? Tất cả ngăn và ô thuộc kệ này sẽ bị xóa.')) {
+  const handleDeleteShelf = (id: number, name: string) => {
+    setDeleteConfirm({ 
+      open: true, 
+      type: 'shelf', 
+      id, 
+      name,
+      warning: 'Tất cả ngăn và ô thuộc kệ này sẽ bị xóa.'
+    });
+  };
+
+  const handleDeleteRack = (id: number, name: string) => {
+    setDeleteConfirm({ 
+      open: true, 
+      type: 'rack', 
+      id, 
+      name,
+      warning: 'Tất cả ô thuộc ngăn này sẽ bị xóa.'
+    });
+  };
+
+  const handleDeleteSlot = (id: number, name: string) => {
+    setDeleteConfirm({ 
+      open: true, 
+      type: 'slot', 
+      id, 
+      name 
+    });
+  };
+
+  const confirmDelete = () => {
+    const { type, id } = deleteConfirm;
+    
+    if (type === 'shelf') {
       setShelves(shelves.filter(shelf => shelf.id !== id));
       const rackIds = racks.filter(r => r.shelfId === id).map(r => r.id);
       setRacks(racks.filter(r => r.shelfId !== id));
       setSlots(slots.filter(s => !rackIds.includes(s.rackId)));
+    } else if (type === 'rack') {
+      setRacks(racks.filter(rack => rack.id !== id));
+      setSlots(slots.filter(slot => slot.rackId !== id));
+    } else if (type === 'slot') {
+      setSlots(slots.filter(slot => slot.id !== id));
     }
   };
 
@@ -112,13 +162,6 @@ export function LocationManagement() {
     setEditingRack(rack);
     setRackFormData({ name: rack.name, shelfId: rack.shelfId });
     setIsRackDialogOpen(true);
-  };
-
-  const handleDeleteRack = (id: number) => {
-    if (confirm('Bạn có chắc chắn muốn xóa ngăn này? Tất cả ô thuộc ngăn này sẽ bị xóa.')) {
-      setRacks(racks.filter(rack => rack.id !== id));
-      setSlots(slots.filter(s => s.rackId !== id));
-    }
   };
 
   const handleSaveRack = () => {
@@ -149,12 +192,6 @@ export function LocationManagement() {
     setEditingSlot(slot);
     setSlotFormData({ name: slot.name, rackId: slot.rackId });
     setIsSlotDialogOpen(true);
-  };
-
-  const handleDeleteSlot = (id: number) => {
-    if (confirm('Bạn có chắc chắn muốn xóa ô này?')) {
-      setSlots(slots.filter(slot => slot.id !== id));
-    }
   };
 
   const handleSaveSlot = () => {
@@ -220,7 +257,7 @@ export function LocationManagement() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDeleteShelf(shelf.id)}
+                        onClick={() => handleDeleteShelf(shelf.id, shelf.name)}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -274,7 +311,7 @@ export function LocationManagement() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDeleteRack(rack.id)}
+                        onClick={() => handleDeleteRack(rack.id, rack.name)}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -348,7 +385,7 @@ export function LocationManagement() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDeleteSlot(slot.id)}
+                        onClick={() => handleDeleteSlot(slot.id, slot.name)}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -496,6 +533,19 @@ export function LocationManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) => !open && setDeleteConfirm({ open: false, type: 'shelf', id: 0, name: '' })}
+        title={`Xóa ${deleteConfirm.type === 'shelf' ? 'kệ' : deleteConfirm.type === 'rack' ? 'ngăn' : 'ô'} "${deleteConfirm.name}"?`}
+        description={
+          deleteConfirm.warning 
+            ? `Bạn có chắc chắn muốn xóa? ${deleteConfirm.warning}`
+            : `Bạn có chắc chắn muốn xóa ${deleteConfirm.type === 'shelf' ? 'kệ' : deleteConfirm.type === 'rack' ? 'ngăn' : 'ô'} này?`
+        }
+        onConfirm={confirmDelete}
+        variant="destructive"
+      />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 export const product = {
-	id: 10001,
+	id: 20001,
 	name: "search product",
 	price: 100000,
 	barcode: 12345,
@@ -12,7 +12,7 @@ const endedAt = new Date();
 endedAt.setDate(current.getDate() + 14);
 
 export const promotion1 = {
-	id: 10001,
+	id: 20001,
 	name: "search product 1",
 	startedAt: startedAt.toISOString(),
 	endedAt: endedAt.toISOString(),
@@ -26,7 +26,7 @@ export const promotion1 = {
 };
 
 export const promotion2 = {
-	id: 10002,
+	id: 20002,
 	name: "search product 2",
 	startedAt: startedAt.toISOString(),
 	endedAt: endedAt.toISOString(),

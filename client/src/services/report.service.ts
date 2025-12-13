@@ -2,6 +2,41 @@ import { apiClient } from './api-client';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 
+// Helper function to calculate column width based on content
+function calculateColumnWidth(value: string, headerWidth: number = 10): number {
+  if (!value) return headerWidth;
+  
+  // Vietnamese characters take more space
+  const viLength = (value.match(/[ăâđêôơưàáảãạầấẩẫậằắẳẵặèéẻẽẹềếểễệìíỉĩịòóỏõọồốổỗộờớởỡợùúủũụừứửữựỳýỷỹỵĂÂĐÊÔƠƯÀÁẢÃẠẦẤẨẪẬẰẮẲẴẶÈÉẺẼẸỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌỒỐỔỖỘỜỚỞỠỢÙÚỦŨỤỪỨỬỮỰỲÝỶỸỴ]/g) || []).length;
+  const enLength = value.length - viLength;
+  
+  // Vietnamese chars: 1.5x, English: 1x, add 2 for padding
+  const calculatedWidth = (viLength * 1.5 + enLength) * 1.2 + 2;
+  return Math.max(calculatedWidth, headerWidth);
+}
+
+// Helper to auto-size columns based on data
+function autoSizeColumns(worksheet: ExcelJS.Worksheet, headerRow: number, columnCount: number) {
+  const maxWidths: number[] = new Array(columnCount).fill(10); // Min width 10
+  
+  worksheet.eachRow((row, rowNumber) => {
+    if (rowNumber >= headerRow) {
+      row.eachCell((cell, colNumber) => {
+        if (colNumber <= columnCount) {
+          const cellValue = cell.value?.toString() || '';
+          const width = calculateColumnWidth(cellValue);
+          maxWidths[colNumber - 1] = Math.max(maxWidths[colNumber - 1], width);
+        }
+      });
+    }
+  });
+  
+  // Apply widths
+  maxWidths.forEach((width, index) => {
+    worksheet.getColumn(index + 1).width = Math.min(width, 50); // Max 50 to avoid ultra-wide columns
+  });
+}
+
 // Report types
 export interface InventoryReportData {
   summary: {
@@ -330,17 +365,8 @@ export const exportInventoryToExcel = async (data: InventoryReportData) => {
     }
   }
 
-  // Set all column widths at the end
-  worksheet.getColumn(1).width = 35;  // Wide enough for summary labels
-  worksheet.getColumn(2).width = 30;  // Tên sản phẩm / Value
-  worksheet.getColumn(3).width = 15;  // Mã vạch
-  worksheet.getColumn(4).width = 12;  // Số lượng
-  worksheet.getColumn(5).width = 12;  // Đơn vị
-  worksheet.getColumn(6).width = 15;  // Giá
-  worksheet.getColumn(7).width = 15;  // Trạng thái
-  worksheet.getColumn(8).width = 20;  // NCC
-  worksheet.getColumn(9).width = 18;  // Loại
-  worksheet.getColumn(10).width = 30; // Vị trí
+  // Auto-size all columns
+  autoSizeColumns(worksheet, 4, 10); // Summary starts at row 4, 10 columns total
 
   // Export
   const buffer = await workbook.xlsx.writeBuffer();
@@ -430,7 +456,11 @@ export const exportGoodsReceiptToExcel = async (data: GoodsReceiptReportData) =>
   headerRow.height = 20;
 
   const startRow = headerRow.number;
-  data.goodReceipts.forEach((gr: any) => {
+  
+  // Sort by ID ascending before adding to Excel
+  const sortedReceipts = [...data.goodReceipts].sort((a: any, b: any) => a.id - b.id);
+  
+  sortedReceipts.forEach((gr: any) => {
     // Backend trả: details[] với productName, supplier, quantity, price, totalPrice
     if (gr.details && gr.details.length > 0) {
       gr.details.forEach((detail: any, index: number) => {
@@ -478,15 +508,8 @@ export const exportGoodsReceiptToExcel = async (data: GoodsReceiptReportData) =>
     }
   }
 
-  // Set column widths at the end
-  worksheet.getColumn(1).width = 35;  // Wide for summary labels + data
-  worksheet.getColumn(2).width = 20;  // Ngày nhập
-  worksheet.getColumn(3).width = 20;  // Nhân viên
-  worksheet.getColumn(4).width = 30;  // Sản phẩm
-  worksheet.getColumn(5).width = 25;  // NCC
-  worksheet.getColumn(6).width = 10;  // SL
-  worksheet.getColumn(7).width = 15;  // Giá nhập
-  worksheet.getColumn(8).width = 18;  // Thành tiền
+  // Auto-size columns
+  autoSizeColumns(worksheet, 4, 8);
 
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], {
@@ -554,7 +577,7 @@ export const exportSalesToExcel = async (data: SalesReportData) => {
 
   worksheet.addRow([]);
 
-  const headerRow = worksheet.addRow(['Mã HĐ', 'Nhân viên', 'Khách hàng', 'SL SP', 'Điểm dùng', 'Tổng tiền']);
+  const headerRow = worksheet.addRow(['Mã HĐ', 'Ngày tạo', 'Nhân viên', 'Khách hàng', 'SL SP', 'Điểm dùng', 'Tổng tiền']);
   
   headerRow.eachCell((cell) => {
     cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
@@ -563,7 +586,7 @@ export const exportSalesToExcel = async (data: SalesReportData) => {
       pattern: 'solid',
       fgColor: { argb: 'FFFFC000' }
     };
-    cell.alignment = { horizontal: 'center', vertical: 'middle' };
+    cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
     cell.border = {
       top: { style: 'thin' },
       left: { style: 'thin' },
@@ -571,27 +594,44 @@ export const exportSalesToExcel = async (data: SalesReportData) => {
       right: { style: 'thin' }
     };
   });
-  headerRow.alignment = { horizontal: 'center', vertical: 'middle' };
-  headerRow.height = 20;
+  headerRow.height = 25;
 
   const startRow = headerRow.number;
-  data.sales.forEach((sale: any) => {
+  
+  // Sort by ID ascending before adding to Excel
+  const sortedSales = [...data.sales].sort((a: any, b: any) => a.id - b.id);
+  
+  sortedSales.forEach((sale: any) => {
+    const createdAt = sale.createdAt ? new Date(sale.createdAt).toLocaleDateString('vi-VN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }) : '-';
     const row = worksheet.addRow([
       sale.id,
+      createdAt,
       sale.employee,
       sale.customer,
       sale.totalQuantity,
       sale.usedPoint,
       sale.total.toLocaleString('vi-VN') + 'đ'
     ]);
-    row.getCell(4).alignment = { horizontal: 'center' };
-    row.getCell(5).alignment = { horizontal: 'center' };
-    row.getCell(6).alignment = { horizontal: 'right' };
+    row.height = 20;
+    row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+    row.getCell(2).alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+    row.getCell(3).alignment = { horizontal: 'left', vertical: 'middle' };
+    row.getCell(4).alignment = { horizontal: 'left', vertical: 'middle' };
+    row.getCell(5).alignment = { horizontal: 'center', vertical: 'middle' };
+    row.getCell(6).alignment = { horizontal: 'center', vertical: 'middle' };
+    row.getCell(7).alignment = { horizontal: 'right', vertical: 'middle' };
   });
 
   const endRow = worksheet.lastRow?.number || startRow;
   for (let i = startRow; i <= endRow; i++) {
-    for (let j = 1; j <= 6; j++) {
+    for (let j = 1; j <= 7; j++) {
       const cell = worksheet.getRow(i).getCell(j);
       cell.border = {
         top: { style: 'thin' },
@@ -602,13 +642,8 @@ export const exportSalesToExcel = async (data: SalesReportData) => {
     }
   }
 
-  // Set column widths at the end
-  worksheet.getColumn(1).width = 35;  // Wide for summary labels
-  worksheet.getColumn(2).width = 25;  // Nhân viên
-  worksheet.getColumn(3).width = 25;  // Khách hàng
-  worksheet.getColumn(4).width = 12;  // SL SP
-  worksheet.getColumn(5).width = 12;  // Điểm dùng
-  worksheet.getColumn(6).width = 18;  // Tổng tiền
+  // Auto-size columns based on content
+  autoSizeColumns(worksheet, startRow, 7);
 
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], {
@@ -696,7 +731,11 @@ export const exportCustomerToExcel = async (data: CustomerReportData) => {
   headerRow.height = 20;
 
   const startRow = headerRow.number;
-  data.customers.forEach((customer) => {
+  
+  // Sort by ID ascending before adding to Excel
+  const sortedCustomers = [...data.customers].sort((a: any, b: any) => a.id - b.id);
+  
+  sortedCustomers.forEach((customer) => {
     const row = worksheet.addRow([
       customer.id,
       customer.name,
@@ -724,14 +763,8 @@ export const exportCustomerToExcel = async (data: CustomerReportData) => {
     }
   }
 
-  // Set column widths at the end
-  worksheet.getColumn(1).width = 35;  // Wide for summary labels
-  worksheet.getColumn(2).width = 25;
-  worksheet.getColumn(3).width = 15;
-  worksheet.getColumn(4).width = 15;
-  worksheet.getColumn(5).width = 15;
-  worksheet.getColumn(6).width = 18;
-  worksheet.getColumn(7).width = 12;
+  // Auto-size columns
+  autoSizeColumns(worksheet, 4, 7);
 
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], {
@@ -819,7 +852,11 @@ export const exportStocktakingToExcel = async (data: StocktakingReportData) => {
   headerRow.height = 20;
 
   const startRow = headerRow.number;
-  data.stocktakings.forEach((st: any) => {
+  
+  // Sort by ID ascending before adding to Excel
+  const sortedStocktakings = [...data.stocktakings].sort((a: any, b: any) => a.id - b.id);
+  
+  sortedStocktakings.forEach((st: any) => {
     // Backend trả: details[] với productName, location, systemQuantity, actualQuantity, discrepancy
     if (st.details && st.details.length > 0) {
       st.details.forEach((detail: any, index: number) => {
@@ -868,16 +905,8 @@ export const exportStocktakingToExcel = async (data: StocktakingReportData) => {
     }
   }
 
-  // Set column widths at the end
-  worksheet.getColumn(1).width = 35;  // Wide for summary labels
-  worksheet.getColumn(2).width = 20;  // Ngày kiểm
-  worksheet.getColumn(3).width = 20;  // Nhân viên
-  worksheet.getColumn(4).width = 30;  // Sản phẩm
-  worksheet.getColumn(5).width = 25;  // Vị trí
-  worksheet.getColumn(6).width = 10;  // Hệ thống
-  worksheet.getColumn(7).width = 10;  // Thực tế
-  worksheet.getColumn(8).width = 12;  // Chênh lệch
-  worksheet.getColumn(5).width = 15;
+  // Auto-size columns
+  autoSizeColumns(worksheet, 4, 8);
 
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], {
@@ -1028,18 +1057,8 @@ export const exportRevenueProfitToExcel = async (data: RevenueProfitReportData) 
       }
     }
 
-    // Set fixed column widths (single table, no data below)
-    if (data.groupBy === 'product') {
-      worksheet.getColumn(1).width = 30; // Tên SP
-      worksheet.getColumn(2).width = 15; // Mã vạch
-      worksheet.getColumn(3).width = 18; // Loại
-      worksheet.getColumn(4).width = 12; // SL
-      worksheet.getColumn(5).width = 18; // Doanh thu
-    } else if (data.groupBy === 'category') {
-      worksheet.getColumn(1).width = 25; // Loại SP
-      worksheet.getColumn(2).width = 12; // SL
-      worksheet.getColumn(3).width = 18; // Doanh thu
-    }
+    // Auto-size columns
+    autoSizeColumns(worksheet, 4, numColumns);
   }
 
   const buffer = await workbook.xlsx.writeBuffer();

@@ -37,9 +37,99 @@ async function main() {
   await prisma.account.deleteMany()
   await prisma.user.deleteMany()
   await prisma.product.deleteMany()
+  await prisma.productCategory.deleteMany()
+  await prisma.supplier.deleteMany()
 
   // ============================================
-  // 1. USERS (Customers)
+  // 1. SUPPLIERS (Nhà cung cấp)
+  // ============================================
+  console.log('Creating suppliers...')
+  const suppliers = await Promise.all([
+    prisma.supplier.create({
+      data: {
+        name: 'Công ty Nước Giải Khát Coca-Cola',
+        address: '123 Đường Trần Hưng Đạo, Q1, TP.HCM',
+        phoneNumber: '0281234567',
+      },
+    }),
+    prisma.supplier.create({
+      data: {
+        name: 'Công ty PepsiCo Việt Nam',
+        address: '456 Đường Nguyễn Huệ, Q1, TP.HCM',
+        phoneNumber: '0282345678',
+      },
+    }),
+    prisma.supplier.create({
+      data: {
+        name: 'Mondelez Kinh Đô',
+        address: '789 Đường Lê Lợi, Q1, TP.HCM',
+        phoneNumber: '0283456789',
+      },
+    }),
+    prisma.supplier.create({
+      data: {
+        name: 'Công ty Acecook Việt Nam',
+        address: '321 Đường Hai Bà Trưng, Q3, TP.HCM',
+        phoneNumber: '0284567890',
+      },
+    }),
+    prisma.supplier.create({
+      data: {
+        name: 'TH True Milk',
+        address: '654 Đường Điện Biên Phủ, Q3, TP.HCM',
+        phoneNumber: '0285678901',
+      },
+    }),
+    prisma.supplier.create({
+      data: {
+        name: 'Unilever Việt Nam',
+        address: '987 Đường Nguyễn Thị Minh Khai, Q3, TP.HCM',
+        phoneNumber: '0286789012',
+      },
+    }),
+  ])
+  console.log(`✅ Created ${suppliers.length} suppliers`)
+
+  // ============================================
+  // 2. PRODUCT CATEGORIES (Loại sản phẩm)
+  // ============================================
+  console.log('Creating product categories...')
+  const categories = await Promise.all([
+    prisma.productCategory.create({
+      data: {
+        name: 'Đồ uống',
+        description: 'Nước giải khát, nước ngọt, nước suối',
+      },
+    }),
+    prisma.productCategory.create({
+      data: {
+        name: 'Snack & Bánh kẹo',
+        description: 'Snack, bánh quy, kẹo các loại',
+      },
+    }),
+    prisma.productCategory.create({
+      data: {
+        name: 'Mì ăn liền',
+        description: 'Mì gói, mì ly các loại',
+      },
+    }),
+    prisma.productCategory.create({
+      data: {
+        name: 'Sữa & Sản phẩm từ sữa',
+        description: 'Sữa tươi, sữa chua, sữa đặc',
+      },
+    }),
+    prisma.productCategory.create({
+      data: {
+        name: 'Chăm sóc cá nhân',
+        description: 'Dầu gội, xà phòng, kem đánh răng',
+      },
+    }),
+  ])
+  console.log(`✅ Created ${categories.length} product categories`)
+
+  // ============================================
+  // 3. USERS (Customers)
   // ============================================
   console.log('Creating users...')
   const users = await Promise.all([
@@ -233,7 +323,7 @@ async function main() {
   console.log(`✅ Created ${employeeAccounts.length} employee accounts`)
 
   // ============================================
-  // 5. PRODUCTS
+  // 7. PRODUCTS
   // ============================================
   console.log('Creating products...')
   const products = await Promise.all([
@@ -241,155 +331,200 @@ async function main() {
     prisma.product.create({
       data: {
         name: 'Coca Cola 390ml',
-        unit: ProductUnit.UNKNOWN,
+        unit: ProductUnit.BOTTLE,
         price: 10000,
         barcode: 11001110,
         amount: 100,
         status: ProductStatus.GOOD,
+        expiryDate: new Date('2025-12-31'),
+        supplierId: suppliers[0].id,
+        categoryId: categories[0].id,
       },
     }),
     prisma.product.create({
       data: {
         name: 'Pepsi 390ml',
-        unit: ProductUnit.UNKNOWN,
+        unit: ProductUnit.BOTTLE,
         price: 9500,
         barcode: 11001111,
         amount: 80,
         status: ProductStatus.GOOD,
+        expiryDate: new Date('2025-11-30'),
+        supplierId: suppliers[1].id,
+        categoryId: categories[0].id,
       },
     }),
     prisma.product.create({
       data: {
         name: 'Nước suối Lavie 500ml',
-        unit: ProductUnit.UNKNOWN,
+        unit: ProductUnit.BOTTLE,
         price: 5000,
         barcode: 11001112,
         amount: 200,
         status: ProductStatus.GOOD,
+        expiryDate: new Date('2026-06-30'),
+        supplierId: suppliers[0].id,
+        categoryId: categories[0].id,
       },
     }),
     prisma.product.create({
       data: {
         name: 'Sting dâu 330ml',
-        unit: ProductUnit.UNKNOWN,
+        unit: ProductUnit.CAN,
         price: 12000,
         barcode: 11001113,
         amount: 60,
         status: ProductStatus.GOOD,
+        expiryDate: new Date('2025-09-30'),
+        supplierId: suppliers[1].id,
+        categoryId: categories[0].id,
       },
     }),
     prisma.product.create({
       data: {
         name: 'Trà xanh 0 độ 450ml',
-        unit: ProductUnit.UNKNOWN,
+        unit: ProductUnit.BOTTLE,
         price: 8000,
         barcode: 11001114,
         amount: 90,
         status: ProductStatus.GOOD,
+        expiryDate: new Date('2025-10-31'),
+        supplierId: suppliers[0].id,
+        categoryId: categories[0].id,
       },
     }),
     // Snack
     prisma.product.create({
       data: {
         name: 'Snack Ostar phô mai',
-        unit: ProductUnit.UNKNOWN,
+        unit: ProductUnit.PACKAGE,
         price: 7000,
         barcode: 22002220,
         amount: 50,
         status: ProductStatus.GOOD,
+        expiryDate: new Date('2025-08-31'),
+        supplierId: suppliers[2].id,
+        categoryId: categories[1].id,
       },
     }),
     prisma.product.create({
       data: {
         name: 'Snack Poca vị lẩu Thái',
-        unit: ProductUnit.UNKNOWN,
+        unit: ProductUnit.PACKAGE,
         price: 6500,
         barcode: 22002221,
         amount: 45,
         status: ProductStatus.GOOD,
+        expiryDate: new Date('2025-07-31'),
+        supplierId: suppliers[2].id,
+        categoryId: categories[1].id,
       },
     }),
     prisma.product.create({
       data: {
         name: 'Bánh Chocopie',
-        unit: ProductUnit.UNKNOWN,
+        unit: ProductUnit.BOX,
         price: 5000,
         barcode: 22002222,
         amount: 100,
         status: ProductStatus.GOOD,
+        expiryDate: new Date('2025-12-31'),
+        supplierId: suppliers[2].id,
+        categoryId: categories[1].id,
       },
     }),
     // Mì gói
     prisma.product.create({
       data: {
         name: 'Mì Hảo Hảo tôm chua cay',
-        unit: ProductUnit.UNKNOWN,
+        unit: ProductUnit.PACKAGE,
         price: 4000,
         barcode: 33003330,
         amount: 150,
         status: ProductStatus.GOOD,
+        expiryDate: new Date('2026-03-31'),
+        supplierId: suppliers[3].id,
+        categoryId: categories[2].id,
       },
     }),
     prisma.product.create({
       data: {
         name: 'Mì Kokomi tôm',
-        unit: ProductUnit.UNKNOWN,
+        unit: ProductUnit.PACKAGE,
         price: 3500,
         barcode: 33003331,
         amount: 120,
         status: ProductStatus.GOOD,
+        expiryDate: new Date('2026-02-28'),
+        supplierId: suppliers[3].id,
+        categoryId: categories[2].id,
       },
     }),
     // Sữa
     prisma.product.create({
       data: {
         name: 'Sữa tươi Vinamilk 1L',
-        unit: ProductUnit.UNKNOWN,
+        unit: ProductUnit.BOX,
         price: 35000,
         barcode: 44004440,
         amount: 40,
         status: ProductStatus.GOOD,
+        expiryDate: new Date('2025-01-15'),
+        supplierId: suppliers[4].id,
+        categoryId: categories[3].id,
       },
     }),
     prisma.product.create({
       data: {
         name: 'Sữa chua uống TH True 180ml',
-        unit: ProductUnit.UNKNOWN,
+        unit: ProductUnit.BOTTLE,
         price: 8000,
         barcode: 44004441,
         amount: 70,
         status: ProductStatus.GOOD,
+        expiryDate: new Date('2025-01-10'),
+        supplierId: suppliers[4].id,
+        categoryId: categories[3].id,
       },
     }),
     // Dầu gội, xà phòng
     prisma.product.create({
       data: {
         name: 'Dầu gội Clear Men 650ml',
-        unit: ProductUnit.UNKNOWN,
+        unit: ProductUnit.BOTTLE,
         price: 120000,
         barcode: 55005550,
         amount: 25,
         status: ProductStatus.GOOD,
+        expiryDate: new Date('2027-12-31'),
+        supplierId: suppliers[5].id,
+        categoryId: categories[4].id,
       },
     }),
     prisma.product.create({
       data: {
         name: 'Xà phòng Lifebuoy 90g',
-        unit: ProductUnit.UNKNOWN,
+        unit: ProductUnit.PIECE,
         price: 15000,
         barcode: 55005551,
         amount: 60,
         status: ProductStatus.GOOD,
+        expiryDate: new Date('2027-06-30'),
+        supplierId: suppliers[5].id,
+        categoryId: categories[4].id,
       },
     }),
     prisma.product.create({
       data: {
         name: 'Kem đánh răng PS 150g',
-        unit: ProductUnit.UNKNOWN,
+        unit: ProductUnit.PIECE,
         price: 25000,
         barcode: 55005552,
         amount: 50,
         status: ProductStatus.GOOD,
+        expiryDate: new Date('2027-03-31'),
+        supplierId: suppliers[5].id,
+        categoryId: categories[4].id,
       },
     }),
   ])
@@ -575,124 +710,148 @@ async function main() {
     prisma.goodReceipt.create({
       data: {
         employeeId: employees[2].id, // Nhân viên nhập hàng 1
-        createdAt: new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000),
+        createdAt: new Date('2024-11-15T09:00:00'), // Earlier than invoices
       },
     }),
     prisma.goodReceipt.create({
       data: {
         employeeId: employees[3].id, // Nhân viên nhập hàng 2
-        createdAt: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000),
+        createdAt: new Date('2024-11-20T10:30:00'),
       },
     }),
     prisma.goodReceipt.create({
       data: {
         employeeId: employees[2].id,
-        createdAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+        createdAt: new Date('2024-11-25T14:00:00'),
       },
     }),
     prisma.goodReceipt.create({
       data: {
         employeeId: employees[3].id,
-        createdAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000),
+        createdAt: new Date('2024-11-28T11:00:00'),
       },
     }),
     prisma.goodReceipt.create({
       data: {
         employeeId: employees[2].id,
-        createdAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
+        createdAt: new Date('2024-12-01T08:30:00'),
       },
     }),
   ])
   console.log(`✅ Created ${goodReceipts.length} good receipts`)
 
   // ============================================
-  // 11. GOOD RECEIPT DETAILS
+  // 11. GOOD RECEIPT DETAILS - Realistic data
   // ============================================
   console.log('Creating good receipt details...')
   const goodReceiptDetails = await Promise.all([
-    // Receipt 1
+    // Receipt 1 - Đồ uống
     prisma.goodReceiptDetail.create({
       data: {
         goodReceiptId: goodReceipts[0].id,
-        productId: products[0].id,
-        quantity: 50,
-        price: 8000,
+        productId: products[0].id, // Coca Cola
+        quantity: 100,
+        price: 7000, // Cost price (sell at 10000)
       },
     }),
     prisma.goodReceiptDetail.create({
       data: {
         goodReceiptId: goodReceipts[0].id,
-        productId: products[1].id,
-        quantity: 40,
-        price: 7500,
+        productId: products[1].id, // Pepsi
+        quantity: 80,
+        price: 6500,
       },
     }),
-    // Receipt 2
+    prisma.goodReceiptDetail.create({
+      data: {
+        goodReceiptId: goodReceipts[0].id,
+        productId: products[2].id, // Nước suối
+        quantity: 200,
+        price: 3500,
+      },
+    }),
+    // Receipt 2 - Snack
     prisma.goodReceiptDetail.create({
       data: {
         goodReceiptId: goodReceipts[1].id,
-        productId: products[5].id,
-        quantity: 30,
+        productId: products[5].id, // Ostar
+        quantity: 50,
         price: 5000,
       },
     }),
     prisma.goodReceiptDetail.create({
       data: {
         goodReceiptId: goodReceipts[1].id,
-        productId: products[6].id,
-        quantity: 25,
-        price: 4800,
+        productId: products[6].id, // Poca
+        quantity: 45,
+        price: 4500,
       },
     }),
-    // Receipt 3
     prisma.goodReceiptDetail.create({
       data: {
-        goodReceiptId: goodReceipts[2].id,
-        productId: products[8].id,
+        goodReceiptId: goodReceipts[1].id,
+        productId: products[7].id, // Chocopie
         quantity: 100,
-        price: 3000,
+        price: 3500,
       },
     }),
+    // Receipt 3 - Mì gói
     prisma.goodReceiptDetail.create({
       data: {
         goodReceiptId: goodReceipts[2].id,
-        productId: products[9].id,
-        quantity: 80,
+        productId: products[8].id, // Hảo Hảo
+        quantity: 150,
         price: 2800,
       },
     }),
-    // Receipt 4
+    prisma.goodReceiptDetail.create({
+      data: {
+        goodReceiptId: goodReceipts[2].id,
+        productId: products[9].id, // Kokomi
+        quantity: 120,
+        price: 2500,
+      },
+    }),
+    // Receipt 4 - Sữa
     prisma.goodReceiptDetail.create({
       data: {
         goodReceiptId: goodReceipts[3].id,
-        productId: products[10].id,
-        quantity: 20,
+        productId: products[10].id, // Vinamilk
+        quantity: 40,
         price: 28000,
       },
     }),
     prisma.goodReceiptDetail.create({
       data: {
         goodReceiptId: goodReceipts[3].id,
-        productId: products[11].id,
-        quantity: 40,
-        price: 6500,
+        productId: products[11].id, // TH True
+        quantity: 70,
+        price: 6000,
       },
     }),
-    // Receipt 5
+    // Receipt 5 - Chăm sóc cá nhân
     prisma.goodReceiptDetail.create({
       data: {
         goodReceiptId: goodReceipts[4].id,
-        productId: products[12].id,
-        quantity: 15,
-        price: 100000,
+        productId: products[12].id, // Dầu gội
+        quantity: 25,
+        price: 95000,
       },
     }),
     prisma.goodReceiptDetail.create({
       data: {
         goodReceiptId: goodReceipts[4].id,
-        productId: products[13].id,
-        quantity: 30,
-        price: 12000,
+        productId: products[13].id, // Xà phòng
+        quantity: 60,
+        price: 11000,
+      },
+    }),
+    prisma.goodReceiptDetail.create({
+      data: {
+        goodReceiptId: goodReceipts[4].id,
+        productId: products[14].id, // Kem đánh răng
+        quantity: 50,
+        price: 20000,
       },
     }),
   ])
@@ -709,6 +868,7 @@ async function main() {
         userId: users[0].id,
         usedPoint: 50,
         total: 45000,
+        createdAt: new Date('2024-12-01T10:30:00'),
       },
     }),
     prisma.invoice.create({
@@ -717,6 +877,7 @@ async function main() {
         userId: users[1].id,
         usedPoint: 100,
         total: 80000,
+        createdAt: new Date('2024-12-03T14:15:00'),
       },
     }),
     prisma.invoice.create({
@@ -725,6 +886,7 @@ async function main() {
         userId: users[2].id,
         usedPoint: 0,
         total: 25000,
+        createdAt: new Date('2024-12-05T09:45:00'),
       },
     }),
     prisma.invoice.create({
@@ -733,6 +895,7 @@ async function main() {
         userId: users[3].id,
         usedPoint: 200,
         total: 150000,
+        createdAt: new Date('2024-12-07T16:20:00'),
       },
     }),
     prisma.invoice.create({
@@ -741,6 +904,7 @@ async function main() {
         userId: users[4].id,
         usedPoint: 30,
         total: 35000,
+        createdAt: new Date('2024-12-10T11:00:00'),
       },
     }),
     prisma.invoice.create({
@@ -749,6 +913,7 @@ async function main() {
         userId: null, // Khách vãng lai
         usedPoint: 0,
         total: 20000,
+        createdAt: new Date('2024-12-12T15:30:00'),
       },
     }),
   ])
@@ -940,6 +1105,8 @@ async function main() {
 
   console.log('\n🎉 Database seeding completed successfully!')
   console.log('\n📊 Summary:')
+  console.log(`   - Suppliers: ${suppliers.length}`)
+  console.log(`   - Product Categories: ${categories.length}`)
   console.log(`   - Users: ${users.length}`)
   console.log(`   - Customer Accounts: ${accounts.length}`)
   console.log(`   - Employees: ${employees.length}`)

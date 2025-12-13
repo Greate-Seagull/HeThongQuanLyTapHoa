@@ -658,61 +658,114 @@ export function Reports() {
         return <p className="text-gray-500 text-center p-4">Không có dữ liệu bán hàng</p>;
       }
 
-      // Backend trả: total, totalQuantity, employee, customer
-      // Gộp theo nhóm nếu quá nhiều (>20 hóa đơn)
+      // Sort by createdAt ascending (oldest to newest) for left to right display
+      const sortedSales = [...data.sales]
+        .filter((s: any) => s.createdAt) // Filter out items without createdAt
+        .sort((a: any, b: any) => {
+          const dateA = new Date(a.createdAt).getTime();
+          const dateB = new Date(b.createdAt).getTime();
+          return dateA - dateB; // ascending order: old -> new
+        });
+
+      console.log('Original sales:', data.sales);
+      console.log('Sorted sales:', sortedSales);
+
       let chartData: any[] = [];
       
-      if (data.sales.length > 20) {
-        // Gộp mỗi 5 hóa đơn thành 1 nhóm
-        const groupSize = Math.ceil(data.sales.length / 15);
-        const groups: any = {};
+      if (sortedSales.length > 15) {
+        // Group by date if too many invoices
+        const groupedByDate: { [key: string]: { revenue: number; quantity: number; count: number; timestamp: number } } = {};
         
-        data.sales.forEach((s: any, index: number) => {
-          const groupIndex = Math.floor(index / groupSize);
-          const groupKey = `Nhóm ${groupIndex + 1}`;
+        sortedSales.forEach((s: any) => {
+          const dateObj = new Date(s.createdAt);
+          const dateKey = dateObj.toLocaleDateString('vi-VN', { 
+            day: '2-digit', 
+            month: '2-digit',
+            year: '2-digit'
+          });
           
-          if (!groups[groupKey]) {
-            groups[groupKey] = { revenue: 0, quantity: 0, count: 0 };
+          if (!groupedByDate[dateKey]) {
+            groupedByDate[dateKey] = { 
+              revenue: 0, 
+              quantity: 0, 
+              count: 0,
+              timestamp: dateObj.getTime()
+            };
           }
-          groups[groupKey].revenue += s.total || 0;
-          groups[groupKey].quantity += s.totalQuantity || 0;
-          groups[groupKey].count += 1;
+          groupedByDate[dateKey].revenue += s.total || 0;
+          groupedByDate[dateKey].quantity += s.totalQuantity || 0;
+          groupedByDate[dateKey].count += 1;
         });
         
-        chartData = Object.entries(groups).map(([key, val]: [string, any]) => ({
-          date: `${key} (${val.count} HĐ)`,
-          revenue: val.revenue,
-          quantity: val.quantity,
-        }));
+        // Sort by timestamp and create chart data
+        chartData = Object.entries(groupedByDate)
+          .sort(([, a], [, b]) => a.timestamp - b.timestamp)
+          .map(([date, val]) => ({
+            date: `${date}\n(${val.count} HĐ)`,
+            revenue: val.revenue,
+            quantity: val.quantity,
+          }));
       } else {
-        // Hiển thị từng hóa đơn
-        chartData = data.sales.slice(0, 20).reverse().map((s: any) => ({
-          date: `HĐ #${s.id}`,
-          revenue: s.total || 0,
-          quantity: s.totalQuantity || 0,
-          employee: s.employee || 'N/A',
-        }));
+        // Display individual invoices with date only (no invoice number)
+        chartData = sortedSales.map((s: any) => {
+          const dateObj = new Date(s.createdAt);
+          const dateStr = dateObj.toLocaleDateString('vi-VN', {
+            day: '2-digit',
+            month: '2-digit',
+          });
+          const timeStr = dateObj.toLocaleTimeString('vi-VN', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          });
+          
+          return {
+            date: `${dateStr}\n${timeStr}`,
+            revenue: s.total || 0,
+            quantity: s.totalQuantity || 0,
+            invoiceId: s.id,
+          };
+        });
       }
 
-      console.log('Sales chartData:', chartData);
+      console.log('Final chartData (sorted old->new):', chartData);
 
       return (
         <div className="grid grid-cols-1 gap-6 mb-6">
           <Card className="border-orange-200">
             <CardHeader className="bg-orange-50">
-              <CardTitle className="text-orange-900 text-lg">Doanh thu & Số lượng bán</CardTitle>
+              <CardTitle className="text-orange-900 text-lg">Doanh thu & Số lượng bán theo thời gian</CardTitle>
             </CardHeader>
             <CardContent className="p-4">
-              <ResponsiveContainer width="100%" height={350}>
-                <LineChart data={chartData}>
+              <ResponsiveContainer width="100%" height={400}>
+                <LineChart data={chartData} margin={{ top: 5, right: 30, left: 10, bottom: 80 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" angle={-45} textAnchor="end" height={80} />
-                  <YAxis yAxisId="left" tick={{ fontSize: 10 }} />
-                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} />
-                  <Tooltip formatter={(value) => Number(value).toLocaleString('vi-VN')} />
-                  <Legend />
-                  <Line yAxisId="left" type="monotone" dataKey="revenue" stroke={CHART_COLORS.warning} strokeWidth={2} name="Doanh thu (VNĐ)" />
-                  <Line yAxisId="right" type="monotone" dataKey="quantity" stroke={CHART_COLORS.primary} strokeWidth={2} name="Số lượng bán" />
+                  <XAxis 
+                    dataKey="date" 
+                    angle={-45} 
+                    textAnchor="end" 
+                    height={100}
+                    interval={0}
+                    tick={{ fontSize: 9 }}
+                  />
+                  <YAxis 
+                    yAxisId="left" 
+                    tick={{ fontSize: 10 }} 
+                    label={{ value: 'VNĐ', angle: -90, position: 'insideLeft', style: { fontSize: 12 } }} 
+                  />
+                  <YAxis 
+                    yAxisId="right" 
+                    orientation="right" 
+                    tick={{ fontSize: 10 }} 
+                    label={{ value: 'SL', angle: 90, position: 'insideRight', style: { fontSize: 12 } }} 
+                  />
+                  <Tooltip 
+                    formatter={(value: any) => Number(value).toLocaleString('vi-VN')}
+                    labelFormatter={(label) => `Thời gian: ${label}`}
+                  />
+                  <Legend wrapperStyle={{ paddingTop: '10px' }} />
+                  <Line yAxisId="left" type="monotone" dataKey="revenue" stroke={CHART_COLORS.warning} strokeWidth={2} name="Doanh thu (VNĐ)" dot={{ r: 4 }} />
+                  <Line yAxisId="right" type="monotone" dataKey="quantity" stroke={CHART_COLORS.primary} strokeWidth={2} name="Số lượng bán" dot={{ r: 4 }} />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>

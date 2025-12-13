@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Plus, Edit, Trash2, Search, FolderOpen } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -26,6 +27,11 @@ export function ProductCategoryManagement() {
   const [searchTerm, setSearchTerm] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<ProductCategory | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: number; name: string }>({
+    open: false,
+    id: 0,
+    name: '',
+  })
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -111,13 +117,13 @@ export function ProductCategoryManagement() {
   }
 
   const handleDelete = async (id: number, name: string) => {
-    if (!confirm(`Bạn có chắc muốn xóa loại sản phẩm "${name}"?`)) {
-      return
-    }
+    setDeleteConfirm({ open: true, id, name })
+  }
 
+  const confirmDelete = async () => {
     try {
       setIsLoading(true)
-      await deleteProductCategory(id)
+      await deleteProductCategory(deleteConfirm.id)
       toast.success('Xóa loại sản phẩm thành công!')
       loadCategories()
     } catch (error: any) {
@@ -191,24 +197,24 @@ export function ProductCategoryManagement() {
                         {category._count?.products || 0}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleOpenDialog(category)}
-                            disabled={isLoading}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDelete(category.id, category.name)}
-                            disabled={isLoading}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleOpenDialog(category)}
+                          disabled={isLoading}
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(category.id, category.name)}
+                          disabled={isLoading}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))
@@ -258,6 +264,18 @@ export function ProductCategoryManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) => setDeleteConfirm({ ...deleteConfirm, open })}
+        title="Xác nhận xóa"
+        description={`Bạn có chắc muốn xóa loại sản phẩm "${deleteConfirm.name}"? Hành động này không thể hoàn tác.`}
+        onConfirm={confirmDelete}
+        confirmText="Xóa"
+        cancelText="Hủy"
+        variant="destructive"
+      />
     </div>
   )
 }
