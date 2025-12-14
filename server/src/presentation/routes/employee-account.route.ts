@@ -5,6 +5,8 @@ import { controller } from "../controllers/controller";
 import {
 	createAccountUsecase,
 	useAccountUsecase,
+	updateEmployeeAccountUsecase,
+	getEmployeeAccountsUsecase,
 } from "../../composition-root";
 
 const router = Router();
@@ -17,5 +19,12 @@ router.post(
 	authorizationMiddleware("MANAGER"),
 	controller(createAccountUsecase)
 );
+
+
+// Lấy danh sách tất cả employee-accounts
+router.get("/", authenticationMiddleware, controller(getEmployeeAccountsUsecase));
+
+// Cập nhật thông tin employee-account
+router.put("/", authenticationMiddleware, controller(updateEmployeeAccountUsecase));
 
 export default router;

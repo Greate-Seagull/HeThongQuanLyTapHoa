@@ -27,6 +27,8 @@ import { EmployeeAccountRepository } from "./infrastructure/repositories/employe
 import { EmployeeAccountReadAccessor } from "./infrastructure/read-accessors/employee-account.read-accessor";
 import { CreateAccountUsecase } from "./application/employee-account/create-account.usecase";
 import { UseAccountUsecase } from "./application/employee-account/use-account.usecase";
+import { UpdateEmployeeAccountUsecase } from "./application/employee-account/update-employee-account.usecase";
+import { GetEmployeeAccountsUsecase } from "./application/employee-account/get-employee-accounts.usecase";
 import { CreateInvoiceUsecase } from "./application/invoice/create-invoice.usecase";
 import { SignInUsecase } from "./application/customer-account/sign-in.usecase";
 import { SignUpUsecase } from "./application/customer-account/sign-up.usecase";
@@ -90,6 +92,15 @@ export const createAccountUsecase = new CreateAccountUsecase(
 	employeeAccountRepo,
 	employeeRepo,
 	transactionManager
+);
+export const updateEmployeeAccountUsecase = new UpdateEmployeeAccountUsecase(
+  employeeAccountRepo,
+  employeeAccountRead,
+  employeeRepo,
+  employeeReadAccessor
+);
+export const getEmployeeAccountsUsecase = new GetEmployeeAccountsUsecase(
+  employeeAccountRead
 );
 export const signInUsecase = new SignInUsecase(
 	userRepo,

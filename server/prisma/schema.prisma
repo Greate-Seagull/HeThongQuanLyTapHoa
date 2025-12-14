@@ -32,13 +32,13 @@ model Product {
   amount             Int                 @default(0)
   barcode            Int                 @unique
   status             ProductStatus       @default(GOOD)
-  expiryDate         DateTime?
-  supplierId         Int?
   categoryId         Int?
-  supplier           Supplier?           @relation(fields: [supplierId], references: [id], onDelete: SetNull)
-  category           ProductCategory?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  supplierId         Int?
+  expiryDate         DateTime?
   goodReceiptDetails GoodReceiptDetail[]
   invoiceDetails     InvoiceDetail[]
+  category           ProductCategory?    @relation(fields: [categoryId], references: [id])
+  supplier           Supplier?           @relation(fields: [supplierId], references: [id])
   promotionDetails   PromotionDetail[]
   slotDetails        SlotDetail[]
   stocktakingDetails StocktakingDetail[]
@@ -205,16 +205,16 @@ enum PromotionType {
 }
 
 enum ProductUnit {
-  PIECE      // Cái, chiếc
-  BOX        // Hộp
-  BOTTLE     // Chai
-  CAN        // Lon
-  PACKAGE    // Gói
-  BAG        // Túi
-  KG         // Kilogram
-  GRAM       // Gram
-  LITER      // Lít
-  ML         // Mililít
+  PIECE
+  BOX
+  BOTTLE
+  CAN
+  PACKAGE
+  BAG
+  KG
+  GRAM
+  LITER
+  ML
 }
 
 enum ProductStatus {
