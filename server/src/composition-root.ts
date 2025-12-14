@@ -1,3 +1,5 @@
+import { GetEmployeeAccountProfileUsecase } from "./application/employee-account/get-employee-account-profile.usecase";
+
 import { config } from "./config/config";
 import { SearchProductsUsecase } from "./application/product/search-products.usecase";
 import { PrismaClient } from "./generated/client";
@@ -19,14 +21,16 @@ import { ProductReadAccessor } from "./infrastructure/read-accessors/product.rea
 import { AccountRepository } from "./infrastructure/repositories/account.repository";
 import { AccountReadAccessor } from "./infrastructure/read-accessors/account.read-accessor";
 import {
-	Expiry,
-	PasswordService,
-	TokenService,
+  Expiry,
+  PasswordService,
+  TokenService,
 } from "./domain/services/encrypt.service";
 import { EmployeeAccountRepository } from "./infrastructure/repositories/employee-account.repository";
 import { EmployeeAccountReadAccessor } from "./infrastructure/read-accessors/employee-account.read-accessor";
 import { CreateAccountUsecase } from "./application/employee-account/create-account.usecase";
 import { UseAccountUsecase } from "./application/employee-account/use-account.usecase";
+import { UpdateEmployeeAccountUsecase } from "./application/employee-account/update-employee-account.usecase";
+import { GetEmployeeAccountsUsecase } from "./application/employee-account/get-employee-accounts.usecase";
 import { CreateInvoiceUsecase } from "./application/invoice/create-invoice.usecase";
 import { SignInUsecase } from "./application/customer-account/sign-in.usecase";
 import { SignUpUsecase } from "./application/customer-account/sign-up.usecase";
@@ -55,10 +59,10 @@ import { GetRevenueProfitReportUsecase } from "./application/get-revenue-profit-
 
 config;
 export const prisma = new PrismaClient({
-	log: [
-		{ level: "query", emit: "event" },
-		{ level: "error", emit: "stdout" },
-	],
+  log: [
+    { level: "query", emit: "event" },
+    { level: "error", emit: "stdout" },
+  ],
 });
 
 const transactionManager = new PrismaTransactionManager(prisma);
@@ -74,36 +78,52 @@ export const accountRead = new AccountReadAccessor(prisma);
 //Domain services
 export const passwordService = new PasswordService(config.bcrypt.saltRound);
 export const tokenService = new TokenService(
-	config.jwt.secret,
-	config.jwt.expiry as Expiry
+  config.jwt.secret,
+  config.jwt.expiry as Expiry
 );
 //Usecases
 export const useAccountUsecase = new UseAccountUsecase(
-	employeeAccountRepo,
-	employeeReadAccessor,
-	passwordService,
-	tokenService
+  employeeAccountRepo,
+  employeeReadAccessor,
+  passwordService,
+  tokenService
 );
 export const createAccountUsecase = new CreateAccountUsecase(
-	employeeAccountRead,
-	passwordService,
-	employeeAccountRepo,
-	employeeRepo,
-	transactionManager
+  employeeAccountRead,
+  passwordService,
+  employeeAccountRepo,
+  employeeRepo,
+  transactionManager
+);
+export const updateEmployeeAccountUsecase = new UpdateEmployeeAccountUsecase(
+  employeeAccountRepo,
+  employeeAccountRead,
+  employeeRepo,
+  employeeReadAccessor
+);
+
+export const getEmployeeAccountProfileUsecase =
+  new GetEmployeeAccountProfileUsecase(
+    employeeAccountRepo,
+    employeeRepo,
+    employeeReadAccessor
+  );
+export const getEmployeeAccountsUsecase = new GetEmployeeAccountsUsecase(
+  employeeAccountRead
 );
 export const signInUsecase = new SignInUsecase(
-	userRepo,
-	accountRepo,
-	passwordService,
-	tokenService
+  userRepo,
+  accountRepo,
+  passwordService,
+  tokenService
 );
 export const signUpUsecase = new SignUpUsecase(
-	accountRead,
-	userRepo,
-	accountRepo,
-	transactionManager,
-	passwordService,
-	tokenService
+  accountRead,
+  userRepo,
+  accountRepo,
+  transactionManager,
+  passwordService,
+  tokenService
 );
 //---------------------------------------------------------
 const productReadAccessor = new ProductReadAccessor(prisma);
@@ -123,56 +143,78 @@ const promoPricing = new PromotionPricingService();
 const processSales = new SalesTransactionService();
 
 export const searchProductsUsecase = new SearchProductsUsecase(
-	productReadAccessor,
-	promotionRepo,
-	promoPricing
+  productReadAccessor,
+  promotionRepo,
+  promoPricing
 );
 export const createPromotionUsecase = new CreatePromotionUsecase(
-	productReadAccessor,
-	promotionRepo
+  productReadAccessor,
+  promotionRepo
 );
 export const createInvoiceUsecase = new CreateInvoiceUsecase(
-	employeeRepo,
-	userRepo,
-	productRepo,
-	promotionRepo,
-	invoiceRepo,
-	processSales,
-	transactionManager
+  employeeRepo,
+  userRepo,
+  productRepo,
+  promotionRepo,
+  invoiceRepo,
+  processSales,
+  transactionManager
 );
 export const createGoodReceiptUsecase = new CreateGoodReceiptUsecase(
-	employeeReadAccessor,
-	productRepo,
-	goodReceiptRepo,
-	transactionManager
+  employeeReadAccessor,
+  productRepo,
+  goodReceiptRepo,
+  transactionManager
 );
 export const updateProductsUsecase = new UpdateProdutsUsecase(
-	productRepo,
-	transactionManager
+  productRepo,
+  transactionManager
 );
 export const getProductsUsecase = new GetProductsUsecase(productReadAccessor);
 export const createStocktakingUsecase = new CreateStocktakingUsecase(
-	productReadAccessor,
-	shelfReadAccessor,
-	stocktakingRepo
+  productReadAccessor,
+  shelfReadAccessor,
+  stocktakingRepo
 );
 
 // Supplier usecases
-export const getSuppliersUsecase = new GetSuppliersUsecase(supplierReadAccessor);
+export const getSuppliersUsecase = new GetSuppliersUsecase(
+  supplierReadAccessor
+);
 export const createSupplierUsecase = new CreateSupplierUsecase(supplierRepo);
 export const updateSupplierUsecase = new UpdateSupplierUsecase(supplierRepo);
 export const deleteSupplierUsecase = new DeleteSupplierUsecase(supplierRepo);
 
 // Product Category usecases
-export const getProductCategoriesUsecase = new GetProductCategoriesUsecase(productCategoryReadAccessor);
-export const createProductCategoryUsecase = new CreateProductCategoryUsecase(productCategoryRepo);
-export const updateProductCategoryUsecase = new UpdateProductCategoryUsecase(productCategoryRepo);
-export const deleteProductCategoryUsecase = new DeleteProductCategoryUsecase(productCategoryRepo);
+export const getProductCategoriesUsecase = new GetProductCategoriesUsecase(
+  productCategoryReadAccessor
+);
+export const createProductCategoryUsecase = new CreateProductCategoryUsecase(
+  productCategoryRepo
+);
+export const updateProductCategoryUsecase = new UpdateProductCategoryUsecase(
+  productCategoryRepo
+);
+export const deleteProductCategoryUsecase = new DeleteProductCategoryUsecase(
+  productCategoryRepo
+);
 
 // Report usecases
-export const getInventoryReportUsecase = new GetInventoryReportUsecase(reportReadAccessor);
-export const getGoodsReceiptReportUsecase = new GetGoodsReceiptReportUsecase(reportReadAccessor);
-export const getSalesReportUsecase = new GetSalesReportUsecase(reportReadAccessor);
-export const getCustomerReportUsecase = new GetCustomerReportUsecase(reportReadAccessor);
-export const getStocktakingReportUsecase = new GetStocktakingReportUsecase(reportReadAccessor);
-export const getRevenueProfitReportUsecase = new GetRevenueProfitReportUsecase(reportReadAccessor);
+export const getInventoryReportUsecase = new GetInventoryReportUsecase(
+  reportReadAccessor
+);
+export const getGoodsReceiptReportUsecase = new GetGoodsReceiptReportUsecase(
+  reportReadAccessor
+);
+export const getSalesReportUsecase = new GetSalesReportUsecase(
+  reportReadAccessor
+);
+export const getCustomerReportUsecase = new GetCustomerReportUsecase(
+  reportReadAccessor
+);
+export const getStocktakingReportUsecase = new GetStocktakingReportUsecase(
+  reportReadAccessor
+);
+export const getRevenueProfitReportUsecase = new GetRevenueProfitReportUsecase(
+  reportReadAccessor
+);

@@ -25,6 +25,7 @@ export class EmployeeRepository implements EmployeeRepository {
 		return savedEntity;
 	}
 
+
 	async add(tx: any, employee: Employee) {
 		const repo = tx ? tx : this.prisma;
 		const raw = await repo.employee.create({
@@ -32,6 +33,18 @@ export class EmployeeRepository implements EmployeeRepository {
 			...EmployeeRepository.baseQuery,
 		});
 
+		const savedEntity = fromPersistence(Employee, raw);
+		this.tracker.track(savedEntity.id, raw);
+		return savedEntity;
+	}
+
+	async updateById(tx: any, employee: Employee) {
+		const repo = tx ? tx : this.prisma;
+		const raw = await repo.employee.update({
+			where: { id: employee.id },
+			data: toPersistenceObject(employee),
+			...EmployeeRepository.baseQuery,
+		});
 		const savedEntity = fromPersistence(Employee, raw);
 		this.tracker.track(savedEntity.id, raw);
 		return savedEntity;

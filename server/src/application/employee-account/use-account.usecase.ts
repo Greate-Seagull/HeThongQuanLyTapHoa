@@ -72,7 +72,7 @@ export class UseAccountUsecase {
 		});
 
 		const token = this.tokenService.generateJwt({
-			id: employee.id,
+			id: account.id,
 			position: employee.position,
 		});
 
