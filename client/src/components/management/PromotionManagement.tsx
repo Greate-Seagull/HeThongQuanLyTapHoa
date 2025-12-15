@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,8 +7,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Edit, Trash2, Search } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { apiClient } from '@/services/api-client';
 
 enum PromotionType {
   PERCENTAGE = 'PERCENTAGE',
@@ -19,51 +20,25 @@ interface Promotion {
   id: number;
   name: string;
   description: string | null;
-  startedAt: Date;
-  endedAt: Date;
+  startedAt: Date | string;
+  endedAt: Date | string;
   condition: string | null;
   value: number;
   promotionType: PromotionType;
 }
 
-const mockPromotions: Promotion[] = [
-  { 
-    id: 1, 
-    name: 'Giảm giá mùa hè', 
-    description: 'Giảm 20% cho tất cả sản phẩm',
-    startedAt: new Date('2024-06-01'),
-    endedAt: new Date('2024-08-31'),
-    condition: 'Đơn hàng từ 100,000đ',
-    value: 20,
-    promotionType: PromotionType.PERCENTAGE
-  },
-  { 
-    id: 2, 
-    name: 'Khuyến mãi tết', 
-    description: 'Giảm 30% dịp tết nguyên đán',
-    startedAt: new Date('2024-01-01'),
-    endedAt: new Date('2024-02-15'),
-    condition: 'Đơn hàng từ 200,000đ',
-    value: 30,
-    promotionType: PromotionType.PERCENTAGE
-  },
-  { 
-    id: 3, 
-    name: 'Giảm giá cố định', 
-    description: 'Giảm 50,000đ cho đơn hàng',
-    startedAt: new Date('2024-11-01'),
-    endedAt: new Date('2024-12-31'),
-    condition: 'Đơn hàng từ 300,000đ',
-    value: 50000,
-    promotionType: PromotionType.FIXED
-  },
-];
+interface ApiResponse {
+  status: string;
+  data: Promotion[];
+}
 
 export function PromotionManagement() {
-  const [promotions, setPromotions] = useState<Promotion[]>(mockPromotions);
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPromotion, setEditingPromotion] = useState<Promotion | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: number; name: string }>({
     open: false,
     id: 0,
@@ -78,6 +53,24 @@ export function PromotionManagement() {
     value: 0,
     promotionType: PromotionType.PERCENTAGE,
   });
+
+  useEffect(() => {
+    fetchPromotions();
+  }, []);
+
+  const fetchPromotions = async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.get<ApiResponse>('/promotions');
+      setPromotions(response);
+      setError(null);
+    } catch (err) {
+      setError('Không thể tải dữ liệu khuyến mãi');
+      console.error('Error fetching promotions:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredPromotions = promotions.filter(promo =>
     promo.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -99,11 +92,14 @@ export function PromotionManagement() {
 
   const handleEdit = (promotion: Promotion) => {
     setEditingPromotion(promotion);
+    const startDate = new Date(promotion.startedAt).toISOString().split('T')[0];
+    const endDate = new Date(promotion.endedAt).toISOString().split('T')[0];
+    
     setFormData({
       name: promotion.name,
       description: promotion.description || '',
-      startedAt: promotion.startedAt.toISOString().split('T')[0],
-      endedAt: promotion.endedAt.toISOString().split('T')[0],
+      startedAt: startDate,
+      endedAt: endDate,
       condition: promotion.condition || '',
       value: promotion.value,
       promotionType: promotion.promotionType,
@@ -115,40 +111,69 @@ export function PromotionManagement() {
     setDeleteConfirm({ open: true, id, name });
   };
 
-  const confirmDelete = () => {
-    setPromotions(promotions.filter(promo => promo.id !== deleteConfirm.id));
+  const confirmDelete = async () => {
+    try {
+      // TODO: Call DELETE API here
+      // await fetch(`YOUR_API_ENDPOINT_HERE/${deleteConfirm.id}`, { method: 'DELETE' });
+      
+      // Optimistic update
+      setPromotions(promotions.filter(promo => promo.id !== deleteConfirm.id));
+      setDeleteConfirm({ open: false, id: 0, name: '' });
+    } catch (err) {
+      console.error('Error deleting promotion:', err);
+      alert('Không thể xóa khuyến mãi');
+    }
   };
 
-  const handleSave = () => {
-    if (editingPromotion) {
-      setPromotions(promotions.map(promo =>
-        promo.id === editingPromotion.id 
-          ? { 
-              ...promo,
-              name: formData.name,
-              description: formData.description || null,
-              startedAt: new Date(formData.startedAt),
-              endedAt: new Date(formData.endedAt),
-              condition: formData.condition || null,
-              value: formData.value,
-              promotionType: formData.promotionType
-            } 
-          : promo
-      ));
-    } else {
-      const newId = Math.max(...promotions.map(p => p.id), 0) + 1;
-      setPromotions([...promotions, { 
-        id: newId,
+  const handleSave = async () => {
+    try {
+      const promotionData = {
         name: formData.name,
         description: formData.description || null,
-        startedAt: new Date(formData.startedAt),
-        endedAt: new Date(formData.endedAt),
+        startedAt: new Date(formData.startedAt).toISOString(),
+        endedAt: new Date(formData.endedAt).toISOString(),
         condition: formData.condition || null,
         value: formData.value,
         promotionType: formData.promotionType
-      }]);
+      };
+
+      if (editingPromotion) {
+        // TODO: Call PUT/PATCH API here
+        // await fetch(`YOUR_API_ENDPOINT_HERE/${editingPromotion.id}`, {
+        //   method: 'PUT',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify(promotionData)
+        // });
+        
+        // Optimistic update
+        setPromotions(promotions.map(promo =>
+          promo.id === editingPromotion.id 
+            ? { ...promo, ...promotionData } 
+            : promo
+        ));
+      } else {
+        // TODO: Call POST API here
+        // const response = await fetch('YOUR_API_ENDPOINT_HERE', {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify(promotionData)
+        // });
+        // const newPromotion = await response.json();
+        
+        // Temporary optimistic update with fake ID
+        const newId = Math.max(...promotions.map(p => p.id), 0) + 1;
+        setPromotions([...promotions, { id: newId, ...promotionData }]);
+      }
+      
+      setIsDialogOpen(false);
+    } catch (err) {
+      console.error('Error saving promotion:', err);
+      alert('Không thể lưu khuyến mãi');
     }
-    setIsDialogOpen(false);
+  };
+
+  const formatDate = (date: Date | string) => {
+    return new Date(date).toLocaleDateString('vi-VN');
   };
 
   return (
@@ -177,62 +202,86 @@ export function PromotionManagement() {
           </div>
 
           <div className="border border-blue-200 rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-blue-50">
-                  <TableHead className="text-blue-900">ID</TableHead>
-                  <TableHead className="text-blue-900">Tên khuyến mãi</TableHead>
-                  <TableHead className="text-blue-900">Loại</TableHead>
-                  <TableHead className="text-blue-900">Giá trị</TableHead>
-                  <TableHead className="text-blue-900">Ngày bắt đầu</TableHead>
-                  <TableHead className="text-blue-900">Ngày kết thúc</TableHead>
-                  <TableHead className="text-blue-900 text-right">Thao tác</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPromotions.map((promo) => (
-                  <TableRow key={promo.id} className="hover:bg-blue-50">
-                    <TableCell>KM{promo.id.toString().padStart(3, '0')}</TableCell>
-                    <TableCell>{promo.name}</TableCell>
-                    <TableCell>
-                      <span className={`px-2 py-1 rounded text-sm ${
-                        promo.promotionType === PromotionType.PERCENTAGE
-                          ? 'bg-purple-100 text-purple-700'
-                          : 'bg-green-100 text-green-700'
-                      }`}>
-                        {promo.promotionType === PromotionType.PERCENTAGE ? 'Phần trăm' : 'Cố định'}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      {promo.promotionType === PromotionType.PERCENTAGE 
-                        ? `${promo.value}%`
-                        : `${promo.value.toLocaleString('vi-VN')}đ`
-                      }
-                    </TableCell>
-                    <TableCell>{promo.startedAt.toLocaleDateString('vi-VN')}</TableCell>
-                    <TableCell>{promo.endedAt.toLocaleDateString('vi-VN')}</TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(promo)}
-                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(promo.id, promo.name)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              </div>
+            ) : error ? (
+              <div className="text-center py-12 text-red-600">
+                {error}
+                <Button 
+                  onClick={fetchPromotions} 
+                  className="ml-4 bg-blue-600 hover:bg-blue-700"
+                >
+                  Thử lại
+                </Button>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-blue-50">
+                    <TableHead className="text-blue-900">ID</TableHead>
+                    <TableHead className="text-blue-900">Tên khuyến mãi</TableHead>
+                    <TableHead className="text-blue-900">Loại</TableHead>
+                    <TableHead className="text-blue-900">Giá trị</TableHead>
+                    <TableHead className="text-blue-900">Ngày bắt đầu</TableHead>
+                    <TableHead className="text-blue-900">Ngày kết thúc</TableHead>
+                    <TableHead className="text-blue-900 text-right">Thao tác</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredPromotions.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                        Không tìm thấy khuyến mãi
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredPromotions.map((promo) => (
+                      <TableRow key={promo.id} className="hover:bg-blue-50">
+                        <TableCell>KM{promo.id.toString().padStart(3, '0')}</TableCell>
+                        <TableCell>{promo.name}</TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded text-sm ${
+                            promo.promotionType === PromotionType.PERCENTAGE
+                              ? 'bg-purple-100 text-purple-700'
+                              : 'bg-green-100 text-green-700'
+                          }`}>
+                            {promo.promotionType === PromotionType.PERCENTAGE ? 'Phần trăm' : 'Cố định'}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {promo.promotionType === PromotionType.PERCENTAGE 
+                            ? `${promo.value}%`
+                            : `${promo.value.toLocaleString('vi-VN')}đ`
+                          }
+                        </TableCell>
+                        <TableCell>{formatDate(promo.startedAt)}</TableCell>
+                        <TableCell>{formatDate(promo.endedAt)}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(promo)}
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(promo.id, promo.name)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            )}
           </div>
         </CardContent>
       </Card>

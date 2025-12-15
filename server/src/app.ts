@@ -10,6 +10,7 @@ import accountRouter from "./presentation/routes/account.route";
 import employeeAccountRouter from "./presentation/routes/employee-account.route";
 import supplierRouter from "./presentation/routes/supplier.route";
 import productCategoryRouter from "./presentation/routes/product-category.route";
+import shelfRouter from "./presentation/routes/shelf.route";
 import { reportRouter } from "./presentation/routes/report.route";
 import * as compositionRoot from "./composition-root";
 
@@ -41,6 +42,7 @@ app.use("/accounts", accountRouter);
 app.use("/employee-accounts", employeeAccountRouter);
 app.use("/suppliers", supplierRouter);
 app.use("/product-categories", productCategoryRouter);
+app.use("/shelves", shelfRouter);
 app.use("/reports", reportRouter({
 	getInventoryReportUsecase: compositionRoot.getInventoryReportUsecase,
 	getGoodsReceiptReportUsecase: compositionRoot.getGoodsReceiptReportUsecase,

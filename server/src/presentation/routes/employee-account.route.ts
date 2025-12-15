@@ -34,14 +34,12 @@ router.post(
   controller(createAccountUsecase)
 );
 
-// Lấy danh sách tất cả employee-accounts
 router.get(
   "/",
   authenticationMiddleware,
   controller(getEmployeeAccountsUsecase)
 );
 
-// Cập nhật thông tin employee-account
 router.put(
   "/",
   authenticationMiddleware,

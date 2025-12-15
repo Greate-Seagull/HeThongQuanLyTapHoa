@@ -24,7 +24,7 @@ const outputSchema = z.object();
 export class CreateStocktakingUsecase {
 	constructor(
 		private readonly productReadAccess: ProductReadAccessor,
-		private readonly shelfReadAccess: ShelfReadAccessor,
+		private readonly shelfReadAccessor: ShelfReadAccessor,
 		private readonly stocktakingRepo: StocktakingRepository
 	) {}
 
@@ -46,9 +46,7 @@ export class CreateStocktakingUsecase {
 		}
 
 		const slotIds = this.getDistinctSlotIds(parsedInput.products);
-		const areSlotsValid = await this.shelfReadAccess.existSlotByIds(
-			slotIds
-		);
+		const areSlotsValid = await this.shelfReadAccessor.existSlotByIds(slotIds);
 		if (!areSlotsValid) {
 			log.warn("Task failed: invalid slot id");
 			throw Error(`Expect all slots to be valid`);

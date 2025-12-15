@@ -59,5 +59,9 @@ export class AccountRepository implements AccountRepository {
 		return savedEntity;
 	}
 
+	
+
+
+
 	static baseQuery = buildSafePrismaSelect(Account);
 }

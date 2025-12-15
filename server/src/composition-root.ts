@@ -1,4 +1,5 @@
 import { GetEmployeeAccountProfileUsecase } from "./application/employee-account/get-employee-account-profile.usecase";
+import { GetMyAccountUsecase } from "./application/customer-account/get-my-account.usecase";
 
 import { config } from "./config/config";
 import { SearchProductsUsecase } from "./application/product/search-products.usecase";
@@ -6,6 +7,8 @@ import { PrismaClient } from "./generated/client";
 import { CreatePromotionUsecase } from "./application/promotion/create-promotion.usecase";
 import { PromotionRepository } from "./infrastructure/repositories/promotion.repository";
 import { PromotionPricingService } from "./domain/services/promotion-pricing.service";
+import { GetPromotionsUsecase } from "./application/promotion/get-promotions.usecase";
+import { PromotionReadAccessor } from "./infrastructure/read-accessors/promotion.read-accessor";
 import { EmployeeRepository } from "./infrastructure/repositories/employee.repository";
 import { UserRepository } from "./infrastructure/repositories/user.repository";
 import { ProductRepositoryPrisma } from "./infrastructure/repositories/product.repository.prisma";
@@ -38,6 +41,7 @@ import { CreateGoodReceiptUsecase } from "./application/good-receipt/create-good
 import { CreateStocktakingUsecase } from "./application/stocktaking/create-stocktaking.usecase";
 import { EmployeeReadAccess } from "./infrastructure/read-accessors/employee.read-accessor";
 import { SupplierRepository } from "./infrastructure/repositories/supplier.repository";
+import { GetAccountsUsecase } from "./application/customer-account/get-accounts.usecase";
 import { SupplierReadAccessor } from "./infrastructure/read-accessors/supplier.read-accessor";
 import { ProductCategoryRepository } from "./infrastructure/repositories/product-category.repository";
 import { ProductCategoryReadAccessor } from "./infrastructure/read-accessors/product-category.read-accessor";
@@ -56,6 +60,7 @@ import { GetSalesReportUsecase } from "./application/get-sales-report.usecase";
 import { GetCustomerReportUsecase } from "./application/get-customer-report.usecase";
 import { GetStocktakingReportUsecase } from "./application/get-stocktaking-report.usecase";
 import { GetRevenueProfitReportUsecase } from "./application/get-revenue-profit-report.usecase";
+import { GetShelvesUsecase } from "./application/shelf/get-shelves.usecase";
 
 config;
 export const prisma = new PrismaClient({
@@ -125,9 +130,11 @@ export const signUpUsecase = new SignUpUsecase(
   passwordService,
   tokenService
 );
+export const getAccountsUsecase = new GetAccountsUsecase(accountRead);
 //---------------------------------------------------------
 const productReadAccessor = new ProductReadAccessor(prisma);
 const promotionRepo = new PromotionRepository(prisma);
+const promotionReadAccessor = new PromotionReadAccessor(prisma);
 export const productRepo = new ProductRepositoryPrisma(prisma);
 export const invoiceRepo = new InvoiceRepository(prisma);
 export const goodReceiptRepo = new GoodReceiptRepository(prisma);
@@ -150,6 +157,9 @@ export const searchProductsUsecase = new SearchProductsUsecase(
 export const createPromotionUsecase = new CreatePromotionUsecase(
   productReadAccessor,
   promotionRepo
+);
+export const getPromotionsUsecase = new GetPromotionsUsecase(
+  promotionReadAccessor
 );
 export const createInvoiceUsecase = new CreateInvoiceUsecase(
   employeeRepo,
@@ -176,6 +186,7 @@ export const createStocktakingUsecase = new CreateStocktakingUsecase(
   shelfReadAccessor,
   stocktakingRepo
 );
+export const getShelvesUsecase = new GetShelvesUsecase(shelfReadAccessor);
 
 // Supplier usecases
 export const getSuppliersUsecase = new GetSuppliersUsecase(
@@ -218,3 +229,4 @@ export const getStocktakingReportUsecase = new GetStocktakingReportUsecase(
 export const getRevenueProfitReportUsecase = new GetRevenueProfitReportUsecase(
   reportReadAccessor
 );
+export const getMyAccountUsecase = new GetMyAccountUsecase(accountRead);

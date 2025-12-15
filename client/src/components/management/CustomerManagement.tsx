@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
+import { apiClient } from '@/services/api-client';
 
 interface User {
   id: number;
@@ -13,79 +14,44 @@ interface User {
 
 interface Account {
   id: number;
-  userId: number;
   phoneNumber: string;
-  passwordHash: string;
-  salt: string;
-  loggedAt: Date;
+  user: User;
 }
 
-interface UserWithAccount extends User {
-  account?: Account;
+interface ApiResponse {
+  status: string;
+  data: Account[];
 }
-
-const mockUsers: UserWithAccount[] = [
-  { 
-    id: 1, 
-    name: 'Nguyễn Văn A', 
-    point: 1250,
-    account: {
-      id: 1,
-      userId: 1,
-      phoneNumber: '0901234567',
-      passwordHash: 'hash',
-      salt: 'salt',
-      loggedAt: new Date('2024-11-20')
-    }
-  },
-  { 
-    id: 2, 
-    name: 'Trần Thị B', 
-    point: 850,
-    account: {
-      id: 2,
-      userId: 2,
-      phoneNumber: '0912345678',
-      passwordHash: 'hash',
-      salt: 'salt',
-      loggedAt: new Date('2024-11-18')
-    }
-  },
-  { 
-    id: 3, 
-    name: 'Lê Văn C', 
-    point: 2100,
-    account: {
-      id: 3,
-      userId: 3,
-      phoneNumber: '0923456789',
-      passwordHash: 'hash',
-      salt: 'salt',
-      loggedAt: new Date('2024-11-22')
-    }
-  },
-  { 
-    id: 4, 
-    name: 'Phạm Thị D', 
-    point: 500,
-    account: {
-      id: 4,
-      userId: 4,
-      phoneNumber: '0934567890',
-      passwordHash: 'hash',
-      salt: 'salt',
-      loggedAt: new Date('2024-11-15')
-    }
-  },
-];
 
 export function CustomerManagement() {
-  const [users] = useState<UserWithAccount[]>(mockUsers);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredUsers = users.filter(user =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.account?.phoneNumber.includes(searchTerm)
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
+  const fetchCustomers = async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.get('/accounts');
+      console.log(response);
+      
+      setAccounts(response);
+      setError(null);
+    } catch (err) {
+      setError('Không thể tải dữ liệu khách hàng');
+      console.error('Error fetching customers:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredAccounts = accounts.filter(account =>
+    account.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    account.phoneNumber.includes(searchTerm)
   );
 
   return (
@@ -110,37 +76,54 @@ export function CustomerManagement() {
           </div>
 
           <div className="border border-blue-200 rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-blue-50">
-                  <TableHead className="text-blue-900">ID</TableHead>
-                  <TableHead className="text-blue-900">Tên khách hàng</TableHead>
-                  <TableHead className="text-blue-900">Số điện thoại</TableHead>
-                  <TableHead className="text-blue-900">Điểm tích lũy</TableHead>
-                  <TableHead className="text-blue-900">Đăng nhập lần cuối</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id} className="hover:bg-blue-50">
-                    <TableCell>KH{user.id.toString().padStart(3, '0')}</TableCell>
-                    <TableCell>{user.name}</TableCell>
-                    <TableCell>{user.account?.phoneNumber || '-'}</TableCell>
-                    <TableCell>
-                      <span className="px-2 py-1 rounded text-sm bg-blue-100 text-blue-700">
-                        {user.point} điểm
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      {user.account?.loggedAt 
-                        ? new Date(user.account.loggedAt).toLocaleDateString('vi-VN')
-                        : '-'
-                      }
-                    </TableCell>
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              </div>
+            ) : error ? (
+              <div className="text-center py-12 text-red-600">
+                {error}
+                <Button 
+                  onClick={fetchCustomers} 
+                  className="ml-4 bg-blue-600 hover:bg-blue-700"
+                >
+                  Thử lại
+                </Button>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-blue-50">
+                    <TableHead className="text-blue-900">ID</TableHead>
+                    <TableHead className="text-blue-900">Tên khách hàng</TableHead>
+                    <TableHead className="text-blue-900">Số điện thoại</TableHead>
+                    <TableHead className="text-blue-900">Điểm tích lũy</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredAccounts.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-8 text-gray-500">
+                        Không tìm thấy khách hàng
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredAccounts.map((account) => (
+                      <TableRow key={account.id} className="hover:bg-blue-50">
+                        <TableCell>KH{account.user.id.toString().padStart(3, '0')}</TableCell>
+                        <TableCell>{account.user.name}</TableCell>
+                        <TableCell>{account.phoneNumber}</TableCell>
+                        <TableCell>
+                          <span className="px-2 py-1 rounded text-sm bg-blue-100 text-blue-700">
+                            {account.user.point} điểm
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            )}
           </div>
         </CardContent>
       </Card>

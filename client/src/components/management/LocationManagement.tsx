@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -6,54 +6,38 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { Plus, Edit, Trash2, Search, ChevronRight } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, ChevronRight, Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { apiClient } from '@/services/api-client';
 
-interface Shelf {
+interface Slot {
   id: number;
   name: string;
+  rackId: number;
 }
 
 interface Rack {
   id: number;
   name: string;
   shelfId: number;
-  shelf: Shelf;
+  slots: Slot[];
 }
 
-interface Slot {
+interface Shelf {
   id: number;
   name: string;
-  rackId: number;
-  rack: Rack;
+  racks: Rack[];
 }
 
-const mockShelves: Shelf[] = [
-  { id: 1, name: 'Kệ A' },
-  { id: 2, name: 'Kệ B' },
-  { id: 3, name: 'Kệ C' },
-];
-
-const mockRacks: Rack[] = [
-  { id: 1, name: 'Ngăn 1', shelfId: 1, shelf: mockShelves[0] },
-  { id: 2, name: 'Ngăn 2', shelfId: 1, shelf: mockShelves[0] },
-  { id: 3, name: 'Ngăn 1', shelfId: 2, shelf: mockShelves[1] },
-  { id: 4, name: 'Ngăn 2', shelfId: 2, shelf: mockShelves[1] },
-];
-
-const mockSlots: Slot[] = [
-  { id: 1, name: 'Ô A', rackId: 1, rack: mockRacks[0] },
-  { id: 2, name: 'Ô B', rackId: 1, rack: mockRacks[0] },
-  { id: 3, name: 'Ô C', rackId: 1, rack: mockRacks[0] },
-  { id: 4, name: 'Ô A', rackId: 2, rack: mockRacks[1] },
-  { id: 5, name: 'Ô B', rackId: 2, rack: mockRacks[1] },
-  { id: 6, name: 'Ô A', rackId: 3, rack: mockRacks[2] },
-];
+interface ApiResponse {
+  status: string;
+  data: Shelf[];
+}
 
 export function LocationManagement() {
-  const [shelves, setShelves] = useState<Shelf[]>(mockShelves);
-  const [racks, setRacks] = useState<Rack[]>(mockRacks);
-  const [slots, setSlots] = useState<Slot[]>(mockSlots);
+  const [shelves, setShelves] = useState<Shelf[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   
   const [isShelfDialogOpen, setIsShelfDialogOpen] = useState(false);
@@ -81,6 +65,53 @@ export function LocationManagement() {
   const [rackFormData, setRackFormData] = useState({ name: '', shelfId: 0 });
   const [slotFormData, setSlotFormData] = useState({ name: '', rackId: 0 });
 
+  useEffect(() => {
+    fetchLocations();
+  }, []);
+
+  const fetchLocations = async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.get<ApiResponse>('/shelves');
+      setShelves(response);
+      setError(null);
+    } catch (err) {
+      setError('Không thể tải dữ liệu vị trí');
+      console.error('Error fetching locations:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Flatten data for easy access
+  const getAllRacks = (): Rack[] => {
+    return shelves.flatMap(shelf => shelf.racks);
+  };
+
+  const getAllSlots = (): Slot[] => {
+    return shelves.flatMap(shelf => 
+      shelf.racks.flatMap(rack => rack.slots)
+    );
+  };
+
+  const getRackWithShelf = (rackId: number) => {
+    for (const shelf of shelves) {
+      const rack = shelf.racks.find(r => r.id === rackId);
+      if (rack) return { rack, shelf };
+    }
+    return null;
+  };
+
+  const getSlotWithRackAndShelf = (slotId: number) => {
+    for (const shelf of shelves) {
+      for (const rack of shelf.racks) {
+        const slot = rack.slots.find(s => s.id === slotId);
+        if (slot) return { slot, rack, shelf };
+      }
+    }
+    return null;
+  };
+
   // Shelf handlers
   const handleAddShelf = () => {
     setEditingShelf(null);
@@ -104,51 +135,36 @@ export function LocationManagement() {
     });
   };
 
-  const handleDeleteRack = (id: number, name: string) => {
-    setDeleteConfirm({ 
-      open: true, 
-      type: 'rack', 
-      id, 
-      name,
-      warning: 'Tất cả ô thuộc ngăn này sẽ bị xóa.'
-    });
-  };
-
-  const handleDeleteSlot = (id: number, name: string) => {
-    setDeleteConfirm({ 
-      open: true, 
-      type: 'slot', 
-      id, 
-      name 
-    });
-  };
-
-  const confirmDelete = () => {
-    const { type, id } = deleteConfirm;
-    
-    if (type === 'shelf') {
-      setShelves(shelves.filter(shelf => shelf.id !== id));
-      const rackIds = racks.filter(r => r.shelfId === id).map(r => r.id);
-      setRacks(racks.filter(r => r.shelfId !== id));
-      setSlots(slots.filter(s => !rackIds.includes(s.rackId)));
-    } else if (type === 'rack') {
-      setRacks(racks.filter(rack => rack.id !== id));
-      setSlots(slots.filter(slot => slot.rackId !== id));
-    } else if (type === 'slot') {
-      setSlots(slots.filter(slot => slot.id !== id));
+  const handleSaveShelf = async () => {
+    try {
+      if (editingShelf) {
+        // TODO: Call PUT API
+        // await fetch(`YOUR_API_ENDPOINT_HERE/shelves/${editingShelf.id}`, {
+        //   method: 'PUT',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify({ name: shelfFormData.name })
+        // });
+        
+        setShelves(shelves.map(shelf =>
+          shelf.id === editingShelf.id ? { ...shelf, name: shelfFormData.name } : shelf
+        ));
+      } else {
+        // TODO: Call POST API
+        // const response = await fetch('YOUR_API_ENDPOINT_HERE/shelves', {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify({ name: shelfFormData.name })
+        // });
+        // const newShelf = await response.json();
+        
+        const newId = Math.max(...shelves.map(s => s.id), 0) + 1;
+        setShelves([...shelves, { id: newId, name: shelfFormData.name, racks: [] }]);
+      }
+      setIsShelfDialogOpen(false);
+    } catch (err) {
+      console.error('Error saving shelf:', err);
+      alert('Không thể lưu kệ');
     }
-  };
-
-  const handleSaveShelf = () => {
-    if (editingShelf) {
-      setShelves(shelves.map(shelf =>
-        shelf.id === editingShelf.id ? { ...shelf, name: shelfFormData.name } : shelf
-      ));
-    } else {
-      const newId = Math.max(...shelves.map(s => s.id), 0) + 1;
-      setShelves([...shelves, { id: newId, name: shelfFormData.name }]);
-    }
-    setIsShelfDialogOpen(false);
   };
 
   // Rack handlers
@@ -164,58 +180,180 @@ export function LocationManagement() {
     setIsRackDialogOpen(true);
   };
 
-  const handleSaveRack = () => {
-    const shelf = shelves.find(s => s.id === rackFormData.shelfId);
-    if (!shelf) return;
+  const handleDeleteRack = (id: number, name: string) => {
+    setDeleteConfirm({ 
+      open: true, 
+      type: 'rack', 
+      id, 
+      name,
+      warning: 'Tất cả ô thuộc ngăn này sẽ bị xóa.'
+    });
+  };
 
-    if (editingRack) {
-      setRacks(racks.map(rack =>
-        rack.id === editingRack.id 
-          ? { ...rack, name: rackFormData.name, shelfId: rackFormData.shelfId, shelf }
-          : rack
-      ));
-    } else {
-      const newId = Math.max(...racks.map(r => r.id), 0) + 1;
-      setRacks([...racks, { id: newId, name: rackFormData.name, shelfId: rackFormData.shelfId, shelf }]);
+  const handleSaveRack = async () => {
+    try {
+      if (editingRack) {
+        // TODO: Call PUT API
+        setShelves(shelves.map(shelf => ({
+          ...shelf,
+          racks: shelf.racks.map(rack =>
+            rack.id === editingRack.id
+              ? { ...rack, name: rackFormData.name, shelfId: rackFormData.shelfId }
+              : rack
+          )
+        })));
+      } else {
+        // TODO: Call POST API
+        const newId = Math.max(...getAllRacks().map(r => r.id), 0) + 1;
+        setShelves(shelves.map(shelf =>
+          shelf.id === rackFormData.shelfId
+            ? {
+                ...shelf,
+                racks: [...shelf.racks, { 
+                  id: newId, 
+                  name: rackFormData.name, 
+                  shelfId: rackFormData.shelfId,
+                  slots: []
+                }]
+              }
+            : shelf
+        ));
+      }
+      setIsRackDialogOpen(false);
+    } catch (err) {
+      console.error('Error saving rack:', err);
+      alert('Không thể lưu ngăn');
     }
-    setIsRackDialogOpen(false);
   };
 
   // Slot handlers
   const handleAddSlot = () => {
     setEditingSlot(null);
-    setSlotFormData({ name: '', rackId: racks[0]?.id || 0 });
+    const allRacks = getAllRacks();
+    setSlotFormData({ name: '', rackId: allRacks[0]?.id || 0 });
     setIsSlotDialogOpen(true);
   };
 
-  const handleEditSlot = (slot: Slot) => {
+  const handleEditSlot = (slot: Slot, rackId: number) => {
     setEditingSlot(slot);
-    setSlotFormData({ name: slot.name, rackId: slot.rackId });
+    setSlotFormData({ name: slot.name, rackId });
     setIsSlotDialogOpen(true);
   };
 
-  const handleSaveSlot = () => {
-    const rack = racks.find(r => r.id === slotFormData.rackId);
-    if (!rack) return;
-
-    if (editingSlot) {
-      setSlots(slots.map(slot =>
-        slot.id === editingSlot.id 
-          ? { ...slot, name: slotFormData.name, rackId: slotFormData.rackId, rack }
-          : slot
-      ));
-    } else {
-      const newId = Math.max(...slots.map(s => s.id), 0) + 1;
-      setSlots([...slots, { id: newId, name: slotFormData.name, rackId: slotFormData.rackId, rack }]);
-    }
-    setIsSlotDialogOpen(false);
+  const handleDeleteSlot = (id: number, name: string) => {
+    setDeleteConfirm({ 
+      open: true, 
+      type: 'slot', 
+      id, 
+      name 
+    });
   };
 
-  const filteredSlots = slots.filter(slot =>
-    slot.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    slot.rack.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    slot.rack.shelf.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleSaveSlot = async () => {
+    try {
+      if (editingSlot) {
+        // TODO: Call PUT API
+        setShelves(shelves.map(shelf => ({
+          ...shelf,
+          racks: shelf.racks.map(rack => ({
+            ...rack,
+            slots: rack.slots.map(slot =>
+              slot.id === editingSlot.id
+                ? { ...slot, name: slotFormData.name, rackId: slotFormData.rackId }
+                : slot
+            )
+          }))
+        })));
+      } else {
+        // TODO: Call POST API
+        const newId = Math.max(...getAllSlots().map(s => s.id), 0) + 1;
+        setShelves(shelves.map(shelf => ({
+          ...shelf,
+          racks: shelf.racks.map(rack =>
+            rack.id === slotFormData.rackId
+              ? {
+                  ...rack,
+                  slots: [...rack.slots, { 
+                    id: newId, 
+                    name: slotFormData.name, 
+                    rackId: slotFormData.rackId 
+                  }]
+                }
+              : rack
+          )
+        })));
+      }
+      setIsSlotDialogOpen(false);
+    } catch (err) {
+      console.error('Error saving slot:', err);
+      alert('Không thể lưu ô');
+    }
+  };
+
+  const confirmDelete = async () => {
+    const { type, id } = deleteConfirm;
+    
+    try {
+      if (type === 'shelf') {
+        // TODO: Call DELETE API
+        // await fetch(`YOUR_API_ENDPOINT_HERE/shelves/${id}`, { method: 'DELETE' });
+        setShelves(shelves.filter(shelf => shelf.id !== id));
+      } else if (type === 'rack') {
+        // TODO: Call DELETE API
+        setShelves(shelves.map(shelf => ({
+          ...shelf,
+          racks: shelf.racks.filter(rack => rack.id !== id)
+        })));
+      } else if (type === 'slot') {
+        // TODO: Call DELETE API
+        setShelves(shelves.map(shelf => ({
+          ...shelf,
+          racks: shelf.racks.map(rack => ({
+            ...rack,
+            slots: rack.slots.filter(slot => slot.id !== id)
+          }))
+        })));
+      }
+      setDeleteConfirm({ open: false, type: 'shelf', id: 0, name: '' });
+    } catch (err) {
+      console.error('Error deleting:', err);
+      alert('Không thể xóa');
+    }
+  };
+
+  const filteredSlots = getAllSlots().filter(slot => {
+    const slotInfo = getSlotWithRackAndShelf(slot.id);
+    if (!slotInfo) return false;
+    
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      slot.name.toLowerCase().includes(searchLower) ||
+      slotInfo.rack.name.toLowerCase().includes(searchLower) ||
+      slotInfo.shelf.name.toLowerCase().includes(searchLower)
+    );
+  });
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12 text-red-600">
+        {error}
+        <Button 
+          onClick={fetchLocations} 
+          className="ml-4 bg-blue-600 hover:bg-blue-700"
+        >
+          Thử lại
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -241,30 +379,38 @@ export function LocationManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {shelves.map((shelf) => (
-                  <TableRow key={shelf.id} className="hover:bg-blue-50">
-                    <TableCell>{shelf.id}</TableCell>
-                    <TableCell>{shelf.name}</TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditShelf(shelf)}
-                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteShelf(shelf.id, shelf.name)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                {shelves.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center py-8 text-gray-500">
+                      Chưa có kệ nào
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  shelves.map((shelf) => (
+                    <TableRow key={shelf.id} className="hover:bg-blue-50">
+                      <TableCell>{shelf.id}</TableCell>
+                      <TableCell>{shelf.name}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditShelf(shelf)}
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteShelf(shelf.id, shelf.name)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
@@ -294,31 +440,42 @@ export function LocationManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {racks.map((rack) => (
-                  <TableRow key={rack.id} className="hover:bg-blue-50">
-                    <TableCell>{rack.id}</TableCell>
-                    <TableCell>{rack.name}</TableCell>
-                    <TableCell>{rack.shelf.name}</TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditRack(rack)}
-                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteRack(rack.id, rack.name)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                {getAllRacks().length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-8 text-gray-500">
+                      Chưa có ngăn nào
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  getAllRacks().map((rack) => {
+                    const shelf = shelves.find(s => s.id === rack.shelfId);
+                    return (
+                      <TableRow key={rack.id} className="hover:bg-blue-50">
+                        <TableCell>{rack.id}</TableCell>
+                        <TableCell>{rack.name}</TableCell>
+                        <TableCell>{shelf?.name || '-'}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditRack(rack)}
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteRack(rack.id, rack.name)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
               </TableBody>
             </Table>
           </div>
@@ -362,37 +519,50 @@ export function LocationManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredSlots.map((slot) => (
-                  <TableRow key={slot.id} className="hover:bg-blue-50">
-                    <TableCell>{slot.id}</TableCell>
-                    <TableCell>{slot.name}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 text-sm">
-                        <span className="text-gray-600">{slot.rack.shelf.name}</span>
-                        <ChevronRight className="h-3 w-3 text-gray-400" />
-                        <span className="text-gray-600">{slot.rack.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditSlot(slot)}
-                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteSlot(slot.id, slot.name)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                {filteredSlots.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-8 text-gray-500">
+                      Không tìm thấy ô
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  filteredSlots.map((slot) => {
+                    const slotInfo = getSlotWithRackAndShelf(slot.id);
+                    if (!slotInfo) return null;
+                    
+                    return (
+                      <TableRow key={slot.id} className="hover:bg-blue-50">
+                        <TableCell>{slot.id}</TableCell>
+                        <TableCell>{slot.name}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1 text-sm">
+                            <span className="text-gray-600">{slotInfo.shelf.name}</span>
+                            <ChevronRight className="h-3 w-3 text-gray-400" />
+                            <span className="text-gray-600">{slotInfo.rack.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditSlot(slot, slotInfo.rack.id)}
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteSlot(slot.id, slot.name)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
               </TableBody>
             </Table>
           </div>
@@ -514,11 +684,14 @@ export function LocationManagement() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {racks.map((rack) => (
-                    <SelectItem key={rack.id} value={rack.id.toString()}>
-                      {rack.shelf.name} - {rack.name}
-                    </SelectItem>
-                  ))}
+                  {getAllRacks().map((rack) => {
+                    const shelf = shelves.find(s => s.id === rack.shelfId);
+                    return (
+                      <SelectItem key={rack.id} value={rack.id.toString()}>
+                        {shelf?.name} - {rack.name}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
