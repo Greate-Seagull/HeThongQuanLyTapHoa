@@ -40,3 +40,9 @@ export class TokenService {
 		return jwt.verify(token, this.secret);
 	}
 }
+
+// Zod schema for validating JWT token payload
+export const authenticationTokenSchema = z.object({
+	id: z.number(),
+	position: z.string().nullable(),
+});
