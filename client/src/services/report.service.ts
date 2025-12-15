@@ -44,7 +44,7 @@ function setupPageLayout(worksheet: ExcelJS.Worksheet) {
     orientation: 'landscape',
     fitToPage: true,
     fitToWidth: 1,
-    fitToHeight: 1,
+    fitToHeight: 0,
     margins: {
       left: 0.25,
       right: 0.25,
