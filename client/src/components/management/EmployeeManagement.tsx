@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { apiClient } from '@/services/api-client'
+import { toast } from 'sonner'
 
 enum EmployeePosition {
   SALES = 'SALES',
@@ -128,11 +129,14 @@ export function EmployeeManagement() {
 
   const confirmDelete = async () => {
     try {
-      await fetch(`${API_BASE_URL}/accounts/${deleteConfirm.id}`, {
-        method: 'DELETE',
-      })
-      setAccounts(accounts.filter((account) => account.id !== deleteConfirm.id))
-      setDeleteConfirm({ open: false, id: 0, name: '' })
+      const response = await apiClient.delete(`/employee-accounts/${deleteConfirm.id}`)
+      if (response) {
+        fetchAccounts()
+        toast.success('Tài khoản nhân viên đã được xóa thành công!')
+        setDeleteConfirm({ open: false, id: 0, name: '' })
+      } else {
+        toast.error('Xóa tài khoản thất bại. Vui lòng thử lại.')
+      }
     } catch (error) {
       console.error('Error deleting account:', error)
     }
@@ -142,39 +146,30 @@ export function EmployeeManagement() {
     try {
       if (editingAccount) {
         // Update existing account
-        const response = await fetch(`${API_BASE_URL}/accounts/${editingAccount.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username: formData.username,
-            employee: {
-              name: formData.name,
-              position: formData.position,
-            },
-          }),
+        const response = await apiClient.put<Account>(`/employee-accounts`, {
+          id: editingAccount.id,
+          username: formData.username,
+          name: formData.name,
+          position: formData.position,
         })
-        const result = await response.json()
-        if (result.status === 'success') {
-          setAccounts(
-            accounts.map((account) => (account.id === editingAccount.id ? result.data : account))
-          )
+        if (response) {
+          fetchAccounts()
+          toast.success('Tài khoản nhân viên đã được cập nhật thành công!')
+        } else {
+          toast.error('Cập nhật tài khoản thất bại. Vui lòng thử lại.')
         }
       } else {
         // Create new account
-        const response = await fetch(`${API_BASE_URL}/accounts`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username: formData.username,
-            employee: {
-              name: formData.name,
-              position: formData.position,
-            },
-          }),
+        const response = await apiClient.post<Account>(`/employee-accounts`, {
+          username: formData.username,
+          name: formData.name,
+          position: formData.position,
         })
-        const result = await response.json()
-        if (result.status === 'success') {
-          setAccounts([...accounts, result.data])
+        if (response) {
+          fetchAccounts()
+          toast.success('Tài khoản nhân viên đã được tạo thành công!')
+        } else {
+          toast.error('Tạo tài khoản thất bại. Vui lòng thử lại.')
         }
       }
       setIsDialogOpen(false)
@@ -228,7 +223,7 @@ export function EmployeeManagement() {
                   <tbody>
                     {filteredAccounts.map((account) => (
                       <tr key={account.id} className="border-t border-blue-100 hover:bg-blue-50">
-                        <td className="p-4 font-medium">{account.id}</td>
+                        <td className="p-4 font-medium">{account.employee.id}</td>
                         <td className="p-4 font-medium text-blue-600">{account.username}</td>
                         <td className="p-4">{account.employee.name}</td>
                         <td className="p-4">
@@ -258,7 +253,7 @@ export function EmployeeManagement() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDelete(account.id, account.employee.name)}
+                            onClick={() => handleDelete(account.employee.id, account.employee.name)}
                             className="text-red-600 hover:bg-red-50 hover:text-red-700"
                           >
                             <Trash2 className="h-4 w-4" />

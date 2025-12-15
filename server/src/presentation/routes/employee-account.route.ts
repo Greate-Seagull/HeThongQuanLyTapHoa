@@ -8,6 +8,7 @@ import {
   updateEmployeeAccountUsecase,
   getEmployeeAccountsUsecase,
   getEmployeeAccountProfileUsecase,
+  deleteEmployeeAccountUsecase,
 } from "../../composition-root";
 const router = Router();
 
@@ -44,6 +45,13 @@ router.put(
   "/",
   authenticationMiddleware,
   controller(updateEmployeeAccountUsecase)
+);
+
+router.delete(
+  "/:id",
+  authenticationMiddleware,
+  authorizationMiddleware("MANAGER"),
+  (req, res) => controller(deleteEmployeeAccountUsecase)({ ...req, id: req.params.id }, res)
 );
 
 export default router;

@@ -1,11 +1,15 @@
 import { Router } from "express";
 import { authenticationMiddleware } from "../middlewares/authentication.middleware";
+import { authorizationMiddleware } from "../middlewares/authorization.middleware";
 import { controller } from "../controllers/controller";
 import {
   signInUsecase,
   signUpUsecase,
   getMyAccountUsecase,
   getAccountsUsecase,
+  createCustomerAccountUsecase,
+  updateCustomerAccountUsecase,
+  deleteCustomerAccountUsecase,
 } from "../../composition-root";
 
 const router = Router();
@@ -41,5 +45,27 @@ router.get("/profile", authenticationMiddleware, (req, res) => {
 
 // Lấy tất cả account (join user)
 router.get("/", authenticationMiddleware, controller(getAccountsUsecase));
+
+// Quản lý Account (Create, Update, Delete)
+router.post(
+  "/create",
+  authenticationMiddleware,
+  authorizationMiddleware("MANAGER"),
+  controller(createCustomerAccountUsecase)
+);
+
+router.put(
+  "/:id",
+  authenticationMiddleware,
+  authorizationMiddleware("MANAGER"),
+  (req, res) => controller(updateCustomerAccountUsecase)({ ...req, id: req.params.id }, res)
+);
+
+router.delete(
+  "/:id",
+  authenticationMiddleware,
+  authorizationMiddleware("MANAGER"),
+  (req, res) => controller(deleteCustomerAccountUsecase)({ ...req, id: req.params.id }, res)
+);
 
 export default router;

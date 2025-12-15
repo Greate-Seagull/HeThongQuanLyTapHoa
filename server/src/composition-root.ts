@@ -33,6 +33,7 @@ import { EmployeeAccountReadAccessor } from "./infrastructure/read-accessors/emp
 import { CreateAccountUsecase } from "./application/employee-account/create-account.usecase";
 import { UseAccountUsecase } from "./application/employee-account/use-account.usecase";
 import { UpdateEmployeeAccountUsecase } from "./application/employee-account/update-employee-account.usecase";
+import { DeleteEmployeeAccountUsecase } from "./application/employee-account/delete-employee-account.usecase";
 import { GetEmployeeAccountsUsecase } from "./application/employee-account/get-employee-accounts.usecase";
 import { CreateInvoiceUsecase } from "./application/invoice/create-invoice.usecase";
 import { SignInUsecase } from "./application/customer-account/sign-in.usecase";
@@ -63,6 +64,9 @@ import { GetRevenueProfitReportUsecase } from "./application/get-revenue-profit-
 import { GetShelvesUsecase } from "./application/shelf/get-shelves.usecase";
 import { InvoiceReadAccessor } from "./infrastructure/read-accessors/invoice.read-accessor";
 import { GetMyInvoicesUsecase } from "./application/invoice/get-my-invoices.usecase";
+import { CreateCustomerAccountUsecase } from "./application/customer-account/create-customer-account.usecase";
+import { UpdateCustomerAccountUsecase } from "./application/customer-account/update-customer-account.usecase";
+import { DeleteCustomerAccountUsecase } from "./application/customer-account/delete-customer-account.usecase";
 
 config;
 export const prisma = new PrismaClient({
@@ -108,6 +112,11 @@ export const updateEmployeeAccountUsecase = new UpdateEmployeeAccountUsecase(
   employeeRepo,
   employeeReadAccessor
 );
+export const deleteEmployeeAccountUsecase = new DeleteEmployeeAccountUsecase(
+  employeeAccountRepo,
+  employeeRepo,
+  transactionManager
+);
 
 export const getEmployeeAccountProfileUsecase =
   new GetEmployeeAccountProfileUsecase(
@@ -133,6 +142,22 @@ export const signUpUsecase = new SignUpUsecase(
   tokenService
 );
 export const getAccountsUsecase = new GetAccountsUsecase(accountRead);
+export const createCustomerAccountUsecase = new CreateCustomerAccountUsecase(
+  accountRepo,
+  userRepo,
+  passwordService,
+  transactionManager
+);
+export const updateCustomerAccountUsecase = new UpdateCustomerAccountUsecase(
+  accountRepo,
+  userRepo,
+  transactionManager
+);
+export const deleteCustomerAccountUsecase = new DeleteCustomerAccountUsecase(
+  accountRepo,
+  userRepo,
+  transactionManager
+);
 //---------------------------------------------------------
 const productReadAccessor = new ProductReadAccessor(prisma);
 const promotionRepo = new PromotionRepository(prisma);
