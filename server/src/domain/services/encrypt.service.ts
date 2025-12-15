@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt, { SignOptions } from "jsonwebtoken";
 import { z } from "zod";
+import { Id } from "../abstracts/entity";
 
 export class PasswordService {
 	constructor(private readonly saltRound: number) {}
@@ -19,13 +20,10 @@ export class PasswordService {
 }
 
 export type Expiry = `${number}${"s" | "m" | "h" | "d"}`;
-export const authenticationTokenSchema = z.object({
-	id: z.number(),
-	position: z.string(),
-});
-export type AuthenticationTokenPayload = z.infer<
-	typeof authenticationTokenSchema
->;
+export interface AuthenticationTokenPayload {
+	id: Id;
+	position: string;
+}
 
 export class TokenService {
 	constructor(

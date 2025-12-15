@@ -1,4 +1,3 @@
-import { hash } from "bcrypt";
 import "dotenv/config";
 
 export const config = {
@@ -6,7 +5,7 @@ export const config = {
 		URL: String(process.env.DATABASE_URL),
 	},
 
-	port: 3000,
+	port: 3001,
 
 	bcrypt: {
 		saltRound: Number(process.env.SALT_ROUND),

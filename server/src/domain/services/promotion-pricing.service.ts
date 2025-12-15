@@ -1,4 +1,4 @@
-import { Promotion } from "../promotion";
+import { Promotion } from "../entities/promotion";
 
 export class PromotionPricingService {
 	getBestPromotion(
