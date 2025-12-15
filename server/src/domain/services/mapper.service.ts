@@ -1,57 +1,6 @@
-import { record } from "../../types/database-record.type";
-import { AnyEntity } from "../../types/entity.type";
-import { Entity } from "../abstracts/entity";
-
-export function toPersistenceUsingSchema<T extends AnyEntity>(
-	entity: T | null,
-	withRelations: boolean = false
-): record {
-	if (!entity) return null;
-	const props = entity.props;
-	if (!props) return null;
-
-	const result: record = {};
-	for (const key of Object.keys(props)) {
-		if (key === "id") continue; // ID is not persisted directly
-
-		const value = props[key];
-		const converted = dispatch(value, withRelations);
-
-		if (converted !== undefined) {
-			result[key] = converted;
-		}
-	}
-
-	return result;
-
-	function dispatch(value: any, withRelations: boolean) {
-		if (value == undefined || value == null) return null;
-		if (!isContainer(value)) return toPersistenceNonContainer(value);
-
-		if (!withRelations) return null;
-		return toPersistenceContainer(value);
-	}
-
-	function isContainer(value: any) {
-		return Array.isArray(value);
-	}
-
-	function toPersistenceNonContainer(value: any) {
-		return value;
-	}
-
-	function toPersistenceContainer(values: Entity<any, any>[]) {
-		if (!values.length) return null;
-		return {
-			connectOrCreate: values.map((entity: Entity<any, any>) => ({
-				where: {
-					id: entity.id,
-				},
-				create: toPersistenceUsingSchema(entity),
-			})),
-		};
-	}
-}
+import { Dto } from "../../application/DTOs/base.dto";
+import { Constructor } from "../../types/entity.type";
+import { BaseEntity, Id } from "../abstracts/entity";
 
 export function toPersistence(entity: any) {
 	if (Array.isArray(entity)) {
@@ -70,6 +19,8 @@ export function toPersistence(entity: any) {
 }
 
 export function toPersistenceObject(entity: any) {
+	if (!entity) return null;
+
 	const instance = entity.constructor.prototype;
 	const writable = instance.__writable;
 	if (!writable || writable.length === 0) return entity;
@@ -81,20 +32,40 @@ export function toPersistenceObject(entity: any) {
 	return persist;
 }
 
-export function fromPersistence(cls: any, raw: any) {
-	if (Array.isArray(raw)) {
-		return raw.map((r) => fromPersistence(cls, r));
-	}
+export function fromPersistence<T extends BaseEntity<Id>>(
+	cls: Constructor<T>,
+	raw: Dto<T> | null
+): T | null {
+	if (!cls || !raw) return null;
 
 	const instance = cls.prototype;
-	if (!instance) return raw;
-	const types = instance.__typeMap;
-	if (!types) return raw;
+	if (!instance) return null;
+	const relations = instance.__relations || {};
 
 	const e = new cls();
 	for (const key of Object.keys(e)) {
 		const publicKey = key.startsWith("_") ? key.slice(1) : key;
-		e[key] = fromPersistence(types[publicKey], raw[publicKey]);
+		const value = raw[publicKey];
+		if (Array.isArray(value))
+			e[key] = value.map((v) => fromPersistence(relations[publicKey], v));
+		else e[key] = fromPersistence(relations[publicKey], value) || value;
 	}
 	return e;
+}
+
+export function toSnapshot(entity: BaseEntity<Id>): object | null {
+	if (!entity) return null;
+
+	const instance = entity.constructor.prototype;
+	const writable = instance.__writable;
+	if (!writable || writable.length === 0) return entity;
+
+	const snapshot = {};
+	for (const key of writable) {
+		const value = entity[key];
+		if (Array.isArray(value))
+			snapshot[key] = value.map((v) => toSnapshot(v));
+		else snapshot[key] = toSnapshot(value) || value;
+	}
+	return snapshot;
 }

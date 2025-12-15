@@ -1,0 +1,38 @@
+import { Promotion } from "../../../domain/entities/promotion";
+import { buildSafePrismaSelect } from "../../../domain/services/query-builder.service";
+import { PrismaRepository } from "./prisma.prisma.repository";
+import { PromotionDto } from "../../../application/DTOs/promotion.dto";
+import { PromotionRepository } from "../../../application/repositories/promotion.repository";
+import { Prisma } from "../../../generated/client";
+
+export class PromotionPrismaRepository
+	extends PrismaRepository<Promotion, PromotionDto>
+	implements PromotionRepository
+{
+	private static baseSelect = buildSafePrismaSelect(Promotion);
+
+	protected buildUpdateData(entity: Promotion): Partial<PromotionDto> {
+		let persitence = this.toPersistence(entity) as any;
+		persitence.promotionDetails = {
+			connect: persitence.promotionDetails,
+		};
+		return persitence;
+	}
+
+	protected buildCreateData(entity: Promotion): Partial<PromotionDto> {
+		let persitence = this.toPersistence(entity) as any;
+		persitence.promotionDetails = {
+			create: persitence.promotionDetails,
+		};
+		return persitence;
+	}
+
+	protected getBaseQuery(): { select: object } {
+		return PromotionPrismaRepository.baseSelect;
+	}
+
+	protected getRepository(transaction?: Prisma.TransactionClient): any {
+		if (transaction) return transaction.promotion;
+		return this.client.promotion;
+	}
+}

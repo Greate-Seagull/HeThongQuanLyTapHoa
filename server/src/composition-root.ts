@@ -1,57 +1,72 @@
 import { config } from "./config/config";
-import { SearchProductsUsecase } from "./application/product/search-products.usecase";
 import { PrismaClient } from "./generated/client";
-import { CreatePromotionUsecase } from "./application/promotion/create-promotion.usecase";
-import { PromotionRepository } from "./infrastructure/repositories/promotion.repository";
-import { PromotionPricingService } from "./domain/services/promotion-pricing.service";
-import { EmployeeRepository } from "./infrastructure/repositories/employee.repository";
-import { UserRepository } from "./infrastructure/repositories/user.repository";
-import { ProductRepositoryPrisma } from "./infrastructure/repositories/product.repository.prisma";
-import { InvoiceRepository } from "./infrastructure/repositories/invoice.repository";
-import { PrismaTransactionManager } from "./infrastructure/transaction";
-import { SalesTransactionService } from "./domain/services/sales-transaction.service";
-import { GoodReceiptRepository } from "./infrastructure/repositories/good-receipt.repository";
-import { UpdateProdutsUsecase } from "./application/product/update-products.usecase";
-import { GetProductsUsecase } from "./application/product/get-products.usecase";
-import { StocktakingRepository } from "./infrastructure/repositories/stocktaking.repository";
-import { ShelfReadAccessor } from "./infrastructure/read-accessors/shelf.read-accessor";
-import { ProductReadAccessor } from "./infrastructure/read-accessors/product.read-accessor";
-import { AccountRepository } from "./infrastructure/repositories/account.repository";
-import { AccountReadAccessor } from "./infrastructure/read-accessors/account.read-accessor";
+
+import { PrismaTransactionManager } from "./application/transactions/prisma.transaction";
+
+import { userDtoSchema } from "./application/DTOs/user.dto";
+import { accountDtoSchema } from "./application/DTOs/account.dto";
+import { employeeDtoSchema } from "./application/DTOs/employee.dto";
+import { employeeAccountDtoSchema } from "./application/DTOs/employee-account.dto";
+import { promotionDtoSchema } from "./application/DTOs/promotion.dto";
+import { goodReceiptDtoSchema } from "./application/DTOs/good-receipt.dto";
+import { stocktakingDtoSchema } from "./application/DTOs/stocktaking.dto";
+import { productDtoSchema } from "./application/DTOs/product.dto";
+import { invoiceDtoSchema } from "./application/DTOs/invoice.dto";
+
+import { PromotionPrismaRepository } from "./infrastructure/repositories/prisma/promotion.prisma.repository";
+import { ProductPrismaRepository } from "./infrastructure/repositories/prisma/product.prisma.repository";
+import { InvoicePrismaRepository } from "./infrastructure/repositories/prisma/invoice.prisma.repository";
+import { GoodReceiptPrismaRepository } from "./infrastructure/repositories/prisma/good-receipt.prisma.repository";
+import { StocktakingPrismaRepository } from "./infrastructure/repositories/prisma/stocktaking.prisma.repository";
+import { SupplierRepository } from "./infrastructure/repositories/supplier.repository";
+import { ProductCategoryRepository } from "./infrastructure/repositories/product-category.repository";
+import { UserPrismaRepository } from "./infrastructure/repositories/prisma/user.prisma.repository";
+import { AccountPrismaRepository } from "./infrastructure/repositories/prisma/account.prisma.repository";
+import { EmployeeAccountPrismaRepository } from "./infrastructure/repositories/prisma/employee-account.prisma.repository";
+import { EmployeePrismaRepository } from "./infrastructure/repositories/prisma/employee.prisma.repository";
+
+import { EmployeePrismaReadAccessor } from "./infrastructure/read-accessors/prisma/employee.read-accessor";
+import { AccountPrismaReadAccessor } from "./infrastructure/read-accessors/prisma/account.read-accessor";
+import { EmployeeAccountPrismaReadAccessor } from "./infrastructure/read-accessors/prisma/employee-account.read-accessor";
+import { ProductCategoryReadAccessor } from "./infrastructure/read-accessors/prisma/product-category.read-accessor";
+import { ProductPrismaReadAccessor } from "./infrastructure/read-accessors/prisma/product.read-accessor";
+import { ReportReadAccessor } from "./infrastructure/read-accessors/prisma/report.read-accessor";
+import { ShelfPrismaReadAccessor } from "./infrastructure/read-accessors/prisma/shelf.read-accessor";
+import { SupplierReadAccessor } from "./infrastructure/read-accessors/prisma/supplier.read-accessor";
+
 import {
 	Expiry,
 	PasswordService,
 	TokenService,
 } from "./domain/services/encrypt.service";
-import { EmployeeAccountRepository } from "./infrastructure/repositories/employee-account.repository";
-import { EmployeeAccountReadAccessor } from "./infrastructure/read-accessors/employee-account.read-accessor";
-import { CreateAccountUsecase } from "./application/employee-account/create-account.usecase";
-import { UseAccountUsecase } from "./application/employee-account/use-account.usecase";
-import { CreateInvoiceUsecase } from "./application/invoice/create-invoice.usecase";
-import { SignInUsecase } from "./application/customer-account/sign-in.usecase";
-import { SignUpUsecase } from "./application/customer-account/sign-up.usecase";
-import { CreateGoodReceiptUsecase } from "./application/good-receipt/create-good-receipt.usecase";
-import { CreateStocktakingUsecase } from "./application/stocktaking/create-stocktaking.usecase";
-import { EmployeeReadAccess } from "./infrastructure/read-accessors/employee.read-accessor";
-import { SupplierRepository } from "./infrastructure/repositories/supplier.repository";
-import { SupplierReadAccessor } from "./infrastructure/read-accessors/supplier.read-accessor";
-import { ProductCategoryRepository } from "./infrastructure/repositories/product-category.repository";
-import { ProductCategoryReadAccessor } from "./infrastructure/read-accessors/product-category.read-accessor";
-import { GetSuppliersUsecase } from "./application/supplier/get-suppliers.usecase";
-import { CreateSupplierUsecase } from "./application/supplier/create-supplier.usecase";
-import { UpdateSupplierUsecase } from "./application/supplier/update-supplier.usecase";
-import { DeleteSupplierUsecase } from "./application/supplier/delete-supplier.usecase";
-import { GetProductCategoriesUsecase } from "./application/product-category/get-product-categories.usecase";
-import { CreateProductCategoryUsecase } from "./application/product-category/create-product-category.usecase";
-import { UpdateProductCategoryUsecase } from "./application/product-category/update-product-category.usecase";
-import { DeleteProductCategoryUsecase } from "./application/product-category/delete-product-category.usecase";
-import { ReportReadAccessor } from "./infrastructure/read-accessors/report.read-accessor";
-import { GetInventoryReportUsecase } from "./application/get-inventory-report.usecase";
-import { GetGoodsReceiptReportUsecase } from "./application/get-goods-receipt-report.usecase";
-import { GetSalesReportUsecase } from "./application/get-sales-report.usecase";
-import { GetCustomerReportUsecase } from "./application/get-customer-report.usecase";
-import { GetStocktakingReportUsecase } from "./application/get-stocktaking-report.usecase";
-import { GetRevenueProfitReportUsecase } from "./application/get-revenue-profit-report.usecase";
+import { SalesTransactionService } from "./domain/services/sales-transaction.service";
+import { PromotionPricingService } from "./domain/services/promotion-pricing.service";
+
+import { SignUpUsecase } from "./application/services/customer-account/sign-up.usecase";
+import { GetProductsUsecase } from "./application/services/product/get-products.usecase";
+import { UpdateProdutsUsecase } from "./application/services/product/update-products.usecase";
+import { SignInUsecase } from "./application/services/customer-account/sign-in.usecase";
+import { CreateAccountUsecase } from "./application/services/employee-account/create-account.usecase";
+import { UseAccountUsecase } from "./application/services/employee-account/use-account.usecase";
+import { CreateInvoiceUsecase } from "./application/services/invoice/create-invoice.usecase";
+import { CreateGoodReceiptUsecase } from "./application/services/good-receipt/create-good-receipt.usecase";
+import { CreateStocktakingUsecase } from "./application/services/stocktaking/create-stocktaking.usecase";
+import { GetSuppliersUsecase } from "./application/services/supplier/get-suppliers.usecase";
+import { CreateSupplierUsecase } from "./application/services/supplier/create-supplier.usecase";
+import { UpdateSupplierUsecase } from "./application/services/supplier/update-supplier.usecase";
+import { DeleteSupplierUsecase } from "./application/services/supplier/delete-supplier.usecase";
+import { GetProductCategoriesUsecase } from "./application/services/product-category/get-product-categories.usecase";
+import { CreateProductCategoryUsecase } from "./application/services/product-category/create-product-category.usecase";
+import { UpdateProductCategoryUsecase } from "./application/services/product-category/update-product-category.usecase";
+import { DeleteProductCategoryUsecase } from "./application/services/product-category/delete-product-category.usecase";
+import { GetInventoryReportUsecase } from "./application/services/report/get-inventory-report.usecase";
+import { GetGoodsReceiptReportUsecase } from "./application/services/report/get-goods-receipt-report.usecase";
+import { GetSalesReportUsecase } from "./application/services/report/get-sales-report.usecase";
+import { GetCustomerReportUsecase } from "./application/services/report/get-customer-report.usecase";
+import { GetStocktakingReportUsecase } from "./application/services/report/get-stocktaking-report.usecase";
+import { GetRevenueProfitReportUsecase } from "./application/services/report/get-revenue-profit-report.usecase";
+import { SearchProductsUsecase } from "./application/services/product/search-products.usecase";
+import { CreatePromotionUsecase } from "./application/services/promotion/create-promotion.usecase";
 
 config;
 export const prisma = new PrismaClient({
@@ -62,21 +77,62 @@ export const prisma = new PrismaClient({
 });
 
 const transactionManager = new PrismaTransactionManager(prisma);
+
 //Repositories
-export const employeeRepo = new EmployeeRepository(prisma);
-export const employeeAccountRepo = new EmployeeAccountRepository(prisma);
-const userRepo = new UserRepository(prisma);
-export const accountRepo = new AccountRepository(prisma);
+export const employeeRepo = new EmployeePrismaRepository(
+	prisma,
+	employeeDtoSchema
+);
+export const employeeAccountRepo = new EmployeeAccountPrismaRepository(
+	prisma,
+	employeeAccountDtoSchema
+);
+export const userRepo = new UserPrismaRepository(prisma, userDtoSchema);
+export const accountRepo = new AccountPrismaRepository(
+	prisma,
+	accountDtoSchema
+);
+const promotionRepo = new PromotionPrismaRepository(prisma, promotionDtoSchema);
+export const productRepo = new ProductPrismaRepository(
+	prisma,
+	productDtoSchema
+);
+export const invoiceRepo = new InvoicePrismaRepository(
+	prisma,
+	invoiceDtoSchema
+);
+export const goodReceiptRepo = new GoodReceiptPrismaRepository(
+	prisma,
+	goodReceiptDtoSchema
+);
+const stocktakingRepo = new StocktakingPrismaRepository(
+	prisma,
+	stocktakingDtoSchema
+);
+const supplierRepo = new SupplierRepository(prisma);
+const productCategoryRepo = new ProductCategoryRepository(prisma);
+
 //Read accessors
-export const employeeReadAccessor = new EmployeeReadAccess(prisma);
-export const employeeAccountRead = new EmployeeAccountReadAccessor(prisma);
-export const accountRead = new AccountReadAccessor(prisma);
+export const employeeReadAccessor = new EmployeePrismaReadAccessor(prisma);
+export const employeeAccountRead = new EmployeeAccountPrismaReadAccessor(
+	prisma
+);
+export const accountRead = new AccountPrismaReadAccessor(prisma);
+const productReadAccessor = new ProductPrismaReadAccessor(prisma);
+const shelfReadAccessor = new ShelfPrismaReadAccessor(prisma);
+const productCategoryReadAccessor = new ProductCategoryReadAccessor(prisma);
+const supplierReadAccessor = new SupplierReadAccessor(prisma);
+const reportReadAccessor = new ReportReadAccessor(prisma);
+
 //Domain services
 export const passwordService = new PasswordService(config.bcrypt.saltRound);
 export const tokenService = new TokenService(
 	config.jwt.secret,
 	config.jwt.expiry as Expiry
 );
+const promoPricing = new PromotionPricingService();
+const processSales = new SalesTransactionService();
+
 //Usecases
 export const useAccountUsecase = new UseAccountUsecase(
 	employeeAccountRepo,
@@ -91,9 +147,11 @@ export const createAccountUsecase = new CreateAccountUsecase(
 	employeeRepo,
 	transactionManager
 );
+
 export const signInUsecase = new SignInUsecase(
 	userRepo,
 	accountRepo,
+
 	passwordService,
 	tokenService
 );
@@ -105,28 +163,18 @@ export const signUpUsecase = new SignUpUsecase(
 	passwordService,
 	tokenService
 );
-//---------------------------------------------------------
-const productReadAccessor = new ProductReadAccessor(prisma);
-const promotionRepo = new PromotionRepository(prisma);
-export const productRepo = new ProductRepositoryPrisma(prisma);
-export const invoiceRepo = new InvoiceRepository(prisma);
-export const goodReceiptRepo = new GoodReceiptRepository(prisma);
-const shelfReadAccessor = new ShelfReadAccessor(prisma);
-const stocktakingRepo = new StocktakingRepository(prisma);
-const supplierRepo = new SupplierRepository(prisma);
-const supplierReadAccessor = new SupplierReadAccessor(prisma);
-const productCategoryRepo = new ProductCategoryRepository(prisma);
-const productCategoryReadAccessor = new ProductCategoryReadAccessor(prisma);
-const reportReadAccessor = new ReportReadAccessor(prisma);
-
-const promoPricing = new PromotionPricingService();
-const processSales = new SalesTransactionService();
 
 export const searchProductsUsecase = new SearchProductsUsecase(
 	productReadAccessor,
 	promotionRepo,
 	promoPricing
 );
+export const updateProductsUsecase = new UpdateProdutsUsecase(
+	productRepo,
+	transactionManager
+);
+export const getProductsUsecase = new GetProductsUsecase(productReadAccessor);
+
 export const createPromotionUsecase = new CreatePromotionUsecase(
 	productReadAccessor,
 	promotionRepo
@@ -146,11 +194,6 @@ export const createGoodReceiptUsecase = new CreateGoodReceiptUsecase(
 	goodReceiptRepo,
 	transactionManager
 );
-export const updateProductsUsecase = new UpdateProdutsUsecase(
-	productRepo,
-	transactionManager
-);
-export const getProductsUsecase = new GetProductsUsecase(productReadAccessor);
 export const createStocktakingUsecase = new CreateStocktakingUsecase(
 	productReadAccessor,
 	shelfReadAccessor,
@@ -158,21 +201,43 @@ export const createStocktakingUsecase = new CreateStocktakingUsecase(
 );
 
 // Supplier usecases
-export const getSuppliersUsecase = new GetSuppliersUsecase(supplierReadAccessor);
+export const getSuppliersUsecase = new GetSuppliersUsecase(
+	supplierReadAccessor
+);
 export const createSupplierUsecase = new CreateSupplierUsecase(supplierRepo);
 export const updateSupplierUsecase = new UpdateSupplierUsecase(supplierRepo);
 export const deleteSupplierUsecase = new DeleteSupplierUsecase(supplierRepo);
 
 // Product Category usecases
-export const getProductCategoriesUsecase = new GetProductCategoriesUsecase(productCategoryReadAccessor);
-export const createProductCategoryUsecase = new CreateProductCategoryUsecase(productCategoryRepo);
-export const updateProductCategoryUsecase = new UpdateProductCategoryUsecase(productCategoryRepo);
-export const deleteProductCategoryUsecase = new DeleteProductCategoryUsecase(productCategoryRepo);
+export const getProductCategoriesUsecase = new GetProductCategoriesUsecase(
+	productCategoryReadAccessor
+);
+export const createProductCategoryUsecase = new CreateProductCategoryUsecase(
+	productCategoryRepo
+);
+export const updateProductCategoryUsecase = new UpdateProductCategoryUsecase(
+	productCategoryRepo
+);
+export const deleteProductCategoryUsecase = new DeleteProductCategoryUsecase(
+	productCategoryRepo
+);
 
 // Report usecases
-export const getInventoryReportUsecase = new GetInventoryReportUsecase(reportReadAccessor);
-export const getGoodsReceiptReportUsecase = new GetGoodsReceiptReportUsecase(reportReadAccessor);
-export const getSalesReportUsecase = new GetSalesReportUsecase(reportReadAccessor);
-export const getCustomerReportUsecase = new GetCustomerReportUsecase(reportReadAccessor);
-export const getStocktakingReportUsecase = new GetStocktakingReportUsecase(reportReadAccessor);
-export const getRevenueProfitReportUsecase = new GetRevenueProfitReportUsecase(reportReadAccessor);
+export const getInventoryReportUsecase = new GetInventoryReportUsecase(
+	reportReadAccessor
+);
+export const getGoodsReceiptReportUsecase = new GetGoodsReceiptReportUsecase(
+	reportReadAccessor
+);
+export const getSalesReportUsecase = new GetSalesReportUsecase(
+	reportReadAccessor
+);
+export const getCustomerReportUsecase = new GetCustomerReportUsecase(
+	reportReadAccessor
+);
+export const getStocktakingReportUsecase = new GetStocktakingReportUsecase(
+	reportReadAccessor
+);
+export const getRevenueProfitReportUsecase = new GetRevenueProfitReportUsecase(
+	reportReadAccessor
+);
