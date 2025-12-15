@@ -34,26 +34,42 @@ enum EmployeePosition {
   INVENTORY = 'INVENTORY',
   RECEIVING = 'RECEIVING',
   MANAGER = 'MANAGER',
+  CUSTOMER = 'CUSTOMER',
+}
+
+// Account structure từ API
+interface AccountResponse {
+  id: number
+  phoneNumber: string
+  user: {
+    id: number
+    name: string
+    point: number
+  }
+}
+
+// Employee Account structure (nếu có)
+interface EmployeeAccountResponse {
+  id: number
+  username: string
+  position: EmployeePosition
+  user: {
+    id: number
+    name: string
+  }
 }
 
 interface UserProfile {
   id: number
-  username: string
   name: string
+  username?: string
   position?: EmployeePosition
   phoneNumber?: string
   point?: number
   type: 'EMPLOYEE' | 'CUSTOMER'
 }
 
-interface ApiResponse {
-  status: string
-  data: UserProfile
-}
-
-const API_BASE_URL = 'https://your-api-url.com/api' // Thay URL này
-
-export function ProfilePage() {
+export function CustomerProfileContent() {
   const [user, setUser] = useState<UserProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
@@ -80,44 +96,37 @@ export function ProfilePage() {
   const fetchProfile = async () => {
     setIsLoading(true)
     try {
-      // Thử lấy profile nhân viên trước, bỏ qua redirect 401 nếu lỗi
-      try {
-        const response = await apiClient.get<any>('/employee-accounts/profile', {
-          skipAuthRedirect: true,
-        } as any)
+      // Gọi API profile - API sẽ tự động xác định employee hay customer dựa trên token
+      const response = await apiClient.get<AccountResponse>('/accounts/profile')
 
-        setUser({ ...response, type: 'EMPLOYEE' })
-        setFormData({
-          id: response.id,
-          name: response.name,
-          username: response.username,
-          phoneNumber: '',
-        })
-      } catch (error: any) {
-        // Nếu lỗi 401, thử lấy profile khách hàng
-        if (error.response?.status === 401) {
-          const response = await apiClient.get<any>('/accounts/profile')
-          // Mapping dữ liệu khách hàng (Account structure)
-          setUser({
-            id: response.id,
-            name: response.user.name,
-            phoneNumber: response.phoneNumber,
-            point: response.user.point,
-            type: 'CUSTOMER',
-            username: '',
-          })
-          setFormData({
-            id: response.id,
-            name: response.user.name,
-            username: '',
-            phoneNumber: response.phoneNumber,
-          })
-        } else {
-          throw error
-        }
+      console.log('Profile response:', response)
+
+      // Map response to UserProfile
+      const mappedUser: UserProfile = {
+        id: response.id,
+        name: response.user.name,
+        phoneNumber: response.phoneNumber,
+        point: response.user.point,
+        type: 'CUSTOMER', // Từ response structure này là customer
       }
-    } catch (error) {
+
+      setUser(mappedUser)
+      setFormData({
+        id: response.id,
+        name: response.user.name,
+        username: '',
+        phoneNumber: response.phoneNumber,
+      })
+    } catch (error: any) {
       console.error('Error fetching profile:', error)
+
+      // Nếu lỗi 401/403, có thể token hết hạn
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        toast.error('Phiên đăng nhập đã hết hạn')
+        // Redirect to login sẽ được xử lý bởi apiClient
+      } else {
+        toast.error('Không thể tải thông tin người dùng')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -126,96 +135,102 @@ export function ProfilePage() {
   const handleSave = async () => {
     // Validation
     if (!formData.name.trim()) {
-      alert('Vui lòng nhập họ và tên')
-      return
-    }
-
-    if (!formData.username.trim()) {
-      alert('Vui lòng nhập tên đăng nhập')
+      toast.error('Vui lòng nhập họ và tên')
       return
     }
 
     try {
-      const response = await apiClient.put<UserProfile>('/employee-accounts', {
-        id : formData.id,
+      // TODO: Thay đổi endpoint phù hợp với API của bạn
+      const response = await apiClient.put<AccountResponse>('/accounts/profile', {
         name: formData.name,
-        username: formData.username,
+        // phoneNumber thường không cho sửa vì là identifier
       })
-      const result = response
-      setUser(result)
+
+      // Update user state with new data
+      const mappedUser: UserProfile = {
+        id: response.id,
+        name: response.user.name,
+        phoneNumber: response.phoneNumber,
+        point: response.user.point,
+        type: 'CUSTOMER',
+      }
+
+      setUser(mappedUser)
+      setFormData({
+        id: response.id,
+        name: response.user.name,
+        username: '',
+        phoneNumber: response.phoneNumber,
+      })
+
       setIsEditing(false)
       toast.success('Cập nhật thông tin thành công!')
     } catch (error) {
       console.error('Error updating profile:', error)
-      alert('Có lỗi xảy ra, vui lòng thử lại')
+      toast.error('Có lỗi xảy ra, vui lòng thử lại')
     }
   }
 
   const handleCancel = () => {
-    setFormData({
-      id: user?.id || 0,
-      name: user?.name || '',
-      username: user?.username || '',
-      phoneNumber: user?.phoneNumber || '',
-    })
+    if (user) {
+      setFormData({
+        id: user.id,
+        name: user.name,
+        username: user.username || '',
+        phoneNumber: user.phoneNumber || '',
+      })
+    }
     setIsEditing(false)
   }
 
   const handleChangePassword = async () => {
     // Validation
     if (!passwordData.currentPassword.trim()) {
-      alert('Vui lòng nhập mật khẩu hiện tại')
+      toast.error('Vui lòng nhập mật khẩu hiện tại')
       return
     }
 
     if (!passwordData.newPassword.trim()) {
-      alert('Vui lòng nhập mật khẩu mới')
+      toast.error('Vui lòng nhập mật khẩu mới')
       return
     }
 
     if (passwordData.newPassword.length < 6) {
-      alert('Mật khẩu mới phải có tối thiểu 6 ký tự')
+      toast.error('Mật khẩu mới phải có tối thiểu 6 ký tự')
       return
     }
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert('Mật khẩu xác nhận không khớp')
+      toast.error('Mật khẩu xác nhận không khớp')
       return
     }
 
     if (passwordData.currentPassword === passwordData.newPassword) {
-      alert('Mật khẩu mới phải khác mật khẩu hiện tại')
+      toast.error('Mật khẩu mới phải khác mật khẩu hiện tại')
       return
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/profile/change-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword,
-        }),
+      // TODO: Cập nhật endpoint change password
+      await apiClient.post('/accounts/change-password', {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
       })
 
-      const result = await response.json()
-      if (result.status === 'success') {
-        alert('Đổi mật khẩu thành công!')
-        setPasswordData({
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: '',
-        })
-        setIsChangePasswordOpen(false)
-      } else {
-        alert(result.message || 'Mật khẩu hiện tại không đúng')
-      }
-    } catch (error) {
+      toast.success('Đổi mật khẩu thành công!')
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      })
+      setIsChangePasswordOpen(false)
+    } catch (error: any) {
       console.error('Error changing password:', error)
-      alert('Có lỗi xảy ra, vui lòng thử lại')
+      if (error.response?.status === 400) {
+        toast.error('Mật khẩu hiện tại không đúng')
+      } else {
+        toast.error('Có lỗi xảy ra, vui lòng thử lại')
+      }
     }
   }
 
@@ -273,6 +288,9 @@ export function ProfilePage() {
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-white">
         <Card className="p-6">
           <p className="text-gray-600">Không thể tải thông tin người dùng</p>
+          <Button onClick={fetchProfile} className="mt-4">
+            Thử lại
+          </Button>
         </Card>
       </div>
     )
@@ -302,7 +320,11 @@ export function ProfilePage() {
                   </div>
                   <div
                     className={`absolute bottom-0 right-0 flex h-10 w-10 items-center justify-center rounded-full border-4 border-white ${
-                      user.type === 'CUSTOMER' ? 'bg-yellow-500' : user.position === EmployeePosition.MANAGER ? 'bg-purple-500' : 'bg-blue-500'
+                      user.type === 'CUSTOMER'
+                        ? 'bg-yellow-500'
+                        : user.position === EmployeePosition.MANAGER
+                          ? 'bg-purple-500'
+                          : 'bg-blue-500'
                     }`}
                   >
                     {user.type === 'CUSTOMER' ? (
@@ -330,8 +352,12 @@ export function ProfilePage() {
                     <span className="font-medium text-gray-900">#{user.id}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">{user.type === 'CUSTOMER' ? 'SĐT:' : 'Username:'}</span>
-                    <span className="font-medium text-gray-900">{user.type === 'CUSTOMER' ? user.phoneNumber : user.username}</span>
+                    <span className="text-gray-600">
+                      {user.type === 'CUSTOMER' ? 'SĐT:' : 'Username:'}
+                    </span>
+                    <span className="font-medium text-gray-900">
+                      {user.type === 'CUSTOMER' ? user.phoneNumber : user.username}
+                    </span>
                   </div>
                   {user.type === 'CUSTOMER' && (
                     <div className="flex items-center justify-between text-sm">
@@ -392,7 +418,10 @@ export function ProfilePage() {
 
                   {/* Username hoặc Số điện thoại */}
                   <div className="space-y-2">
-                    <Label htmlFor={user.type === 'CUSTOMER' ? "phoneNumber" : "username"} className="flex items-center gap-2">
+                    <Label
+                      htmlFor={user.type === 'CUSTOMER' ? 'phoneNumber' : 'username'}
+                      className="flex items-center gap-2"
+                    >
                       {user.type === 'CUSTOMER' ? (
                         <Phone className="h-4 w-4 text-gray-500" />
                       ) : (
@@ -400,23 +429,14 @@ export function ProfilePage() {
                       )}
                       {user.type === 'CUSTOMER' ? 'Số điện thoại' : 'Tên đăng nhập'}
                     </Label>
-                    {isEditing ? (
-                      <Input
-                        id={user.type === 'CUSTOMER' ? "phoneNumber" : "username"}
-                        value={user.type === 'CUSTOMER' ? formData.phoneNumber : formData.username}
-                        onChange={(e) => 
-                          user.type === 'CUSTOMER' 
-                            ? setFormData({ ...formData, phoneNumber: e.target.value })
-                            : setFormData({ ...formData, username: e.target.value })
-                        }
-                        placeholder={user.type === 'CUSTOMER' ? "Nhập số điện thoại" : "Nhập tên đăng nhập"}
-                        disabled={user.type === 'CUSTOMER'} // Thường SĐT là định danh, không cho sửa dễ dàng
-                      />
-                    ) : (
-                      <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900">
-                        {user.type === 'CUSTOMER' ? formData.phoneNumber : formData.username}
-                      </div>
-                    )}
+                    <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900">
+                      {user.type === 'CUSTOMER' ? formData.phoneNumber : formData.username}
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      {user.type === 'CUSTOMER'
+                        ? 'Số điện thoại không thể thay đổi'
+                        : 'Tên đăng nhập không thể thay đổi'}
+                    </p>
                   </div>
 
                   {/* Chức vụ - Read only */}

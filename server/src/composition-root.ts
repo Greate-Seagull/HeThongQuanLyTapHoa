@@ -61,6 +61,8 @@ import { GetCustomerReportUsecase } from "./application/get-customer-report.usec
 import { GetStocktakingReportUsecase } from "./application/get-stocktaking-report.usecase";
 import { GetRevenueProfitReportUsecase } from "./application/get-revenue-profit-report.usecase";
 import { GetShelvesUsecase } from "./application/shelf/get-shelves.usecase";
+import { InvoiceReadAccessor } from "./infrastructure/read-accessors/invoice.read-accessor";
+import { GetMyInvoicesUsecase } from "./application/invoice/get-my-invoices.usecase";
 
 config;
 export const prisma = new PrismaClient({
@@ -145,6 +147,7 @@ const supplierReadAccessor = new SupplierReadAccessor(prisma);
 const productCategoryRepo = new ProductCategoryRepository(prisma);
 const productCategoryReadAccessor = new ProductCategoryReadAccessor(prisma);
 const reportReadAccessor = new ReportReadAccessor(prisma);
+const invoiceReadAccessor = new InvoiceReadAccessor(prisma);
 
 const promoPricing = new PromotionPricingService();
 const processSales = new SalesTransactionService();
@@ -187,6 +190,7 @@ export const createStocktakingUsecase = new CreateStocktakingUsecase(
   stocktakingRepo
 );
 export const getShelvesUsecase = new GetShelvesUsecase(shelfReadAccessor);
+export const getMyInvoicesUsecase = new GetMyInvoicesUsecase(invoiceReadAccessor);
 
 // Supplier usecases
 export const getSuppliersUsecase = new GetSuppliersUsecase(

@@ -20,11 +20,24 @@ router.get("/profile", authenticationMiddleware, (req, res) => {
   const authId =
     (req as any).authId ||
     (req as any).user?.id ||
-    req.body?.authId ||
-    req.query?.authId;
+    req.body?.id ||
+    req.query?.id;
   if (!authId) return res.status(401).jsend.fail("Missing account id");
   return controller(getMyAccountUsecase)({ ...req, body: { authId } }, res);
 });
+
+// router.get("/profile", authenticationMiddleware, (req, res) => {
+//   const id =
+//     (req as any).authId ||
+//     (req as any).user?.id ||
+//     req.body?.id ||
+//     req.query?.id;
+//   if (!id) return res.status(401).jsend.fail("Missing account id");
+//   return controller(getEmployeeAccountProfileUsecase)(
+//     { ...req, body: { id } },
+//     res
+//   );
+// });
 
 // Lấy tất cả account (join user)
 router.get("/", authenticationMiddleware, controller(getAccountsUsecase));

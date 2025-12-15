@@ -66,7 +66,7 @@ export class SignInUsecase {
 
 		const token = this.tokenService.generateJwt({
 			id: account.id,
-			position: null,
+			position: "CUSTOMER",
 		});
 
 		log.info("Task completed");
