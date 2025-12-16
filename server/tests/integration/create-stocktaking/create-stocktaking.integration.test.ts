@@ -13,7 +13,20 @@ import {
 
 jest.setTimeout(50000);
 
-const outputSchema = z.object();
+const outputSchema = z.object({
+	id: z.number(),
+	employeeId: z.number(),
+	createdAt: z.date(),
+	stocktakingDetails: z.array(
+		z.object({
+			id: z.number(),
+			productId: z.number(),
+			slotId: z.number(),
+			status: z.string(),
+			quantity: z.number(),
+		})
+	),
+});
 
 describe("Create stocktaking integration test", () => {
 	let input;

@@ -20,8 +20,43 @@ import {
  */
 export const getProducts = async (): Promise<Product[]> => {
   try {
-    const response = await apiClient.get<Product[]>('/products')
-    return response
+    const response = await apiClient.get<any>('/products')
+    
+    // Debug log
+    console.log('Raw products response:', response);
+    
+    // Handle different response formats from backend
+    // Format 1: Direct array
+    if (Array.isArray(response)) {
+      return response;
+    }
+    
+    // Format 2: Wrapped in data property
+    if (response && typeof response === 'object') {
+      // Check for products property (common in pagination)
+      if (Array.isArray(response.products)) {
+        return response.products;
+      }
+      
+      // Check for data property
+      if (Array.isArray(response.data)) {
+        return response.data;
+      }
+      
+      // Check for items property
+      if (Array.isArray(response.items)) {
+        return response.items;
+      }
+    }
+    
+    // If response is empty object or null, return empty array
+    if (!response || (typeof response === 'object' && Object.keys(response).length === 0)) {
+      console.warn('Products API returned empty response');
+      return [];
+    }
+    
+    console.error('Unexpected products response format:', response);
+    return [];
   } catch (error: any) {
     console.error('Get products error:', error)
     

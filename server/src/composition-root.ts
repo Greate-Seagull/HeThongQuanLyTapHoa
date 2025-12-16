@@ -67,6 +67,9 @@ import { GetStocktakingReportUsecase } from "./application/services/report/get-s
 import { GetRevenueProfitReportUsecase } from "./application/services/report/get-revenue-profit-report.usecase";
 import { SearchProductsUsecase } from "./application/services/product/search-products.usecase";
 import { CreatePromotionUsecase } from "./application/services/promotion/create-promotion.usecase";
+import { GetStocktakingsUsecase } from "./application/services/stocktaking/get-stocktakings.usecase";
+import { ApplyStocktakingUsecase } from "./application/services/stocktaking/apply-stocktaking.usecase";
+import { GetShelvesUsecase } from "./application/services/shelf/get-shelves.usecase";
 
 config;
 export const prisma = new PrismaClient({
@@ -241,3 +244,20 @@ export const getStocktakingReportUsecase = new GetStocktakingReportUsecase(
 export const getRevenueProfitReportUsecase = new GetRevenueProfitReportUsecase(
 	reportReadAccessor
 );
+
+// Stocktaking use cases
+const stocktakingRepository = new StocktakingPrismaRepository(
+	prisma,
+	stocktakingDtoSchema
+);
+
+export const getStocktakingsUsecase = new GetStocktakingsUsecase(
+	stocktakingRepository
+);
+
+export const applyStocktakingUsecase = new ApplyStocktakingUsecase(
+	stocktakingRepository,
+	productRepo
+);
+
+export const getShelvesUsecase = new GetShelvesUsecase(shelfReadAccessor);

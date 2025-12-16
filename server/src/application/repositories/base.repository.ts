@@ -18,3 +18,4 @@ export interface BaseRepository<EntityType extends BaseEntity<Id>> {
 		transaction?: Transaction
 	): Promise<EntityType[]>;
 }
+

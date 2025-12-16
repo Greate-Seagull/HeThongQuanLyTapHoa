@@ -1,4 +1,7 @@
 import { Stocktaking } from "../../domain/entities/stocktaking";
 import { BaseRepository } from "./base.repository";
 
-export interface StocktakingRepository extends BaseRepository<Stocktaking> {}
+export interface StocktakingRepository extends BaseRepository<Stocktaking> {
+	findAll(): Promise<Stocktaking[]>;
+	getById(id: number): Promise<Stocktaking | null>;
+}

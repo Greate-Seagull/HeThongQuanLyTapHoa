@@ -63,13 +63,22 @@ class ApiClient {
   }
 
   async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    const response = await this.client.get<any>(url, config)
-    // Backend wraps response in { data: {...}, status: "success" }
-    // Unwrap it to get the actual data
-    if (response.data && response.data.data) {
-      return response.data.data as T
+    try {
+      const response = await this.client.get<any>(url, config)
+      
+      console.log(`API GET ${url} - Status:`, response.status);
+      console.log(`API GET ${url} - Data:`, response.data);
+      
+      // Backend wraps response in { data: {...}, status: "success" }
+      // Unwrap it to get the actual data
+      if (response.data && response.data.data) {
+        return response.data.data as T
+      }
+      return response.data
+    } catch (error: any) {
+      console.error(`API GET ${url} - Error:`, error.response?.data || error.message);
+      throw error;
     }
-    return response.data
   }
 
   async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {

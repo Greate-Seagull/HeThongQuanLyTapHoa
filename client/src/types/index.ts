@@ -301,11 +301,11 @@ export interface CreateGoodReceiptRequest {
 }
 
 export interface CreateStocktakingRequest {
-  employeeId: number
-  details: {
-    productId: number
-    slotId: number
-    status: ProductStatus
-    quantity: number
-  }[]
+  authId: number;
+  products: {
+    barcode: number;
+    slotId: number;
+    status: string;
+    quantity: number;
+  }[];
 }

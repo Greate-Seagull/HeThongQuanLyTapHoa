@@ -40,4 +40,57 @@ export class StocktakingPrismaRepository
 		if (transaction) return transaction.stocktaking;
 		return this.client.stocktaking;
 	}
+
+	async findAll(): Promise<Stocktaking[]> {
+		const stocktakings = await this.client.stocktaking.findMany({
+			include: {
+				stocktakingDetails: {
+					include: {
+						product: true,
+						slot: {
+							include: {
+								rack: {
+									include: {
+										shelf: true
+									}
+								}
+							}
+						}
+					}
+				},
+				employee: true
+			},
+			orderBy: {
+				createdAt: 'desc'
+			}
+		});
+
+		return stocktakings.map(data => this.fromPersistence(data));
+	}
+
+	async getById(id: number): Promise<Stocktaking | null> {
+		const stocktaking = await this.client.stocktaking.findUnique({
+			where: { id },
+			include: {
+				stocktakingDetails: {
+					include: {
+						product: true,
+						slot: {
+							include: {
+								rack: {
+									include: {
+										shelf: true
+									}
+								}
+							}
+						}
+					}
+				},
+				employee: true
+			},
+		});
+
+		if (!stocktaking) return null;
+		return this.fromPersistence(stocktaking) as Stocktaking;
+	}
 }

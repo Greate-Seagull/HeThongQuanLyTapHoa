@@ -12,4 +12,19 @@ export class ShelfPrismaReadAccessor
 
 		return count === ids.length;
 	}
+
+	async getShelvesWithRacksAndSlots(): Promise<any[]> {
+		return this.client.shelf.findMany({
+			include: {
+				racks: {
+					include: {
+						slots: true,
+					},
+				},
+			},
+			orderBy: {
+				name: 'asc',
+			},
+		});
+	}
 }

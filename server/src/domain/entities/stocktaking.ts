@@ -38,9 +38,13 @@ export class StocktakingDetail extends BaseEntity<StocktakingDetailId> {
 		this._slotId = value;
 	}
 	private set status(value: ProductStatus) {
-		const statuses = Object.keys(ProductStatus);
-		if (!statuses.includes(value))
-			throw Error(`Expect a status in [${statuses}], got ${value}`);
+		const validStatuses = [
+			ProductStatus.GOOD,
+			ProductStatus.EXPIRED
+		];
+		
+		if (!validStatuses.includes(value as ProductStatus))
+			throw Error(`Expect a status in [GOOD, EXPIRED], got ${value}`);
 
 		this._status = value;
 	}

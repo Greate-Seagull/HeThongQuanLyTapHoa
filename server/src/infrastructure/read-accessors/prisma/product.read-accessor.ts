@@ -50,6 +50,8 @@ export class ProductPrismaReadAccessor
 			price: number;
 			unit: string;
 			barcode: ProductBarcode;
+			amount: number;
+			status: string;
 		}[]
 	> {
 		const skip = (page - 1) * limit;
@@ -60,6 +62,8 @@ export class ProductPrismaReadAccessor
 				price: true,
 				unit: true,
 				barcode: true,
+				amount: true,
+				status: true,
 			},
 			orderBy: {
 				name: "asc",

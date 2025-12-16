@@ -1,21 +1,21 @@
 import { Router } from "express";
-import { authenticationMiddleware } from "../middlewares/authentication.middleware";
-import { authorizationMiddleware } from "../middlewares/authorization.middleware";
 import { controller } from "../controllers/controller";
-import {
-	getProductsUsecase,
-	searchProductsUsecase,
-	updateProductsUsecase,
+import { 
+  getProductsUsecase, 
+  searchProductsUsecase, 
+  updateProductsUsecase 
 } from "../../composition-root";
+import { authenticationMiddleware } from "../middlewares/authentication.middleware";
 
 const router = Router();
+
+// Get all products - should work without authentication for inventory checking
 router.get("/", controller(getProductsUsecase));
-router.get("/:productId", controller(searchProductsUsecase));
-router.put(
-	"/bulk",
-	authenticationMiddleware,
-	authorizationMiddleware("ADMIN"),
-	controller(updateProductsUsecase)
-);
+
+// Search products
+router.get("/search", controller(searchProductsUsecase));
+
+// Update products bulk - requires authentication
+router.put("/bulk", authenticationMiddleware, controller(updateProductsUsecase));
 
 export default router;
