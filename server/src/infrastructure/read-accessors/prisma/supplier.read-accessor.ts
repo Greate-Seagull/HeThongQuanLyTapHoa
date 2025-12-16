@@ -44,4 +44,9 @@ export class SupplierReadAccessor {
     });
     return count > 0;
   }
+  async getById(id: number) {
+    return this.prisma.supplier.findUnique({
+      where: { id },
+    });
+  }
 }

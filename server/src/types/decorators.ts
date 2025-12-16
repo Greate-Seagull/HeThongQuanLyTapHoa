@@ -1,5 +1,3 @@
-import { Constructor } from "./entity.type";
-
 // decorators.ts
 export function Read(target: any, propertyKey: string) {
 	if (!Object.prototype.hasOwnProperty.call(target, "__readable")) {
@@ -15,14 +13,12 @@ export function Write(target: any, propertyKey: string) {
 	target.__writable.push(propertyKey);
 }
 
-export function Relation<T>(type: Constructor<T>) {
+export function Type(type: any) {
 	return (target: any, key: string) => {
-		if (!Object.prototype.hasOwnProperty.call(target, "__relations")) {
-			target.__relations = target.__relations
-				? { ...target.__relations }
-				: {};
+		if (!Object.prototype.hasOwnProperty.call(target, "__typeMap")) {
+			target.__typeMap = target.__typeMap ? { ...target.__typeMap } : {};
 		}
-		target.__relations[key] = type;
+		target.__typeMap[key] = type;
 	};
 }
 
@@ -38,4 +34,14 @@ export function Optional(target: any, propertyKey: string) {
 		target.__optional = target.__optional ? [...target.__optional] : [];
 	}
 	target.__optional.push(propertyKey);
+}
+export function Relation(relationType: any) {
+	return (target: any, key: string) => {
+		if (!Object.prototype.hasOwnProperty.call(target, "__relationMap")) {
+			target.__relationMap = target.__relationMap
+				? { ...target.__relationMap }
+				: {};
+		}
+		target.__relationMap[key] = relationType;
+	};
 }

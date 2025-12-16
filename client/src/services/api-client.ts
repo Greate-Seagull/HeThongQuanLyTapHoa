@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'
 
 class ApiClient {
   private client: AxiosInstance
@@ -31,7 +31,9 @@ class ApiClient {
     this.client.interceptors.response.use(
       (response) => response,
       (error) => {
-        if (error.response?.status === 401) {
+        const skipAuthRedirect = (error.config as any)?.skipAuthRedirect
+
+        if (error.response?.status === 401 && !skipAuthRedirect) {
           // Handle unauthorized access
           this.clearToken()
           if (typeof window !== 'undefined') {
