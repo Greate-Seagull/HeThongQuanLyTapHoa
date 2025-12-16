@@ -5,6 +5,8 @@ import { config } from "./config/config";
 import { SearchProductsUsecase } from "./application/product/search-products.usecase";
 import { PrismaClient } from "./generated/client";
 import { CreatePromotionUsecase } from "./application/promotion/create-promotion.usecase";
+import { UpdatePromotionUsecase } from "./application/promotion/update-promotion.usecase";
+import { DeletePromotionUsecase } from "./application/promotion/delete-promotion.usecase";
 import { PromotionRepository } from "./infrastructure/repositories/promotion.repository";
 import { PromotionPricingService } from "./domain/services/promotion-pricing.service";
 import { GetPromotionsUsecase } from "./application/promotion/get-promotions.usecase";
@@ -18,6 +20,9 @@ import { SalesTransactionService } from "./domain/services/sales-transaction.ser
 import { GoodReceiptRepository } from "./infrastructure/repositories/good-receipt.repository";
 import { UpdateProdutsUsecase } from "./application/product/update-products.usecase";
 import { GetProductsUsecase } from "./application/product/get-products.usecase";
+import { CreateProductUsecase } from "./application/product/create-product.usecase";
+import { UpdateProductUsecase } from "./application/product/update-product.usecase";
+import { DeleteProductUsecase } from "./application/product/delete-product.usecase";
 import { StocktakingRepository } from "./infrastructure/repositories/stocktaking.repository";
 import { ShelfReadAccessor } from "./infrastructure/read-accessors/shelf.read-accessor";
 import { ProductReadAccessor } from "./infrastructure/read-accessors/product.read-accessor";
@@ -63,6 +68,18 @@ import { GetStocktakingReportUsecase } from "./application/get-stocktaking-repor
 import { GetRevenueProfitReportUsecase } from "./application/get-revenue-profit-report.usecase";
 import { GetShelvesUsecase } from "./application/shelf/get-shelves.usecase";
 import { InvoiceReadAccessor } from "./infrastructure/read-accessors/invoice.read-accessor";
+import { ShelfRepository } from "./infrastructure/repositories/shelf.repository";
+import { CreateShelfUsecase } from "./application/shelf/create-shelf.usecase";
+import { UpdateShelfUsecase } from "./application/shelf/update-shelf.usecase";
+import { DeleteShelfUsecase } from "./application/shelf/delete-shelf.usecase";
+import { RackRepository } from "./infrastructure/repositories/rack.repository";
+import { CreateRackUsecase } from "./application/rack/create-rack.usecase";
+import { UpdateRackUsecase } from "./application/rack/update-rack.usecase";
+import { DeleteRackUsecase } from "./application/rack/delete-rack.usecase";
+import { SlotRepository } from "./infrastructure/repositories/slot.repository";
+import { CreateSlotUsecase } from "./application/slot/create-slot.usecase";
+import { UpdateSlotUsecase } from "./application/slot/update-slot.usecase";
+import { DeleteSlotUsecase } from "./application/slot/delete-slot.usecase";
 import { GetMyInvoicesUsecase } from "./application/invoice/get-my-invoices.usecase";
 import { CreateCustomerAccountUsecase } from "./application/customer-account/create-customer-account.usecase";
 import { UpdateCustomerAccountUsecase } from "./application/customer-account/update-customer-account.usecase";
@@ -167,6 +184,9 @@ export const invoiceRepo = new InvoiceRepository(prisma);
 export const goodReceiptRepo = new GoodReceiptRepository(prisma);
 const shelfReadAccessor = new ShelfReadAccessor(prisma);
 const stocktakingRepo = new StocktakingRepository(prisma);
+const shelfRepo = new ShelfRepository(prisma);
+const rackRepo = new RackRepository(prisma);
+const slotRepo = new SlotRepository(prisma);
 const supplierRepo = new SupplierRepository(prisma);
 const supplierReadAccessor = new SupplierReadAccessor(prisma);
 const productCategoryRepo = new ProductCategoryRepository(prisma);
@@ -184,6 +204,13 @@ export const searchProductsUsecase = new SearchProductsUsecase(
 );
 export const createPromotionUsecase = new CreatePromotionUsecase(
   productReadAccessor,
+  promotionRepo
+);
+export const updatePromotionUsecase = new UpdatePromotionUsecase(
+  productReadAccessor,
+  promotionRepo
+);
+export const deletePromotionUsecase = new DeletePromotionUsecase(
   promotionRepo
 );
 export const getPromotionsUsecase = new GetPromotionsUsecase(
@@ -209,12 +236,33 @@ export const updateProductsUsecase = new UpdateProdutsUsecase(
   transactionManager
 );
 export const getProductsUsecase = new GetProductsUsecase(productReadAccessor);
+export const createProductUsecase = new CreateProductUsecase(
+  productRepo,
+  productCategoryReadAccessor,
+  supplierReadAccessor
+);
+export const updateProductUsecase = new UpdateProductUsecase(
+  productRepo,
+  productCategoryReadAccessor,
+  supplierReadAccessor
+);
+export const deleteProductUsecase = new DeleteProductUsecase(productRepo);
+
 export const createStocktakingUsecase = new CreateStocktakingUsecase(
   productReadAccessor,
   shelfReadAccessor,
   stocktakingRepo
 );
 export const getShelvesUsecase = new GetShelvesUsecase(shelfReadAccessor);
+export const createShelfUsecase = new CreateShelfUsecase(shelfRepo);
+export const updateShelfUsecase = new UpdateShelfUsecase(shelfRepo);
+export const deleteShelfUsecase = new DeleteShelfUsecase(shelfRepo);
+export const createRackUsecase = new CreateRackUsecase(rackRepo, shelfRepo);
+export const updateRackUsecase = new UpdateRackUsecase(rackRepo);
+export const deleteRackUsecase = new DeleteRackUsecase(rackRepo);
+export const createSlotUsecase = new CreateSlotUsecase(slotRepo, rackRepo);
+export const updateSlotUsecase = new UpdateSlotUsecase(slotRepo);
+export const deleteSlotUsecase = new DeleteSlotUsecase(slotRepo);
 export const getMyInvoicesUsecase = new GetMyInvoicesUsecase(invoiceReadAccessor);
 
 // Supplier usecases

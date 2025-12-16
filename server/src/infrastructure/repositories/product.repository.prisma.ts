@@ -124,5 +124,32 @@ export class ProductRepositoryPrisma implements ProductRepository {
 		);
 	}
 
+	async create(product: Product): Promise<Product> {
+		const data = toPersistenceObject(product);
+		const raw = await this.prisma.product.create({
+			data: this.tracker.diff(product.id, data),
+			...ProductRepositoryPrisma.baseQuery,
+		});
+		const entity = fromPersistence(Product, raw);
+		this.tracker.track(entity.id, raw);
+		return entity;
+	}
+
+	async update(product: Product): Promise<Product> {
+		const data = toPersistenceObject(product);
+		const raw = await this.prisma.product.update({
+			where: { id: product.id },
+			data: this.tracker.diff(product.id, data),
+			...ProductRepositoryPrisma.baseQuery,
+		});
+		const entity = fromPersistence(Product, raw);
+		this.tracker.track(entity.id, raw);
+		return entity;
+	}
+
+	async delete(id: number): Promise<void> {
+		await this.prisma.product.delete({ where: { id } });
+	}
+
 	static baseQuery = buildSafePrismaSelect(Product);
 }

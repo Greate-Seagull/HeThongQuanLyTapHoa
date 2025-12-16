@@ -3,19 +3,18 @@ import { authenticationMiddleware } from "../middlewares/authentication.middlewa
 import { authorizationMiddleware } from "../middlewares/authorization.middleware";
 import { controller } from "../controllers/controller";
 import {
-  createPromotionUsecase,
-  getPromotionsUsecase,
-  updatePromotionUsecase,
-  deletePromotionUsecase,
+	createRackUsecase,
+	updateRackUsecase,
+	deleteRackUsecase,
 } from "../../composition-root";
 
 const router = Router();
 
 router.use(authenticationMiddleware);
-router.get("/", controller(getPromotionsUsecase));
 // router.use(authorizationMiddleware("ADMIN"));
-router.post("/", controller(createPromotionUsecase));
-router.put("/:id", controller(updatePromotionUsecase));
-router.delete("/:id", controller(deletePromotionUsecase));
+
+router.post("/", controller(createRackUsecase));
+router.put("/:id", controller(updateRackUsecase));
+router.delete("/:id", controller(deleteRackUsecase));
 
 export default router;

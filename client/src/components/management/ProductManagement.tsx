@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { apiClient } from '@/services/api-client'
+import { toast } from 'sonner'
 
 enum ProductUnit {
   CAN = 'CAN',
@@ -39,18 +40,41 @@ enum ProductUnit {
   PIECE = 'PIECE',
 }
 
+interface Category {
+  id: number
+  name: string
+  description: string
+  _count?: {
+    products: number
+  }
+}
+
+interface Supplier {
+  id: number
+  name: string
+  address: string
+  phoneNumber: string
+  _count?: {
+    products: number
+  }
+}
+
 interface Product {
   id: number
   name: string
   price: number
+  amount: number
   unit: ProductUnit
   barcode: number
-}
-
-interface ApiResponse {
-  status: string
-  data: {
-    products: Product[]
+  categoryId: number
+  supplierId: number
+  category: {
+    id: number
+    name: string
+  }
+  supplier: {
+    id: number
+    name: string
   }
 }
 
@@ -62,10 +86,12 @@ const unitLabels: Record<ProductUnit, string> = {
   [ProductUnit.PIECE]: 'Cái',
 }
 
-const API_BASE_URL = 'https://your-api-url.com/api' // Thay đổi URL này
+const API_BASE_URL = 'https://your-api-url.com/api'
 
 export function ProductManagement() {
   const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -78,26 +104,48 @@ export function ProductManagement() {
   const [formData, setFormData] = useState({
     name: '',
     price: 0,
+    amount: 0,
     unit: ProductUnit.BOTTLE,
     barcode: 0,
+    categoryId: 0,
+    supplierId: 0,
   })
 
-  // Fetch products from API
   useEffect(() => {
     fetchProducts()
+    fetchCategories()
+    fetchSuppliers()
   }, [])
 
   const fetchProducts = async () => {
     setIsLoading(true)
     try {
-      const response = await apiClient.get<Product[]>(`/products`)
-      console.log(response)
-
+      const response = await apiClient.get<{ products: Product[] }>('/products')
       setProducts(response.products)
     } catch (error) {
       console.error('Error fetching products:', error)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const fetchCategories = async () => {
+    try {
+      const response = await apiClient.get<{ categories: Category[] }>('/product-categories')
+      setCategories(response.categories)
+    } catch (error) {
+      console.error('Error fetching categories:', error)
+    }
+  }
+
+  const fetchSuppliers = async () => {
+    try {
+      const response = await apiClient.get<{ suppliers: Supplier[] }>('/suppliers')
+      console.log(response.suppliers)
+
+      setSuppliers(response.suppliers)
+    } catch (error) {
+      console.error('Error fetching suppliers:', error)
     }
   }
 
@@ -109,7 +157,15 @@ export function ProductManagement() {
 
   const handleAdd = () => {
     setEditingProduct(null)
-    setFormData({ name: '', price: 0, unit: ProductUnit.BOTTLE, barcode: 0 })
+    setFormData({
+      name: '',
+      price: 0,
+      amount: 0,
+      unit: ProductUnit.BOTTLE,
+      barcode: 0,
+      categoryId: categories[0]?.id || 0,
+      supplierId: suppliers[0]?.id || 0,
+    })
     setIsDialogOpen(true)
   }
 
@@ -118,8 +174,11 @@ export function ProductManagement() {
     setFormData({
       name: product.name,
       price: product.price,
+      amount: product.amount,
       unit: product.unit,
       barcode: product.barcode,
+      categoryId: product.categoryId,
+      supplierId: product.supplierId,
     })
     setIsDialogOpen(true)
   }
@@ -130,56 +189,74 @@ export function ProductManagement() {
 
   const confirmDelete = async () => {
     try {
-      await fetch(`${API_BASE_URL}/products/${deleteConfirm.id}`, {
-        method: 'DELETE',
-      })
-      setProducts(products.filter((product) => product.id !== deleteConfirm.id))
-      setDeleteConfirm({ open: false, id: 0, name: '' })
+      const data = await apiClient.delete(`/products/${deleteConfirm.id}`)
+      if (data) {
+        setDeleteConfirm({ open: false, id: 0, name: '' })
+        toast.success('Sản phẩm đã được xóa thành công')
+        fetchProducts()
+      } else {
+      }
     } catch (error) {
+      toast.error('Không thể xóa sản phẩm do đang có đơn hàng liên quan')
       console.error('Error deleting product:', error)
     }
   }
 
   const handleSave = async () => {
-    // Validation
     if (!formData.name.trim()) {
-      alert('Vui lòng nhập tên sản phẩm')
+      toast.error('Vui lòng nhập tên sản phẩm')
       return
     }
     if (formData.price <= 0) {
-      alert('Giá phải lớn hơn 0')
+      toast.error('Giá phải lớn hơn 0')
       return
     }
     if (!formData.barcode || formData.barcode.toString().length < 8) {
-      alert('Mã vạch phải hợp lệ (ít nhất 8 số)')
+      toast.error('Mã vạch phải hợp lệ (ít nhất 8 số)')
+      return
+    }
+    if (!formData.categoryId || formData.categoryId === 0) {
+      toast.error('Vui lòng chọn danh mục')
+      return
+    }
+    if (!formData.supplierId || formData.supplierId === 0) {
+      alert('Vui lòng chọn nhà cung cấp')
       return
     }
 
     try {
       if (editingProduct) {
-        // Update existing product
-        const response = await fetch(`${API_BASE_URL}/products/${editingProduct.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: formData.name,
-            price: formData.price,
-            unit: formData.unit,
-            barcode: formData.barcode,
-          }),
+        const response = await apiClient.put<Product>(`/products`, {
+          id: editingProduct.id,
+          name: formData.name,
+          price: formData.price,
+          amount: formData.amount,
+          unit: formData.unit,
+          barcode: formData.barcode,
+          categoryId: formData.categoryId,
+          supplierId: formData.supplierId,
         })
-        const result = await response.json()
-        if (result.status === 'success') {
-          setProducts(
-            products.map((product) => (product.id === editingProduct.id ? result.data : product))
-          )
+        if (response) {
+          setIsDialogOpen(false)
+          toast.success('Sản phẩm đã được cập nhật thành công')
+          await fetchProducts()
         }
       } else {
-        // Create new product
-        const response = await apiClient.get<Product[]>(`/products`)
-        setProducts(response)
+        const response = await apiClient.post<Product>('/products', {
+          name: formData.name,
+          price: formData.price,
+          amount: formData.amount,
+          unit: formData.unit,
+          barcode: formData.barcode,
+          categoryId: formData.categoryId,
+          supplierId: formData.supplierId,
+        })
+        if (response) {
+          setIsDialogOpen(false)
+          toast.success('Sản phẩm đã được tạo thành công')
+          await fetchProducts()
+        }
       }
-      setIsDialogOpen(false)
     } catch (error) {
       console.error('Error saving product:', error)
     }
@@ -223,8 +300,11 @@ export function ProductManagement() {
                       <th className="p-4 text-left font-semibold text-blue-900">ID</th>
                       <th className="p-4 text-left font-semibold text-blue-900">Mã vạch</th>
                       <th className="p-4 text-left font-semibold text-blue-900">Tên sản phẩm</th>
+                      <th className="p-4 text-left font-semibold text-blue-900">Danh mục</th>
+                      <th className="p-4 text-left font-semibold text-blue-900">Nhà cung cấp</th>
                       <th className="p-4 text-left font-semibold text-blue-900">Đơn vị</th>
                       <th className="p-4 text-left font-semibold text-blue-900">Giá bán</th>
+                      <th className="p-4 text-left font-semibold text-blue-900">Số lượng</th>
                       <th className="p-4 text-right font-semibold text-blue-900">Thao tác</th>
                     </tr>
                   </thead>
@@ -234,6 +314,8 @@ export function ProductManagement() {
                         <td className="p-4 font-medium">{product.id}</td>
                         <td className="p-4 font-mono text-blue-600">{product.barcode}</td>
                         <td className="p-4 font-medium">{product.name}</td>
+                        <td className="p-4 text-sm text-gray-600">{product.category.name}</td>
+                        <td className="p-4 text-sm text-gray-600">{product.supplier.name}</td>
                         <td className="p-4">
                           <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700">
                             {unitLabels[product.unit]}
@@ -242,23 +324,26 @@ export function ProductManagement() {
                         <td className="p-4 font-semibold text-blue-700">
                           {product.price.toLocaleString('vi-VN')}đ
                         </td>
-                        <td className="p-4 text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(product)}
-                            className="mr-2 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(product.id, product.name)}
-                            className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                        <td className="p-4">{product.amount}</td>
+                        <td className="p-4">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(product)}
+                              className=" text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(product.id, product.name)}
+                              className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -311,6 +396,52 @@ export function ProductManagement() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
+                  <Label htmlFor="category" className="text-sm font-medium">
+                    Danh mục *
+                  </Label>
+                  <Select
+                    value={formData.categoryId.toString()}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, categoryId: parseInt(value) })
+                    }
+                  >
+                    <SelectTrigger className="border-blue-200">
+                      <SelectValue placeholder="Chọn danh mục" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id.toString()}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="supplier" className="text-sm font-medium">
+                    Nhà cung cấp *
+                  </Label>
+                  <Select
+                    value={formData.supplierId.toString()}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, supplierId: parseInt(value) })
+                    }
+                  >
+                    <SelectTrigger className="border-blue-200">
+                      <SelectValue placeholder="Chọn nhà cung cấp" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {suppliers.map((supplier) => (
+                        <SelectItem key={supplier.id} value={supplier.id.toString()}>
+                          {supplier.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
                   <Label htmlFor="price" className="text-sm font-medium">
                     Giá bán (VNĐ) *
                   </Label>
@@ -326,27 +457,42 @@ export function ProductManagement() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="unit" className="text-sm font-medium">
-                    Đơn vị tính *
+                  <Label htmlFor="amount" className="text-sm font-medium">
+                    Số lượng *
                   </Label>
-                  <Select
-                    value={formData.unit}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, unit: value as ProductUnit })
+                  <Input
+                    id="amount"
+                    type="number"
+                    value={formData.amount || ''}
+                    onChange={(e) =>
+                      setFormData({ ...formData, amount: parseInt(e.target.value) || 0 })
                     }
-                  >
-                    <SelectTrigger className="border-blue-200">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={ProductUnit.BOTTLE}>Chai</SelectItem>
-                      <SelectItem value={ProductUnit.CAN}>Lon</SelectItem>
-                      <SelectItem value={ProductUnit.PACKAGE}>Gói</SelectItem>
-                      <SelectItem value={ProductUnit.BOX}>Hộp</SelectItem>
-                      <SelectItem value={ProductUnit.PIECE}>Cái</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    className="border-blue-200"
+                    placeholder="Nhập số lượng"
+                  />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="unit" className="text-sm font-medium">
+                  Đơn vị tính *
+                </Label>
+                <Select
+                  value={formData.unit}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, unit: value as ProductUnit })
+                  }
+                >
+                  <SelectTrigger className="border-blue-200">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ProductUnit.BOTTLE}>Chai</SelectItem>
+                    <SelectItem value={ProductUnit.CAN}>Lon</SelectItem>
+                    <SelectItem value={ProductUnit.PACKAGE}>Gói</SelectItem>
+                    <SelectItem value={ProductUnit.BOX}>Hộp</SelectItem>
+                    <SelectItem value={ProductUnit.PIECE}>Cái</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <DialogFooter>
@@ -365,7 +511,6 @@ export function ProductManagement() {
           </DialogContent>
         </Dialog>
 
-        {/* Delete Confirmation Dialog */}
         <AlertDialog
           open={deleteConfirm.open}
           onOpenChange={(open) => setDeleteConfirm({ ...deleteConfirm, open })}

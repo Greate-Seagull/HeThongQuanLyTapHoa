@@ -58,6 +58,21 @@ export class Promotion {
 		return entity;
 	}
 
+	public update(input: any) {
+		if (input.name !== undefined) this.name = input.name;
+		if (input.description !== undefined) this.description = input.description;
+		if (input.startedAt !== undefined) this.startedAt = input.startedAt;
+		if (input.endedAt !== undefined) this.endedAt = input.endedAt;
+		if (input.condition !== undefined) this.condition = input.condition;
+		if (input.value !== undefined) this.value = input.value;
+		if (input.promotionType !== undefined) this.promotionType = input.promotionType;
+
+		if (input.promotionDetails !== undefined) {
+			// Convert raw objects to PromotionDetail instances using the factory service
+			this.promotionDetails = input.promotionDetails.map((d: any) => create(PromotionDetail, d));
+		}
+	}
+
 	private updateDates(startedAt: Date, endedAt: Date) {
 		if (startedAt >= endedAt)
 			throw Error(
@@ -135,8 +150,8 @@ export class Promotion {
 	}
 
 	private set promotionDetails(value: PromotionDetail[]) {
-		if (value.length < 1)
-			throw Error(`Expect promotion to have at least one product Id`);
+		// if (value.length < 1)
+		// 	throw Error(`Expect promotion to have at least one product Id`);
 		this._promotionDetails = value;
 	}
 
@@ -197,7 +212,7 @@ export class Promotion {
 	}
 	@Read
 	@Write
-	@Required
+	@Optional
 	@Type(PromotionDetail)
 	get promotionDetails(): PromotionDetail[] {
 		// Return a shallow copy to protect internal mutation

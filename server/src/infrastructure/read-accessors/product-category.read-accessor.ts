@@ -11,9 +11,9 @@ export class ProductCategoryReadAccessor {
         description: true,
         _count: {
           select: {
-            products: true
-          }
-        }
+            products: true,
+          },
+        },
       },
     });
   }
@@ -30,8 +30,8 @@ export class ProductCategoryReadAccessor {
             id: true,
             name: true,
             price: true,
-          }
-        }
+          },
+        },
       },
     });
   }
@@ -41,5 +41,10 @@ export class ProductCategoryReadAccessor {
       where: { id },
     });
     return count > 0;
+  }
+  async getById(id: number) {
+    return this.prisma.productCategory.findUnique({
+      where: { id },
+    });
   }
 }

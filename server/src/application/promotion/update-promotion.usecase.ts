@@ -1,61 +1,63 @@
 import z from "zod";
-import { Promotion } from "../../domain/promotion";
 import { ProductReadAccessor } from "../../infrastructure/read-accessors/product.read-accessor";
 import { PromotionRepository } from "../../infrastructure/repositories/promotion.repository";
 import { logger } from "../../domain/services/logger.service";
 
 const inputSchema = z.object({
+	id: z.coerce.number(),
 	authId: z.number(),
-	name: z.string(),
+	name: z.string().optional(),
 	description: z.string().optional().nullable(),
-	startedAt: z.string().transform((val) => new Date(val)),
-	endedAt: z.string().transform((val) => new Date(val)),
+	startedAt: z.string().transform((val) => new Date(val)).optional(),
+	endedAt: z.string().transform((val) => new Date(val)).optional(),
 	condition: z.string().optional().nullable(),
-	value: z.number(),
-	promotionType: z.string(),
+	value: z.number().optional(),
+	promotionType: z.string().optional(),
 	promotionDetails: z.array(
 		z.object({
 			productId: z.number(),
 		})
-	).optional().default([]),
+	).optional(),
 });
 
 const outputSchema = z.object({
 	promotionId: z.number(),
 });
 
-type CreatePromotionOutput = z.infer<typeof outputSchema>;
-
-export class CreatePromotionUsecase {
+export class UpdatePromotionUsecase {
 	constructor(
 		private readonly productReadAccessor: ProductReadAccessor,
 		private readonly promotionRepo: PromotionRepository
 	) {}
 
-	async execute(input: any): Promise<CreatePromotionOutput> {
+	async execute(input: any) {
 		const parsedInput = inputSchema.parse(input);
 		const log = logger.child({
-			task: "Creating promotion",
+			task: "Updating promotion",
 			employeeId: parsedInput.authId,
+			promotionId: parsedInput.id,
 		});
 		log.info("Task started");
 
-		if (parsedInput.promotionDetails.length > 0) {
+		const promotions = await this.promotionRepo.getByIds([parsedInput.id]);
+		if (promotions.length === 0) {
+			throw Error(`Promotion with id ${parsedInput.id} not found`);
+		}
+		const promotion = promotions[0];
+
+		if (parsedInput.promotionDetails && parsedInput.promotionDetails.length > 0) {
 			const productIds = parsedInput.promotionDetails.map((p) => p.productId);
 			const doExist = await this.productReadAccessor.existByIds(productIds);
 			if (!doExist) {
-				log.warn("Task failed: invalid product id");
 				throw Error(`Expect all products to be exist`);
 			}
-			log.debug("Task validated", {
-				productIds: productIds,
-			});
 		}
 
-		const promotion = Promotion.create(parsedInput);
+		promotion.update(parsedInput);
 
-		const savedPromotion = await this.promotionRepo.add(promotion);
-		log.debug("Task saved", {
+		const savedPromotion = await this.promotionRepo.update(promotion);
+		
+		log.debug("Task updated", {
 			promotionId: savedPromotion.id,
 		});
 

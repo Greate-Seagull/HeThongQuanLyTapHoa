@@ -12,9 +12,9 @@ export class SupplierReadAccessor {
         phoneNumber: true,
         _count: {
           select: {
-            products: true
-          }
-        }
+            products: true,
+          },
+        },
       },
     });
   }
@@ -32,8 +32,8 @@ export class SupplierReadAccessor {
             id: true,
             name: true,
             price: true,
-          }
-        }
+          },
+        },
       },
     });
   }
@@ -43,5 +43,10 @@ export class SupplierReadAccessor {
       where: { id },
     });
     return count > 0;
+  }
+  async getById(id: number) {
+    return this.prisma.supplier.findUnique({
+      where: { id },
+    });
   }
 }
