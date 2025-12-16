@@ -37,6 +37,25 @@ function autoSizeColumns(worksheet: ExcelJS.Worksheet, headerRow: number, column
   });
 }
 
+// Helper to setup page layout for printing/PDF export
+function setupPageLayout(worksheet: ExcelJS.Worksheet) {
+  worksheet.pageSetup = {
+    paperSize: 9, // A4
+    orientation: 'landscape',
+    fitToPage: true,
+    fitToWidth: 1,
+    fitToHeight: 0,
+    margins: {
+      left: 0.25,
+      right: 0.25,
+      top: 0.75,
+      bottom: 0.75,
+      header: 0.3,
+      footer: 0.3,
+    },
+  };
+}
+
 // Report types
 export interface InventoryReportData {
   summary: {
@@ -368,6 +387,9 @@ export const exportInventoryToExcel = async (data: InventoryReportData) => {
   // Auto-size all columns
   autoSizeColumns(worksheet, 4, 10); // Summary starts at row 4, 10 columns total
 
+  // Setup page layout for printing/PDF
+  setupPageLayout(worksheet);
+
   // Export
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], {
@@ -511,6 +533,9 @@ export const exportGoodsReceiptToExcel = async (data: GoodsReceiptReportData) =>
   // Auto-size columns
   autoSizeColumns(worksheet, 4, 8);
 
+  // Setup page layout for printing/PDF
+  setupPageLayout(worksheet);
+
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -521,6 +546,17 @@ export const exportGoodsReceiptToExcel = async (data: GoodsReceiptReportData) =>
 export const exportSalesToExcel = async (data: SalesReportData) => {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Báo Cáo Bán Hàng');
+
+  // Set column widths
+  worksheet.columns = [
+    { width: 20 },  // A - Labels (wider for Vietnamese text)
+    { width: 15 },  // B - Values
+    { width: 15 },  // C
+    { width: 15 },  // D
+    { width: 12 },  // E
+    { width: 12 },  // F
+    { width: 15 },  // G
+  ];
 
   worksheet.mergeCells('A1:F1');
   const titleCell = worksheet.getCell('A1');
@@ -541,6 +577,7 @@ export const exportSalesToExcel = async (data: SalesReportData) => {
   const summaryTitle = worksheet.getCell('A4');
   summaryTitle.value = 'TỔNG KẾT:';
   summaryTitle.font = { bold: true, size: 12 };
+  summaryTitle.alignment = { vertical: 'middle' };
   summaryTitle.border = {
     top: { style: 'thin' },
     left: { style: 'thin' },
@@ -548,31 +585,40 @@ export const exportSalesToExcel = async (data: SalesReportData) => {
     right: { style: 'thin' }
   };
 
-  const summaryRows = [
-    ['Tổng hóa đơn:', data.summary.totalInvoices],
-    ['Tổng doanh thu:', data.summary.totalRevenue.toLocaleString('vi-VN') + 'đ'],
-    ['Tổng số lượng:', data.summary.totalQuantity],
-    ['Trung bình/HĐ:', data.summary.averageInvoiceValue.toLocaleString('vi-VN') + 'đ'],
-    ['Tổng điểm dùng:', data.summary.totalPointsUsed]
+  const summaryData = [
+    { label: 'Tổng hóa đơn:', value: data.summary.totalInvoices },
+    { label: 'Tổng doanh thu:', value: data.summary.totalRevenue.toLocaleString('vi-VN') + 'đ' },
+    { label: 'Tổng số lượng:', value: data.summary.totalQuantity },
+    { label: 'Trung bình/HĐ:', value: data.summary.averageInvoiceValue.toLocaleString('vi-VN') + 'đ' },
+    { label: 'Tổng điểm dùng:', value: data.summary.totalPointsUsed }
   ];
 
-  summaryRows.forEach(rowData => {
-    const row = worksheet.addRow(rowData);
-    row.eachCell((cell, colNumber) => {
-      cell.border = {
-        top: { style: 'thin' },
-        left: { style: 'thin' },
-        bottom: { style: 'thin' },
-        right: { style: 'thin' }
-      };
-      if (colNumber === 1) {
-        cell.font = { bold: true };
-        cell.alignment = { wrapText: true, vertical: 'middle' };
-      }
-      if (colNumber === 2) {
-        cell.alignment = { horizontal: 'right', vertical: 'middle' };
-      }
-    });
+  summaryData.forEach((item, index) => {
+    const rowNum = 5 + index;
+    
+    // Merge cells for label to show full text
+    worksheet.mergeCells(`A${rowNum}:A${rowNum}`);
+    const labelCell = worksheet.getCell(`A${rowNum}`);
+    labelCell.value = item.label;
+    labelCell.font = { bold: true };
+    labelCell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false };
+    labelCell.border = {
+      top: { style: 'thin' },
+      left: { style: 'thin' },
+      bottom: { style: 'thin' },
+      right: { style: 'thin' }
+    };
+
+    // Value cell
+    const valueCell = worksheet.getCell(`B${rowNum}`);
+    valueCell.value = item.value;
+    valueCell.alignment = { horizontal: 'right', vertical: 'middle' };
+    valueCell.border = {
+      top: { style: 'thin' },
+      left: { style: 'thin' },
+      bottom: { style: 'thin' },
+      right: { style: 'thin' }
+    };
   });
 
   worksheet.addRow([]);
@@ -644,6 +690,9 @@ export const exportSalesToExcel = async (data: SalesReportData) => {
 
   // Auto-size columns based on content
   autoSizeColumns(worksheet, startRow, 7);
+
+  // Setup page layout for printing/PDF
+  setupPageLayout(worksheet);
 
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], {
@@ -765,6 +814,9 @@ export const exportCustomerToExcel = async (data: CustomerReportData) => {
 
   // Auto-size columns
   autoSizeColumns(worksheet, 4, 7);
+
+  // Setup page layout for printing/PDF
+  setupPageLayout(worksheet);
 
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], {
@@ -908,6 +960,9 @@ export const exportStocktakingToExcel = async (data: StocktakingReportData) => {
   // Auto-size columns
   autoSizeColumns(worksheet, 4, 8);
 
+  // Setup page layout for printing/PDF
+  setupPageLayout(worksheet);
+
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -918,6 +973,15 @@ export const exportStocktakingToExcel = async (data: StocktakingReportData) => {
 export const exportRevenueProfitToExcel = async (data: RevenueProfitReportData) => {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Báo Cáo Doanh Thu - Lợi Nhuận');
+
+  // Set column widths
+  worksheet.columns = [
+    { width: 25 },  // A - Labels (wider for Vietnamese text)
+    { width: 18 },  // B - Values
+    { width: 15 },  // C
+    { width: 15 },  // D
+    { width: 15 },  // E
+  ];
 
   worksheet.mergeCells('A1:E1');
   const titleCell = worksheet.getCell('A1');
@@ -938,6 +1002,7 @@ export const exportRevenueProfitToExcel = async (data: RevenueProfitReportData) 
   const summaryTitle = worksheet.getCell('A4');
   summaryTitle.value = 'TỔNG KẾT:';
   summaryTitle.font = { bold: true, size: 12 };
+  summaryTitle.alignment = { vertical: 'middle' };
   summaryTitle.border = {
     top: { style: 'thin' },
     left: { style: 'thin' },
@@ -945,30 +1010,38 @@ export const exportRevenueProfitToExcel = async (data: RevenueProfitReportData) 
     right: { style: 'thin' }
   };
 
-  const summaryRows = [
-    ['Tổng doanh thu:', data.totalRevenue.toLocaleString('vi-VN') + 'đ'],
-    ['Tổng chi phí:', data.totalCost.toLocaleString('vi-VN') + 'đ'],
-    ['Lợi nhuận:', data.totalProfit.toLocaleString('vi-VN') + 'đ'],
-    ['Tỷ suất lợi nhuận:', data.profitMargin + '%']
+  const summaryData = [
+    { label: 'Tổng doanh thu:', value: data.totalRevenue.toLocaleString('vi-VN') + 'đ' },
+    { label: 'Tổng chi phí:', value: data.totalCost.toLocaleString('vi-VN') + 'đ' },
+    { label: 'Lợi nhuận:', value: data.totalProfit.toLocaleString('vi-VN') + 'đ' },
+    { label: 'Tỷ suất lợi nhuận:', value: data.profitMargin + '%' }
   ];
 
-  summaryRows.forEach(rowData => {
-    const row = worksheet.addRow(rowData);
-    row.eachCell((cell, colNumber) => {
-      cell.border = {
-        top: { style: 'thin' },
-        left: { style: 'thin' },
-        bottom: { style: 'thin' },
-        right: { style: 'thin' }
-      };
-      if (colNumber === 1) {
-        cell.font = { bold: true };
-        // NO wrapText for revenue-profit - single table only
-      }
-      if (colNumber === 2) {
-        cell.alignment = { horizontal: 'right', vertical: 'middle' };
-      }
-    });
+  summaryData.forEach((item, index) => {
+    const rowNum = 5 + index;
+    
+    // Label cell with full width
+    const labelCell = worksheet.getCell(`A${rowNum}`);
+    labelCell.value = item.label;
+    labelCell.font = { bold: true };
+    labelCell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: false };
+    labelCell.border = {
+      top: { style: 'thin' },
+      left: { style: 'thin' },
+      bottom: { style: 'thin' },
+      right: { style: 'thin' }
+    };
+
+    // Value cell
+    const valueCell = worksheet.getCell(`B${rowNum}`);
+    valueCell.value = item.value;
+    valueCell.alignment = { horizontal: 'right', vertical: 'middle' };
+    valueCell.border = {
+      top: { style: 'thin' },
+      left: { style: 'thin' },
+      bottom: { style: 'thin' },
+      right: { style: 'thin' }
+    };
   });
 
   worksheet.addRow([]);
@@ -1060,6 +1133,9 @@ export const exportRevenueProfitToExcel = async (data: RevenueProfitReportData) 
     // Auto-size columns
     autoSizeColumns(worksheet, 4, numColumns);
   }
+
+  // Setup page layout for printing/PDF
+  setupPageLayout(worksheet);
 
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], {

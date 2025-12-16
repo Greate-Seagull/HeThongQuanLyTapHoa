@@ -1,2 +1,1 @@
-import { Entity } from "../domain/abstracts/entity";
-export type AnyEntity = Entity<any, any>;
+export type Constructor<T> = new () => T;
