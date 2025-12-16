@@ -1,228 +1,355 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { Plus, Edit, Trash2, Search, ChevronRight } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { Plus, Edit, Trash2, Search, ChevronRight, Loader2 } from 'lucide-react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { apiClient } from '@/services/api-client'
+import { toast } from 'sonner'
 
-interface Shelf {
-  id: number;
-  name: string;
+interface Slot {
+  id: number
+  name: string
+  rackId: number
 }
 
 interface Rack {
-  id: number;
-  name: string;
-  shelfId: number;
-  shelf: Shelf;
+  id: number
+  name: string
+  shelfId: number
+  slots: Slot[]
 }
 
-interface Slot {
-  id: number;
-  name: string;
-  rackId: number;
-  rack: Rack;
+interface Shelf {
+  id: number
+  name: string
+  racks: Rack[]
 }
 
-const mockShelves: Shelf[] = [
-  { id: 1, name: 'Kệ A' },
-  { id: 2, name: 'Kệ B' },
-  { id: 3, name: 'Kệ C' },
-];
-
-const mockRacks: Rack[] = [
-  { id: 1, name: 'Ngăn 1', shelfId: 1, shelf: mockShelves[0] },
-  { id: 2, name: 'Ngăn 2', shelfId: 1, shelf: mockShelves[0] },
-  { id: 3, name: 'Ngăn 1', shelfId: 2, shelf: mockShelves[1] },
-  { id: 4, name: 'Ngăn 2', shelfId: 2, shelf: mockShelves[1] },
-];
-
-const mockSlots: Slot[] = [
-  { id: 1, name: 'Ô A', rackId: 1, rack: mockRacks[0] },
-  { id: 2, name: 'Ô B', rackId: 1, rack: mockRacks[0] },
-  { id: 3, name: 'Ô C', rackId: 1, rack: mockRacks[0] },
-  { id: 4, name: 'Ô A', rackId: 2, rack: mockRacks[1] },
-  { id: 5, name: 'Ô B', rackId: 2, rack: mockRacks[1] },
-  { id: 6, name: 'Ô A', rackId: 3, rack: mockRacks[2] },
-];
+interface ApiResponse {
+  status: string
+  data: Shelf[]
+}
 
 export function LocationManagement() {
-  const [shelves, setShelves] = useState<Shelf[]>(mockShelves);
-  const [racks, setRacks] = useState<Rack[]>(mockRacks);
-  const [slots, setSlots] = useState<Slot[]>(mockSlots);
-  const [searchTerm, setSearchTerm] = useState('');
-  
-  const [isShelfDialogOpen, setIsShelfDialogOpen] = useState(false);
-  const [isRackDialogOpen, setIsRackDialogOpen] = useState(false);
-  const [isSlotDialogOpen, setIsSlotDialogOpen] = useState(false);
-  
-  const [editingShelf, setEditingShelf] = useState<Shelf | null>(null);
-  const [editingRack, setEditingRack] = useState<Rack | null>(null);
-  const [editingSlot, setEditingSlot] = useState<Slot | null>(null);
-  
-  const [deleteConfirm, setDeleteConfirm] = useState<{ 
-    open: boolean; 
-    type: 'shelf' | 'rack' | 'slot'; 
-    id: number; 
-    name: string;
-    warning?: string;
+  const [shelves, setShelves] = useState<Shelf[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+
+  const [isShelfDialogOpen, setIsShelfDialogOpen] = useState(false)
+  const [isRackDialogOpen, setIsRackDialogOpen] = useState(false)
+  const [isSlotDialogOpen, setIsSlotDialogOpen] = useState(false)
+
+  const [editingShelf, setEditingShelf] = useState<Shelf | null>(null)
+  const [editingRack, setEditingRack] = useState<Rack | null>(null)
+  const [editingSlot, setEditingSlot] = useState<Slot | null>(null)
+
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    open: boolean
+    type: 'shelf' | 'rack' | 'slot'
+    id: number
+    name: string
+    warning?: string
   }>({
     open: false,
     type: 'shelf',
     id: 0,
     name: '',
-  });
-  
-  const [shelfFormData, setShelfFormData] = useState({ name: '' });
-  const [rackFormData, setRackFormData] = useState({ name: '', shelfId: 0 });
-  const [slotFormData, setSlotFormData] = useState({ name: '', rackId: 0 });
+  })
+
+  const [shelfFormData, setShelfFormData] = useState({ name: '' })
+  const [rackFormData, setRackFormData] = useState({ name: '', shelfId: 0 })
+  const [slotFormData, setSlotFormData] = useState({ name: '', rackId: 0 })
+
+  useEffect(() => {
+    fetchLocations()
+  }, [])
+
+  const fetchLocations = async () => {
+    try {
+      setLoading(true)
+      const response = await apiClient.get<ApiResponse>('/shelves')
+      setShelves(response)
+      setError(null)
+    } catch (err) {
+      setError('Không thể tải dữ liệu vị trí')
+      console.error('Error fetching locations:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Flatten data for easy access
+  const getAllRacks = (): Rack[] => {
+    return shelves.flatMap((shelf) => shelf.racks)
+  }
+
+  const getAllSlots = (): Slot[] => {
+    return shelves.flatMap((shelf) => shelf.racks.flatMap((rack) => rack.slots))
+  }
+
+  const getRackWithShelf = (rackId: number) => {
+    for (const shelf of shelves) {
+      const rack = shelf.racks.find((r) => r.id === rackId)
+      if (rack) return { rack, shelf }
+    }
+    return null
+  }
+
+  const getSlotWithRackAndShelf = (slotId: number) => {
+    for (const shelf of shelves) {
+      for (const rack of shelf.racks) {
+        const slot = rack.slots.find((s) => s.id === slotId)
+        if (slot) return { slot, rack, shelf }
+      }
+    }
+    return null
+  }
 
   // Shelf handlers
   const handleAddShelf = () => {
-    setEditingShelf(null);
-    setShelfFormData({ name: '' });
-    setIsShelfDialogOpen(true);
-  };
+    setEditingShelf(null)
+    setShelfFormData({ name: '' })
+    setIsShelfDialogOpen(true)
+  }
 
   const handleEditShelf = (shelf: Shelf) => {
-    setEditingShelf(shelf);
-    setShelfFormData({ name: shelf.name });
-    setIsShelfDialogOpen(true);
-  };
+    setEditingShelf(shelf)
+    setShelfFormData({ name: shelf.name })
+    setIsShelfDialogOpen(true)
+  }
 
   const handleDeleteShelf = (id: number, name: string) => {
-    setDeleteConfirm({ 
-      open: true, 
-      type: 'shelf', 
-      id, 
+    setDeleteConfirm({
+      open: true,
+      type: 'shelf',
+      id,
       name,
-      warning: 'Tất cả ngăn và ô thuộc kệ này sẽ bị xóa.'
-    });
-  };
+      warning: 'Tất cả ngăn và ô thuộc kệ này sẽ bị xóa.',
+    })
+  }
 
-  const handleDeleteRack = (id: number, name: string) => {
-    setDeleteConfirm({ 
-      open: true, 
-      type: 'rack', 
-      id, 
-      name,
-      warning: 'Tất cả ô thuộc ngăn này sẽ bị xóa.'
-    });
-  };
-
-  const handleDeleteSlot = (id: number, name: string) => {
-    setDeleteConfirm({ 
-      open: true, 
-      type: 'slot', 
-      id, 
-      name 
-    });
-  };
-
-  const confirmDelete = () => {
-    const { type, id } = deleteConfirm;
-    
-    if (type === 'shelf') {
-      setShelves(shelves.filter(shelf => shelf.id !== id));
-      const rackIds = racks.filter(r => r.shelfId === id).map(r => r.id);
-      setRacks(racks.filter(r => r.shelfId !== id));
-      setSlots(slots.filter(s => !rackIds.includes(s.rackId)));
-    } else if (type === 'rack') {
-      setRacks(racks.filter(rack => rack.id !== id));
-      setSlots(slots.filter(slot => slot.rackId !== id));
-    } else if (type === 'slot') {
-      setSlots(slots.filter(slot => slot.id !== id));
+  const handleSaveShelf = async () => {
+    try {
+      if (editingShelf) {
+        // TODO: Call PUT API
+        const data = await apiClient.put<Shelf>(`/shelves/${editingShelf.id}`, {
+          name: shelfFormData.name,
+        })
+        if (data) {
+          fetchLocations()
+        }
+        toast.success('Kệ đã được cập nhật thành công')
+      } else {
+        // TODO: Call POST API
+        const data = await apiClient.post<Shelf>('/shelves', { name: shelfFormData.name })
+        if (data) {
+          fetchLocations()
+          toast.success('Kệ đã được tạo thành công')
+        }
+      }
+      setIsShelfDialogOpen(false)
+    } catch (err) {
+      console.error('Error saving shelf:', err)
+      toast.error('Không thể lưu kệ')
     }
-  };
-
-  const handleSaveShelf = () => {
-    if (editingShelf) {
-      setShelves(shelves.map(shelf =>
-        shelf.id === editingShelf.id ? { ...shelf, name: shelfFormData.name } : shelf
-      ));
-    } else {
-      const newId = Math.max(...shelves.map(s => s.id), 0) + 1;
-      setShelves([...shelves, { id: newId, name: shelfFormData.name }]);
-    }
-    setIsShelfDialogOpen(false);
-  };
+  }
 
   // Rack handlers
   const handleAddRack = () => {
-    setEditingRack(null);
-    setRackFormData({ name: '', shelfId: shelves[0]?.id || 0 });
-    setIsRackDialogOpen(true);
-  };
+    setEditingRack(null)
+    setRackFormData({ name: '', shelfId: shelves[0]?.id || 0 })
+    setIsRackDialogOpen(true)
+  }
 
   const handleEditRack = (rack: Rack) => {
-    setEditingRack(rack);
-    setRackFormData({ name: rack.name, shelfId: rack.shelfId });
-    setIsRackDialogOpen(true);
-  };
+    setEditingRack(rack)
+    setRackFormData({ name: rack.name, shelfId: rack.shelfId })
+    setIsRackDialogOpen(true)
+  }
 
-  const handleSaveRack = () => {
-    const shelf = shelves.find(s => s.id === rackFormData.shelfId);
-    if (!shelf) return;
+  const handleDeleteRack = (id: number, name: string) => {
+    setDeleteConfirm({
+      open: true,
+      type: 'rack',
+      id,
+      name,
+      warning: 'Tất cả ô thuộc ngăn này sẽ bị xóa.',
+    })
+  }
 
-    if (editingRack) {
-      setRacks(racks.map(rack =>
-        rack.id === editingRack.id 
-          ? { ...rack, name: rackFormData.name, shelfId: rackFormData.shelfId, shelf }
-          : rack
-      ));
-    } else {
-      const newId = Math.max(...racks.map(r => r.id), 0) + 1;
-      setRacks([...racks, { id: newId, name: rackFormData.name, shelfId: rackFormData.shelfId, shelf }]);
+  const handleSaveRack = async () => {
+    try {
+      if (editingRack) {
+        const data = await apiClient.put<Rack>(`/racks/${editingRack.id}`, {
+          name: rackFormData.name,
+          shelfId: rackFormData.shelfId,
+        })
+        if (data) {
+          toast.success('Ngăn đã được cập nhật thành công')
+          fetchLocations()
+        }
+      } else {
+        const data = await apiClient.post<Rack>('/racks', {
+          name: rackFormData.name,
+          shelfId: rackFormData.shelfId,
+        })
+        if (data) {
+          toast.success('Ngăn đã được tạo thành công')
+          fetchLocations()
+        }
+      }
+      setIsRackDialogOpen(false)
+    } catch (err) {
+      console.error('Error saving rack:', err)
+      toast.error('Không thể lưu ngăn')
     }
-    setIsRackDialogOpen(false);
-  };
+  }
 
   // Slot handlers
   const handleAddSlot = () => {
-    setEditingSlot(null);
-    setSlotFormData({ name: '', rackId: racks[0]?.id || 0 });
-    setIsSlotDialogOpen(true);
-  };
+    setEditingSlot(null)
+    const allRacks = getAllRacks()
+    setSlotFormData({ name: '', rackId: allRacks[0]?.id || 0 })
+    setIsSlotDialogOpen(true)
+  }
 
-  const handleEditSlot = (slot: Slot) => {
-    setEditingSlot(slot);
-    setSlotFormData({ name: slot.name, rackId: slot.rackId });
-    setIsSlotDialogOpen(true);
-  };
+  const handleEditSlot = (slot: Slot, rackId: number) => {
+    setEditingSlot(slot)
+    setSlotFormData({ name: slot.name, rackId })
+    setIsSlotDialogOpen(true)
+  }
 
-  const handleSaveSlot = () => {
-    const rack = racks.find(r => r.id === slotFormData.rackId);
-    if (!rack) return;
+  const handleDeleteSlot = (id: number, name: string) => {
+    setDeleteConfirm({
+      open: true,
+      type: 'slot',
+      id,
+      name,
+    })
+  }
 
-    if (editingSlot) {
-      setSlots(slots.map(slot =>
-        slot.id === editingSlot.id 
-          ? { ...slot, name: slotFormData.name, rackId: slotFormData.rackId, rack }
-          : slot
-      ));
-    } else {
-      const newId = Math.max(...slots.map(s => s.id), 0) + 1;
-      setSlots([...slots, { id: newId, name: slotFormData.name, rackId: slotFormData.rackId, rack }]);
+  const handleSaveSlot = async () => {
+    try {
+      if (editingSlot) {
+        const data = await apiClient.put<Slot>(`/slots/${editingSlot.id}`, {
+          name: slotFormData.name,
+          rackId: slotFormData.rackId,
+        })
+        if (data) {
+          toast.success('Ô đã được cập nhật thành công')
+          fetchLocations()
+        }
+      } else {
+        const data = await apiClient.post<Slot>('/slots', {
+          name: slotFormData.name,
+          rackId: slotFormData.rackId,
+        })
+        if (data) {
+          toast.success('Ô đã được tạo thành công')
+          fetchLocations()
+        }
+      }
+      setIsSlotDialogOpen(false)
+    } catch (err) {
+      console.error('Error saving slot:', err)
+      toast.error('Không thể lưu ô')
     }
-    setIsSlotDialogOpen(false);
-  };
+  }
 
-  const filteredSlots = slots.filter(slot =>
-    slot.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    slot.rack.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    slot.rack.shelf.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const confirmDelete = async () => {
+    const { type, id } = deleteConfirm
+
+    try {
+      if (type === 'shelf') {
+        // TODO: Call DELETE API
+        const data = await apiClient.delete(`/shelves/${id}`)
+        if (data) {
+          toast.success('Kệ đã được xóa thành công')
+          fetchLocations()
+        }
+      } else if (type === 'rack') {
+        const data = await apiClient.delete(`/racks/${id}`)
+        if (data) {
+          toast.success('Ngăn đã được xóa thành công')
+          fetchLocations()
+        }
+      } else if (type === 'slot') {
+        const data = await apiClient.delete(`/slots/${id}`)
+        if (data) {
+          toast.success('Ô đã được xóa thành công')
+          fetchLocations()
+        }
+      }
+      setDeleteConfirm({ open: false, type: 'shelf', id: 0, name: '' })
+    } catch (err) {
+      console.error('Error deleting:', err)
+      toast.error('Không thể xóa mục này do đang được sử dụng')
+    }
+  }
+
+  const filteredSlots = getAllSlots().filter((slot) => {
+    const slotInfo = getSlotWithRackAndShelf(slot.id)
+    if (!slotInfo) return false
+
+    const searchLower = searchTerm.toLowerCase()
+    return (
+      slot.name.toLowerCase().includes(searchLower) ||
+      slotInfo.rack.name.toLowerCase().includes(searchLower) ||
+      slotInfo.shelf.name.toLowerCase().includes(searchLower)
+    )
+  })
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="py-12 text-center text-red-600">
+        {error}
+        <Button onClick={fetchLocations} className="ml-4 bg-blue-600 hover:bg-blue-700">
+          Thử lại
+        </Button>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
       {/* Kệ */}
       <Card className="border-blue-200">
         <CardHeader className="bg-blue-50">
-          <div className="flex justify-between items-center">
+          <div className="flex items-center justify-between">
             <CardTitle className="text-blue-900">Quản Lý Kệ</CardTitle>
             <Button onClick={handleAddShelf} className="bg-blue-600 hover:bg-blue-700">
               <Plus className="mr-2 h-4 w-4" />
@@ -231,40 +358,48 @@ export function LocationManagement() {
           </div>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="border border-blue-200 rounded-lg overflow-hidden">
+          <div className="overflow-hidden rounded-lg border border-blue-200">
             <Table>
               <TableHeader>
                 <TableRow className="bg-blue-50">
                   <TableHead className="text-blue-900">ID</TableHead>
                   <TableHead className="text-blue-900">Tên kệ</TableHead>
-                  <TableHead className="text-blue-900 text-right">Thao tác</TableHead>
+                  <TableHead className="text-right text-blue-900">Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {shelves.map((shelf) => (
-                  <TableRow key={shelf.id} className="hover:bg-blue-50">
-                    <TableCell>{shelf.id}</TableCell>
-                    <TableCell>{shelf.name}</TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditShelf(shelf)}
-                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteShelf(shelf.id, shelf.name)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                {shelves.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="py-8 text-center text-gray-500">
+                      Chưa có kệ nào
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  shelves.map((shelf) => (
+                    <TableRow key={shelf.id} className="hover:bg-blue-50">
+                      <TableCell>{shelf.id}</TableCell>
+                      <TableCell>{shelf.name}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditShelf(shelf)}
+                          className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteShelf(shelf.id, shelf.name)}
+                          className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
@@ -274,7 +409,7 @@ export function LocationManagement() {
       {/* Ngăn */}
       <Card className="border-blue-200">
         <CardHeader className="bg-blue-50">
-          <div className="flex justify-between items-center">
+          <div className="flex items-center justify-between">
             <CardTitle className="text-blue-900">Quản Lý Ngăn</CardTitle>
             <Button onClick={handleAddRack} className="bg-blue-600 hover:bg-blue-700">
               <Plus className="mr-2 h-4 w-4" />
@@ -283,42 +418,53 @@ export function LocationManagement() {
           </div>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="border border-blue-200 rounded-lg overflow-hidden">
+          <div className="overflow-hidden rounded-lg border border-blue-200">
             <Table>
               <TableHeader>
                 <TableRow className="bg-blue-50">
                   <TableHead className="text-blue-900">ID</TableHead>
                   <TableHead className="text-blue-900">Tên ngăn</TableHead>
                   <TableHead className="text-blue-900">Thuộc kệ</TableHead>
-                  <TableHead className="text-blue-900 text-right">Thao tác</TableHead>
+                  <TableHead className="text-right text-blue-900">Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {racks.map((rack) => (
-                  <TableRow key={rack.id} className="hover:bg-blue-50">
-                    <TableCell>{rack.id}</TableCell>
-                    <TableCell>{rack.name}</TableCell>
-                    <TableCell>{rack.shelf.name}</TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditRack(rack)}
-                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteRack(rack.id, rack.name)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                {getAllRacks().length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="py-8 text-center text-gray-500">
+                      Chưa có ngăn nào
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  getAllRacks().map((rack) => {
+                    const shelf = shelves.find((s) => s.id === rack.shelfId)
+                    return (
+                      <TableRow key={rack.id} className="hover:bg-blue-50">
+                        <TableCell>{rack.id}</TableCell>
+                        <TableCell>{rack.name}</TableCell>
+                        <TableCell>{shelf?.name || '-'}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditRack(rack)}
+                            className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteRack(rack.id, rack.name)}
+                            className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })
+                )}
               </TableBody>
             </Table>
           </div>
@@ -328,7 +474,7 @@ export function LocationManagement() {
       {/* Ô */}
       <Card className="border-blue-200">
         <CardHeader className="bg-blue-50">
-          <div className="flex justify-between items-center">
+          <div className="flex items-center justify-between">
             <CardTitle className="text-blue-900">Quản Lý Ô</CardTitle>
             <Button onClick={handleAddSlot} className="bg-blue-600 hover:bg-blue-700">
               <Plus className="mr-2 h-4 w-4" />
@@ -337,8 +483,8 @@ export function LocationManagement() {
           </div>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex gap-2 flex-1 max-w-md">
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex max-w-md flex-1 gap-2">
               <Input
                 placeholder="Tìm kiếm ô..."
                 value={searchTerm}
@@ -351,48 +497,61 @@ export function LocationManagement() {
             </div>
           </div>
 
-          <div className="border border-blue-200 rounded-lg overflow-hidden">
+          <div className="overflow-hidden rounded-lg border border-blue-200">
             <Table>
               <TableHeader>
                 <TableRow className="bg-blue-50">
                   <TableHead className="text-blue-900">ID</TableHead>
                   <TableHead className="text-blue-900">Tên ô</TableHead>
                   <TableHead className="text-blue-900">Vị trí</TableHead>
-                  <TableHead className="text-blue-900 text-right">Thao tác</TableHead>
+                  <TableHead className="text-right text-blue-900">Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredSlots.map((slot) => (
-                  <TableRow key={slot.id} className="hover:bg-blue-50">
-                    <TableCell>{slot.id}</TableCell>
-                    <TableCell>{slot.name}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 text-sm">
-                        <span className="text-gray-600">{slot.rack.shelf.name}</span>
-                        <ChevronRight className="h-3 w-3 text-gray-400" />
-                        <span className="text-gray-600">{slot.rack.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditSlot(slot)}
-                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteSlot(slot.id, slot.name)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                {filteredSlots.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="py-8 text-center text-gray-500">
+                      Không tìm thấy ô
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  filteredSlots.map((slot) => {
+                    const slotInfo = getSlotWithRackAndShelf(slot.id)
+                    if (!slotInfo) return null
+
+                    return (
+                      <TableRow key={slot.id} className="hover:bg-blue-50">
+                        <TableCell>{slot.id}</TableCell>
+                        <TableCell>{slot.name}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1 text-sm">
+                            <span className="text-gray-600">{slotInfo.shelf.name}</span>
+                            <ChevronRight className="h-3 w-3 text-gray-400" />
+                            <span className="text-gray-600">{slotInfo.rack.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditSlot(slot, slotInfo.rack.id)}
+                            className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteSlot(slot.id, slot.name)}
+                            className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })
+                )}
               </TableBody>
             </Table>
           </div>
@@ -422,7 +581,11 @@ export function LocationManagement() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsShelfDialogOpen(false)} className="border-blue-200">
+            <Button
+              variant="outline"
+              onClick={() => setIsShelfDialogOpen(false)}
+              className="border-blue-200"
+            >
               Hủy
             </Button>
             <Button onClick={handleSaveShelf} className="bg-blue-600 hover:bg-blue-700">
@@ -457,7 +620,9 @@ export function LocationManagement() {
               <Label htmlFor="shelfId">Thuộc kệ</Label>
               <Select
                 value={rackFormData.shelfId.toString()}
-                onValueChange={(value) => setRackFormData({ ...rackFormData, shelfId: parseInt(value) })}
+                onValueChange={(value) =>
+                  setRackFormData({ ...rackFormData, shelfId: parseInt(value) })
+                }
               >
                 <SelectTrigger className="border-blue-200">
                   <SelectValue />
@@ -473,7 +638,11 @@ export function LocationManagement() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRackDialogOpen(false)} className="border-blue-200">
+            <Button
+              variant="outline"
+              onClick={() => setIsRackDialogOpen(false)}
+              className="border-blue-200"
+            >
               Hủy
             </Button>
             <Button onClick={handleSaveRack} className="bg-blue-600 hover:bg-blue-700">
@@ -508,23 +677,32 @@ export function LocationManagement() {
               <Label htmlFor="rackId">Thuộc ngăn</Label>
               <Select
                 value={slotFormData.rackId.toString()}
-                onValueChange={(value) => setSlotFormData({ ...slotFormData, rackId: parseInt(value) })}
+                onValueChange={(value) =>
+                  setSlotFormData({ ...slotFormData, rackId: parseInt(value) })
+                }
               >
                 <SelectTrigger className="border-blue-200">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {racks.map((rack) => (
-                    <SelectItem key={rack.id} value={rack.id.toString()}>
-                      {rack.shelf.name} - {rack.name}
-                    </SelectItem>
-                  ))}
+                  {getAllRacks().map((rack) => {
+                    const shelf = shelves.find((s) => s.id === rack.shelfId)
+                    return (
+                      <SelectItem key={rack.id} value={rack.id.toString()}>
+                        {shelf?.name} - {rack.name}
+                      </SelectItem>
+                    )
+                  })}
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsSlotDialogOpen(false)} className="border-blue-200">
+            <Button
+              variant="outline"
+              onClick={() => setIsSlotDialogOpen(false)}
+              className="border-blue-200"
+            >
               Hủy
             </Button>
             <Button onClick={handleSaveSlot} className="bg-blue-600 hover:bg-blue-700">
@@ -536,10 +714,12 @@ export function LocationManagement() {
 
       <ConfirmDialog
         open={deleteConfirm.open}
-        onOpenChange={(open) => !open && setDeleteConfirm({ open: false, type: 'shelf', id: 0, name: '' })}
+        onOpenChange={(open) =>
+          !open && setDeleteConfirm({ open: false, type: 'shelf', id: 0, name: '' })
+        }
         title={`Xóa ${deleteConfirm.type === 'shelf' ? 'kệ' : deleteConfirm.type === 'rack' ? 'ngăn' : 'ô'} "${deleteConfirm.name}"?`}
         description={
-          deleteConfirm.warning 
+          deleteConfirm.warning
             ? `Bạn có chắc chắn muốn xóa? ${deleteConfirm.warning}`
             : `Bạn có chắc chắn muốn xóa ${deleteConfirm.type === 'shelf' ? 'kệ' : deleteConfirm.type === 'rack' ? 'ngăn' : 'ô'} này?`
         }
@@ -547,5 +727,5 @@ export function LocationManagement() {
         variant="destructive"
       />
     </div>
-  );
+  )
 }

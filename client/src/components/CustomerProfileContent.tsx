@@ -1,0 +1,596 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import {
+  User,
+  Phone,
+  Save,
+  Edit,
+  X,
+  Shield,
+  Briefcase,
+  Award,
+  KeyRound,
+  Lock,
+  Loader2,
+} from 'lucide-react'
+import { apiClient } from '@/services/api-client'
+import { toast } from 'sonner'
+
+enum EmployeePosition {
+  SALES = 'SALES',
+  INVENTORY = 'INVENTORY',
+  RECEIVING = 'RECEIVING',
+  MANAGER = 'MANAGER',
+  CUSTOMER = 'CUSTOMER',
+}
+
+// Account structure từ API
+interface AccountResponse {
+  id: number
+  phoneNumber: string
+  user: {
+    id: number
+    name: string
+    point: number
+  }
+}
+
+// Employee Account structure (nếu có)
+interface EmployeeAccountResponse {
+  id: number
+  username: string
+  position: EmployeePosition
+  user: {
+    id: number
+    name: string
+  }
+}
+
+interface UserProfile {
+  id: number
+  name: string
+  username?: string
+  position?: EmployeePosition
+  phoneNumber?: string
+  point?: number
+  type: 'EMPLOYEE' | 'CUSTOMER'
+}
+
+export function CustomerProfileContent() {
+  const [user, setUser] = useState<UserProfile | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isEditing, setIsEditing] = useState(false)
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
+
+  const [formData, setFormData] = useState({
+    id: 0,
+    name: '',
+    username: '',
+    phoneNumber: '',
+  })
+
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  })
+
+  // Fetch user profile from API
+  useEffect(() => {
+    fetchProfile()
+  }, [])
+
+  const fetchProfile = async () => {
+    setIsLoading(true)
+    try {
+      // Gọi API profile - API sẽ tự động xác định employee hay customer dựa trên token
+      const response = await apiClient.get<AccountResponse>('/accounts/profile')
+
+      console.log('Profile response:', response)
+
+      // Map response to UserProfile
+      const mappedUser: UserProfile = {
+        id: response.id,
+        name: response.user.name,
+        phoneNumber: response.phoneNumber,
+        point: response.user.point,
+        type: 'CUSTOMER', // Từ response structure này là customer
+      }
+
+      setUser(mappedUser)
+      setFormData({
+        id: response.id,
+        name: response.user.name,
+        username: '',
+        phoneNumber: response.phoneNumber,
+      })
+    } catch (error: any) {
+      console.error('Error fetching profile:', error)
+
+      // Nếu lỗi 401/403, có thể token hết hạn
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        toast.error('Phiên đăng nhập đã hết hạn')
+        // Redirect to login sẽ được xử lý bởi apiClient
+      } else {
+        toast.error('Không thể tải thông tin người dùng')
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSave = async () => {
+    // Validation
+    if (!formData.name.trim()) {
+      toast.error('Vui lòng nhập họ và tên')
+      return
+    }
+
+    try {
+      // TODO: Thay đổi endpoint phù hợp với API của bạn
+      const response = await apiClient.put<AccountResponse>('/accounts/profile', {
+        name: formData.name,
+        // phoneNumber thường không cho sửa vì là identifier
+      })
+
+      // Update user state with new data
+      const mappedUser: UserProfile = {
+        id: response.id,
+        name: response.user.name,
+        phoneNumber: response.phoneNumber,
+        point: response.user.point,
+        type: 'CUSTOMER',
+      }
+
+      setUser(mappedUser)
+      setFormData({
+        id: response.id,
+        name: response.user.name,
+        username: '',
+        phoneNumber: response.phoneNumber,
+      })
+
+      setIsEditing(false)
+      toast.success('Cập nhật thông tin thành công!')
+    } catch (error) {
+      console.error('Error updating profile:', error)
+      toast.error('Có lỗi xảy ra, vui lòng thử lại')
+    }
+  }
+
+  const handleCancel = () => {
+    if (user) {
+      setFormData({
+        id: user.id,
+        name: user.name,
+        username: user.username || '',
+        phoneNumber: user.phoneNumber || '',
+      })
+    }
+    setIsEditing(false)
+  }
+
+  const handleChangePassword = async () => {
+    // Validation
+    if (!passwordData.currentPassword.trim()) {
+      toast.error('Vui lòng nhập mật khẩu hiện tại')
+      return
+    }
+
+    if (!passwordData.newPassword.trim()) {
+      toast.error('Vui lòng nhập mật khẩu mới')
+      return
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      toast.error('Mật khẩu mới phải có tối thiểu 6 ký tự')
+      return
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error('Mật khẩu xác nhận không khớp')
+      return
+    }
+
+    if (passwordData.currentPassword === passwordData.newPassword) {
+      toast.error('Mật khẩu mới phải khác mật khẩu hiện tại')
+      return
+    }
+
+    try {
+      // TODO: Cập nhật endpoint change password
+      await apiClient.post('/accounts/change-password', {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      })
+
+      toast.success('Đổi mật khẩu thành công!')
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      })
+      setIsChangePasswordOpen(false)
+    } catch (error: any) {
+      console.error('Error changing password:', error)
+      if (error.response?.status === 400) {
+        toast.error('Mật khẩu hiện tại không đúng')
+      } else {
+        toast.error('Có lỗi xảy ra, vui lòng thử lại')
+      }
+    }
+  }
+
+  const handleClosePasswordDialog = () => {
+    setPasswordData({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    })
+    setIsChangePasswordOpen(false)
+  }
+
+  const getPositionLabel = (position?: string) => {
+    if (!position) return 'Khách hàng thân thiết'
+    switch (position) {
+      case EmployeePosition.INVENTORY:
+        return 'Nhân viên kiểm kê'
+      case EmployeePosition.RECEIVING:
+        return 'Nhân viên nhập hàng'
+      case EmployeePosition.SALES:
+        return 'Nhân viên hóa đơn'
+      case EmployeePosition.MANAGER:
+        return 'Quản lý'
+      default:
+        return position
+    }
+  }
+
+  const getPositionColor = (position?: string) => {
+    if (!position) return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+    switch (position) {
+      case EmployeePosition.MANAGER:
+        return 'bg-purple-100 text-purple-800 border-purple-200'
+      case EmployeePosition.SALES:
+        return 'bg-blue-100 text-blue-800 border-blue-200'
+      case EmployeePosition.INVENTORY:
+        return 'bg-green-100 text-green-800 border-green-200'
+      case EmployeePosition.RECEIVING:
+        return 'bg-orange-100 text-orange-800 border-orange-200'
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200'
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-white">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-white">
+        <Card className="p-6">
+          <p className="text-gray-600">Không thể tải thông tin người dùng</p>
+          <Button onClick={fetchProfile} className="mt-4">
+            Thử lại
+          </Button>
+        </Card>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white p-6">
+      <div className="mx-auto max-w-5xl">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="mb-2 text-3xl font-bold text-gray-900">Thông tin cá nhân</h1>
+          <p className="text-gray-600">Quản lý thông tin tài khoản của bạn</p>
+        </div>
+
+        {/* Main Content */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {/* Cột trái - Avatar */}
+          <div className="lg:col-span-1">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-center">Hồ sơ</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col items-center space-y-4">
+                <div className="relative">
+                  <div className="flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-white shadow-lg">
+                    <User className="h-16 w-16" />
+                  </div>
+                  <div
+                    className={`absolute bottom-0 right-0 flex h-10 w-10 items-center justify-center rounded-full border-4 border-white ${
+                      user.type === 'CUSTOMER'
+                        ? 'bg-yellow-500'
+                        : user.position === EmployeePosition.MANAGER
+                          ? 'bg-purple-500'
+                          : 'bg-blue-500'
+                    }`}
+                  >
+                    {user.type === 'CUSTOMER' ? (
+                      <Award className="h-5 w-5 text-white" />
+                    ) : user.position === EmployeePosition.MANAGER ? (
+                      <Shield className="h-5 w-5 text-white" />
+                    ) : (
+                      <Briefcase className="h-5 w-5 text-white" />
+                    )}
+                  </div>
+                </div>
+
+                <div className="text-center">
+                  <h3 className="mb-1 text-xl font-semibold text-gray-900">{user.name}</h3>
+                  <div
+                    className={`inline-flex items-center rounded-full border px-3 py-1 ${getPositionColor(user.position)}`}
+                  >
+                    <span className="text-sm font-medium">{getPositionLabel(user.position)}</span>
+                  </div>
+                </div>
+
+                <div className="w-full space-y-3 border-t border-gray-200 pt-4">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Mã ID:</span>
+                    <span className="font-medium text-gray-900">#{user.id}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">
+                      {user.type === 'CUSTOMER' ? 'SĐT:' : 'Username:'}
+                    </span>
+                    <span className="font-medium text-gray-900">
+                      {user.type === 'CUSTOMER' ? user.phoneNumber : user.username}
+                    </span>
+                  </div>
+                  {user.type === 'CUSTOMER' && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Điểm tích lũy:</span>
+                      <span className="font-bold text-blue-600">{user.point} điểm</span>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Cột phải - Form */}
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Thông tin chi tiết</CardTitle>
+                    <CardDescription>
+                      {isEditing ? 'Chỉnh sửa thông tin cá nhân' : 'Xem thông tin tài khoản'}
+                    </CardDescription>
+                  </div>
+                  {!isEditing && (
+                    <Button
+                      onClick={() => setIsEditing(true)}
+                      variant="outline"
+                      size="sm"
+                      className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                    >
+                      <Edit className="mr-2 h-4 w-4" />
+                      Chỉnh sửa
+                    </Button>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {/* Họ và tên */}
+                  <div className="space-y-2">
+                    <Label htmlFor="name" className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-gray-500" />
+                      Họ và tên
+                    </Label>
+                    {isEditing ? (
+                      <Input
+                        id="name"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        placeholder="Nhập họ và tên"
+                      />
+                    ) : (
+                      <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900">
+                        {formData.name}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Username hoặc Số điện thoại */}
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor={user.type === 'CUSTOMER' ? 'phoneNumber' : 'username'}
+                      className="flex items-center gap-2"
+                    >
+                      {user.type === 'CUSTOMER' ? (
+                        <Phone className="h-4 w-4 text-gray-500" />
+                      ) : (
+                        <KeyRound className="h-4 w-4 text-gray-500" />
+                      )}
+                      {user.type === 'CUSTOMER' ? 'Số điện thoại' : 'Tên đăng nhập'}
+                    </Label>
+                    <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900">
+                      {user.type === 'CUSTOMER' ? formData.phoneNumber : formData.username}
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      {user.type === 'CUSTOMER'
+                        ? 'Số điện thoại không thể thay đổi'
+                        : 'Tên đăng nhập không thể thay đổi'}
+                    </p>
+                  </div>
+
+                  {/* Chức vụ - Read only */}
+                  {user.type === 'EMPLOYEE' && (
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2">
+                        <Briefcase className="h-4 w-4 text-gray-500" />
+                        Chức vụ
+                      </Label>
+                      <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900">
+                        {getPositionLabel(user.position)}
+                      </div>
+                      <p className="text-xs text-gray-500">Chức vụ không thể thay đổi</p>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  {isEditing && (
+                    <div className="flex gap-3 border-t border-gray-200 pt-4">
+                      <Button onClick={handleSave} className="flex-1 bg-blue-600 hover:bg-blue-700">
+                        <Save className="mr-2 h-4 w-4" />
+                        Lưu thay đổi
+                      </Button>
+                      <Button
+                        onClick={handleCancel}
+                        variant="outline"
+                        className="flex-1 border-gray-300 hover:bg-gray-50"
+                      >
+                        <X className="mr-2 h-4 w-4" />
+                        Hủy
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Bảo mật */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Bảo mật tài khoản</CardTitle>
+                <CardDescription>Quản lý mật khẩu và bảo mật</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-4">
+                    <div>
+                      <p className="font-medium text-gray-900">Mật khẩu</p>
+                      <p className="text-sm text-gray-500">
+                        Đổi mật khẩu định kỳ để bảo mật tài khoản
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsChangePasswordOpen(true)}
+                      className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                    >
+                      <KeyRound className="mr-2 h-4 w-4" />
+                      Đổi mật khẩu
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      {/* Dialog đổi mật khẩu */}
+      <Dialog open={isChangePasswordOpen} onOpenChange={handleClosePasswordDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-blue-900">
+              <Lock className="h-5 w-5" />
+              Đổi mật khẩu
+            </DialogTitle>
+            <DialogDescription>
+              Nhập mật khẩu hiện tại và mật khẩu mới. Mật khẩu phải có tối thiểu 6 ký tự.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="currentPassword">Mật khẩu hiện tại</Label>
+              <Input
+                id="currentPassword"
+                type="password"
+                placeholder="Nhập mật khẩu hiện tại"
+                value={passwordData.currentPassword}
+                onChange={(e) =>
+                  setPasswordData({ ...passwordData, currentPassword: e.target.value })
+                }
+                className="border-blue-200 focus:border-blue-600"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">Mật khẩu mới</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)"
+                value={passwordData.newPassword}
+                onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                className="border-blue-200 focus:border-blue-600"
+              />
+              {passwordData.newPassword && passwordData.newPassword.length < 6 && (
+                <p className="text-xs text-red-600">Mật khẩu phải có tối thiểu 6 ký tự</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Xác nhận mật khẩu mới</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="Nhập lại mật khẩu mới"
+                value={passwordData.confirmPassword}
+                onChange={(e) =>
+                  setPasswordData({ ...passwordData, confirmPassword: e.target.value })
+                }
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleChangePassword()
+                  }
+                }}
+                className="border-blue-200 focus:border-blue-600"
+              />
+              {passwordData.confirmPassword &&
+                passwordData.newPassword !== passwordData.confirmPassword && (
+                  <p className="text-xs text-red-600">Mật khẩu xác nhận không khớp</p>
+                )}
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={handleClosePasswordDialog}
+              className="border-gray-300 hover:bg-gray-50"
+            >
+              Hủy
+            </Button>
+            <Button
+              onClick={handleChangePassword}
+              className="bg-blue-600 text-white hover:bg-blue-700"
+            >
+              <Save className="mr-2 h-4 w-4" />
+              Lưu mật khẩu
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
