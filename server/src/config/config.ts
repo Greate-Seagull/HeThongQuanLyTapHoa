@@ -1,4 +1,3 @@
-import { hash } from "bcrypt";
 import "dotenv/config";
 
 export const config = {
