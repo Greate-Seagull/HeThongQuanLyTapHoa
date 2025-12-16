@@ -3,20 +3,16 @@ import {
 	LineItems,
 	ProcessedLineItem,
 	processedLineItemSchema,
-} from "../../application/services/invoice/create-invoice.usecase";
-import { Product, ProductId } from "../entities/product";
-import { Promotion, PromotionId } from "../entities/promotion";
-import { User } from "../entities/user";
+} from "../../application/invoice/create-invoice.usecase";
+import { Product, ProductId } from "../product";
+import { Promotion, PromotionId } from "../promotion";
+import { User } from "../user";
 
 export class SalesTransactionService {
 	processSale(input: ProcessInvoiceInput): ProcessedInvoiceOutput {
 		const productMap = new Map(input.products.map((p) => [p.id, p]));
 		const promotionMap = new Map(input.promotions.map((p) => [p.id, p]));
-		const items = computeItemSnapshot(
-			productMap,
-			promotionMap,
-			input.items
-		);
+		const items = computeItemSnapshot(productMap, promotionMap, input.items);
 		let total = computeTotal(items);
 		total = applyUsedPoints(input.user, input.usedPoint, total);
 		reduceStocks(productMap, input.items);

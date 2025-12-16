@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { Constructor } from "zod/v4/core/util.cjs";
 
 /**
  * Recursively build a Prisma `select` object from a Zod schema.
@@ -53,22 +52,19 @@ export function buildPrismaSelectFromDecorator(cls: any) {
 	return { select };
 }
 
-export function buildSafePrismaSelect<T>(cls: Constructor<T>): {
-	select: object;
-} {
-	if (!cls) return null;
-
+export function buildSafePrismaSelect(cls: any): { select: object } {
 	const instance = cls.prototype;
+	if (!instance) return null;
 	const readable = instance.__readable;
 	if (!readable || readable.length === 0) return null;
 
-	const relations = instance.__relations || {};
+	const types = instance.__typeMap;
+	if (!types) return null;
 
 	const select = {};
 	for (const key of readable) {
-		const subSelect = buildSafePrismaSelect(relations[key]);
+		const subSelect = buildSafePrismaSelect(types[key]);
 		select[key] = subSelect || true;
 	}
-
 	return { select };
 }

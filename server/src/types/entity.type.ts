@@ -1,1 +1,2 @@
-export type Constructor<T> = new () => T;
+import { Entity } from "../domain/abstracts/entity";
+export type AnyEntity = Entity<any, any>;
