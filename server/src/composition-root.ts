@@ -1,8 +1,8 @@
+import { ChangeManagerPasswordUsecase } from "./application/services/employee-account/change-manager-password.usecase";
+import { ChangeCustomerPasswordUsecase } from "./application/services/customer-account/change-customer-password.usecase";
 import { config } from "./config/config";
 import { PrismaClient } from "./generated/client";
-
 import { PrismaTransactionManager } from "./infrastructure/transaction";
-
 import { userDtoSchema } from "./application/DTOs/user.dto";
 import { accountDtoSchema } from "./application/DTOs/account.dto";
 import { employeeDtoSchema } from "./application/DTOs/employee.dto";
@@ -202,6 +202,7 @@ export const deleteEmployeeAccountUsecase = new DeleteEmployeeAccountUsecase(
   transactionManager
 );
 
+
 export const getEmployeeAccountProfileUsecase =
   new GetEmployeeAccountProfileUsecase(
     employeeAccountRepo,
@@ -348,6 +349,17 @@ export const updatePromotionUsecase = new UpdatePromotionUsecase(
   promotionRepo
 );
 export const deletePromotionUsecase = new DeletePromotionUsecase(promotionRepo);
+
 export const getMyInvoicesUsecase = new GetMyInvoicesUsecase(
   invoiceReadAccessor
+);
+
+export const changeCustomerPasswordUsecase = new ChangeCustomerPasswordUsecase(
+  transactionManager,
+  passwordService
+);
+
+export const changeManagerPasswordUsecase = new ChangeManagerPasswordUsecase(
+  transactionManager,
+  passwordService
 );
