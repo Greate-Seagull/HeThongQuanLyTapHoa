@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button'
 import { Award, Star, Receipt, Eye, ShoppingCart, Loader2 } from 'lucide-react'
 import { useAuthStore } from '@/store/auth-store'
 import { useRouter } from 'next/navigation'
-import { CustomerProfileContent } from '@/components/CustomerProfileContent'
 import { apiClient } from '@/services/api-client'
 
 // API Response Types
@@ -270,7 +269,7 @@ export default function CustomerDashboardPage() {
       )}
 
       {activeMenu === 'profile' && customerProfile && (
-        <CustomerProfileContent
+        <ProfilePage
           user={{
             id: user?.customerId || 1,
             name: customerProfile.name || 'Khách hàng',

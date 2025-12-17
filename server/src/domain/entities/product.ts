@@ -1,165 +1,123 @@
+import { Read, Required, Relation, Write } from "../../types/decorators";
 import { BaseEntity } from "../abstracts/entity";
-import { Optional, Read, Required, Type, Write } from "../../types/decorators";
-import { create } from "../services/factory.service";
 
 export type ProductId = number | null;
 export type ProductBarcode = number | null;
 
 export enum ProductUnit {
-  PIECE = "PIECE", // Cái, chiếc (xà phòng, kem đánh răng, v.v.)
-  BOX = "BOX", // Hộp (sữa hộp, snack hộp)
-  BOTTLE = "BOTTLE", // Chai (nước ngọt, dầu gội, nước suối)
-  CAN = "CAN", // Lon (bia, nước ngọt lon)
-  PACKAGE = "PACKAGE", // Gói (mì gói, snack gói)
-  BAG = "BAG", // Túi, bao (gạo, đường)
-  KG = "KG", // Kilogram (trái cây, thịt, cá)
-  GRAM = "GRAM", // Gram (gia vị, bánh kẹo lẻ)
-  LITER = "LITER", // Lít (dầu ăn, nước mắm)
-  ML = "ML", // Milliliter (sữa chua uống nhỏ)
+	PIECE = "PIECE", // Cái, chiếc (xà phòng, kem đánh răng, v.v.)
+	BOX = "BOX", // Hộp (sữa hộp, snack hộp)
+	BOTTLE = "BOTTLE", // Chai (nước ngọt, dầu gội, nước suối)
+	CAN = "CAN", // Lon (bia, nước ngọt lon)
+	PACKAGE = "PACKAGE", // Gói (mì gói, snack gói)
+	BAG = "BAG", // Túi, bao (gạo, đường)
+	KG = "KG", // Kilogram (trái cây, thịt, cá)
+	GRAM = "GRAM", // Gram (gia vị, bánh kẹo lẻ)
+	LITER = "LITER", // Lít (dầu ăn, nước mắm)
+	ML = "ML", // Milliliter (sữa chua uống nhỏ)
 }
 
 export class Product extends BaseEntity<ProductId> {
-  protected _id: ProductId = null;
-  private _name: string = null;
-  private _price: number = 0;
-  private _unit: ProductUnit = ProductUnit.PIECE;
-  private _barcode: number = null;
-  private _amount: number = 0;
-  private _categoryId: number = null;
-  private _supplierId: number = null;
+	private _name: string = null;
+	private _price: number = 0;
+	private _unit: ProductUnit = ProductUnit.PIECE;
+	private _barcode: number = null;
+	private _amount: number = 0;
 
+	public static create(
+		name: string,
+		price: number,
+		unit: string,
+		barcode: number
+	) {
+		let entity = new Product();
+		entity.updateName(name);
+		entity.updatePrice(price);
+		entity.updateUnit(unit);
+		entity.updateBarcode(barcode);
+		entity.amount = 0;
+		return entity;
+	}
 
-  static create(input: any) {
-    const entity = create(Product, input);
-    if (input.amount !== undefined) entity.amount = input.amount;
-    if (input.barcode) entity.barcode = input.barcode;
-    if (input.categoryId) entity.categoryId = input.categoryId;
-    if (input.supplierId) entity.supplierId = input.supplierId;
-    return entity;
-  }
+	updateBarcode(barcode: number) {
+		this.barcode = barcode;
+	}
 
-  public update(input: any) {
-    if (input.name !== undefined) this.name = input.name;
-    if (input.price !== undefined) this.price = input.price;
-    if (input.amount !== undefined) this.amount = input.amount;
-    if (input.unit !== undefined) this.unit = input.unit;
-    if (input.barcode !== undefined) this.barcode = input.barcode;
-    if (input.categoryId !== undefined) this.categoryId = input.categoryId;
-    if (input.supplierId !== undefined) this.supplierId = input.supplierId;
-  }
+	updateUnit(unit: string) {
+		this.unit = unit as ProductUnit;
+	}
 
-  updateBarcode(barcode: number) {
-    this.barcode = barcode;
-  }
+	updatePrice(price: number) {
+		this.price = price;
+	}
 
-  updateUnit(unit: string) {
-    this.unit = unit as ProductUnit;
-  }
+	updateName(name: string) {
+		this.name = name;
+	}
 
-  updatePrice(price: number) {
-    this.price = price;
-  }
+	sellStock(quantity: number) {
+		if (quantity <= 0) throw Error(`Invalid sold quantity, ${quantity}`);
+		this.amount -= quantity;
+	}
 
-  updateName(name: string) {
-    this.name = name;
-  }
+	receiveStock(quantity: any) {
+		if (quantity <= 0)
+			throw Error(`Invalid received quantity, ${quantity}`);
+		this.amount += quantity;
+	}
 
-  sellStock(quantity: number) {
-    if (quantity <= 0) throw Error(`Invalid sold quantity, ${quantity}`);
-    this.amount -= quantity;
-  }
+	// Setters
+	private set price(value: number) {
+		if (value <= 0) throw Error(`Invalid price, ${value}`);
+		this._price = value;
+	}
+	private set amount(value: number) {
+		if (value < 0) throw Error(`Invalid quantity, ${value}`);
+		this._amount = value;
+	}
+	private set name(value: string) {
+		this._name = value;
+	}
+	private set unit(value: ProductUnit) {
+		const types = Object.values(ProductUnit);
+		if (!types.includes(value)) throw Error(`Invalid unit, ${value}`);
 
-  receiveStock(quantity: any) {
-    if (quantity <= 0) throw Error(`Invalid received quantity, ${quantity}`);
-    this.amount += quantity;
-  }
+		this._unit = value;
+	}
+	private set barcode(value: number) {
+		if (value <= 0) throw Error(`Invalid barcode, ${value}`);
+		this._barcode = value;
+	}
 
-  // Setters
-  private set price(value: number) {
-    if (value <= 0) throw Error(`Invalid price, ${value}`);
-    this._price = value;
-  }
-  private set amount(value: number) {
-    if (value < 0) throw Error(`Invalid quantity, ${value}`);
-    this._amount = value;
-  }
-  private set name(value: string) {
-    this._name = value;
-  }
-  private set unit(value: ProductUnit) {
-    const types = Object.values(ProductUnit);
-    if (!types.includes(value)) throw Error(`Invalid unit, ${value}`);
-
-    this._unit = value as ProductUnit;
-  }
-  private set barcode(value: number) {
-    if (value <= 0) throw Error(`Invalid barcode, ${value}`);
-    this._barcode = value;
-  }
-  private set categoryId(value: number) {
-    this._categoryId = value;
-  }
-  private set supplierId(value: number) {
-    this._supplierId = value;
-  }
-
-  // Getters
-  @Read
-  @Type(Number)
-  public get id(): ProductId {
-    return this._id;
-  }
-  @Read
-  @Write
-  @Required
-  @Type(Number)
-  public get price(): number {
-    return this._price;
-  }
-  @Read
-  @Write
-  @Type(Number)
-  public get amount(): number {
-    return this._amount;
-  }
-  @Read
-  @Write
-  @Required
-  @Type(String)
-  public get name(): string {
-    return this._name;
-  }
-  @Read
-  @Write
-  @Required
-  @Type(ProductUnit)
-  public get unit(): ProductUnit {
-    return this._unit;
-  }
-  @Read
-  @Write
-  @Required
-  @Type(Number)
-  public get barcode(): number {
-    return this._barcode;
-  }
-  @Read
-  @Write
-  @Optional
-  @Type(Number)
-  public get categoryId(): number {
-    return this._categoryId;
-  }
-  @Read
-  @Write
-  @Optional
-  @Type(Number)
-  public get supplierId(): number {
-    return this._supplierId;
-  }
+	// Getters
+	@Read
+	@Write
+	public get price(): number {
+		return this._price;
+	}
+	@Read
+	@Write
+	public get amount(): number {
+		return this._amount;
+	}
+	@Read
+	@Write
+	public get name(): string {
+		return this._name;
+	}
+	@Read
+	@Write
+	public get unit(): ProductUnit {
+		return this._unit;
+	}
+	@Read
+	@Write
+	public get barcode(): number {
+		return this._barcode;
+	}
 }
 
 export enum ProductStatus {
-  GOOD = "GOOD",
-  EXPIRED = "EXPIRED",
+	GOOD = "GOOD",
+	EXPIRED = "EXPIRED",
 }

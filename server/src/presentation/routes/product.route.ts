@@ -3,29 +3,19 @@ import { authenticationMiddleware } from "../middlewares/authentication.middlewa
 import { authorizationMiddleware } from "../middlewares/authorization.middleware";
 import { controller } from "../controllers/controller";
 import {
-  getProductsUsecase,
-  searchProductsUsecase,
-  updateProductsUsecase,
-  createProductUsecase,
-  updateProductUsecase,
-  deleteProductUsecase,
+	getProductsUsecase,
+	searchProductsUsecase,
+	updateProductsUsecase,
 } from "../../composition-root";
 
 const router = Router();
 router.get("/", controller(getProductsUsecase));
-router.use(authenticationMiddleware);
-
 router.get("/:productId", controller(searchProductsUsecase));
 router.put(
-  "/bulk",
-  authenticationMiddleware,
-  authorizationMiddleware("ADMIN"),
-  controller(updateProductsUsecase)
+	"/bulk",
+	authenticationMiddleware,
+	authorizationMiddleware("ADMIN"),
+	controller(updateProductsUsecase)
 );
-router.post("/", controller(createProductUsecase));
-router.put("/", controller(updateProductUsecase));
-// router.delete("/:id", controller(deleteProductUsecase));
-router.delete("/:id", (req, res) =>
-  controller(deleteProductUsecase)({ ...req, id: req.params.id }, res)
-);
+
 export default router;

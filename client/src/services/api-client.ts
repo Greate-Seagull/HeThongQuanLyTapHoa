@@ -31,9 +31,7 @@ class ApiClient {
     this.client.interceptors.response.use(
       (response) => response,
       (error) => {
-        const skipAuthRedirect = (error.config as any)?.skipAuthRedirect
-
-        if (error.response?.status === 401 && !skipAuthRedirect) {
+        if (error.response?.status === 401) {
           // Handle unauthorized access
           this.clearToken()
           if (typeof window !== 'undefined') {
