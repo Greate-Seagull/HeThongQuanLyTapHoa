@@ -33,11 +33,7 @@ export const promotion1 = {
 	endedAt: new Date(),
 	value: 0.2,
 	promotionType: "PERCENTAGE",
-	promotionDetails: {
-		create: {
-			productId: product1.id,
-		},
-	},
+	promotionDetails: { create: [ { productId: product1.id } ] },
 };
 
 export const promotion2 = {
@@ -47,11 +43,7 @@ export const promotion2 = {
 	endedAt: new Date(),
 	value: 30000,
 	promotionType: "FIXED",
-	promotionDetails: {
-		create: {
-			productId: product1.id,
-		},
-	},
+	promotionDetails: { create: [ { productId: product1.id } ] },
 };
 
 export const item1 = {

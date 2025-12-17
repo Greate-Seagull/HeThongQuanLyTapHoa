@@ -119,15 +119,15 @@ export class Promotion extends BaseEntity<PromotionId> {
 	}
 
 	public applyDiscount(product: Product): number {
-		const searchedDetails = this._promotionDetails.filter(
-			(pd) => pd.productId == product.id
-		);
-		if (searchedDetails.length != 1)
-			throw Error(
-				`The promotion ${this._id} cannot apply to the product ${product.id}`
-			);
-
-		return product.price - this.calculateDiscount(product.price);
+		   if (!product) throw Error(`Invalid product for promotion`);
+		   const searchedDetails = this._promotionDetails.filter(
+			   (pd) => pd.productId == product.id
+		   );
+		   if (searchedDetails.length != 1)
+			   throw Error(
+				   `The promotion ${this._id} cannot apply to the product ${product ? product.id : 'null'}`
+			   );
+		   return product.price - this.calculateDiscount(product.price);
 	}
 
 	// Setters

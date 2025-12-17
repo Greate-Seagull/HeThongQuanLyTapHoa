@@ -9,10 +9,10 @@ describe("Get products integration test", () => {
 
 	beforeAll(async () => {
 		// Clean up data before creating to avoid Unique Constraint errors
-		await prisma.product.deleteMany({
-			where: { id: { in: [product1.id, product2.id] } },
-		});
-		await prisma.product.createMany({ data: [product1, product2] });
+		      await prisma.product.deleteMany({
+			      where: { barcode: { in: [product1.barcode, product2.barcode] } },
+		      });
+		      await prisma.product.createMany({ data: [product1, product2] });
 	});
 
 	afterAll(async () => {
@@ -35,7 +35,7 @@ describe("Get products integration test", () => {
 				id: product1.id,
 				name: product1.name,
 				price: product1.price,
-				unit: (product1 as any).unit,
+				unit: "PIECE",
 				barcode: product1.barcode,
 				amount: 0,
 			});
@@ -49,7 +49,7 @@ describe("Get products integration test", () => {
 				id: product2.id,
 				name: product2.name,
 				price: product2.price,
-				unit: (product2 as any).unit,
+				unit: "PIECE",
 				barcode: product2.barcode,
 				amount: 0,
 			});

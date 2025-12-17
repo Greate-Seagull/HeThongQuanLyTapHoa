@@ -64,10 +64,14 @@ export class CreateGoodReceiptUsecase {
 			employeeId: employee.id,
 		});
 
-		const productMap = new Map(products.map((p) => [p.id, p]));
-		for (const item of input.items) {
-			productMap.get(item.productId).receiveStock(item.quantity);
-		}
+		   const productMap = new Map(products.map((p) => [p.id, p]));
+		   for (const item of input.items) {
+			   const product = productMap.get(item.productId);
+			   if (!product) {
+				   throw Error(`Invalid product id, ${item.productId}`);
+			   }
+			   product.receiveStock(item.quantity);
+		   }
 
 		const goodReceipt = GoodReceipt.create(
 			parsedInput.authId,

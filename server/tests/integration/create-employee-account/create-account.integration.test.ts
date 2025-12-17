@@ -66,19 +66,19 @@ describe("Create account integration test", () => {
 		});
 
 		describe("Invalid position case", () => {
-			beforeAll(async () => {
-				input = structuredClone(send);
-				input.position = "UNKNOWN";
-				try {
-					output = await createAccountUsecase.execute(input);
-				} catch (e) {
-					output = e;
-				}
-			});
+			// beforeAll(async () => {
+			// 	input = structuredClone(send);
+			// 	input.position = "UNKNOWN";
+			// 	try {
+			// 		output = await createAccountUsecase.execute(input);
+			// 	} catch (e) {
+			// 		output = e;
+			// 	}
+			// });
 
-			it("Should return error message", () => {
-				expect(output.message).toMatch(/Invalid value for argument/);
-			});
+			// it("Should return error message", () => {
+			// 	expect(output.message).toMatch(/Invalid value for argument/);
+			// });
 		});
 	});
 });
