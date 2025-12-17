@@ -1,26 +1,15 @@
-import { PrismaClient } from "@prisma/client";
+import { ShelfReadAccessor } from "../../../application/services/read-accessors/shelf.read-accessor";
+import { PrismaReadAccessor } from "./prisma.read-accessor";
 
-export class ShelfReadAccessor {
-	constructor(private readonly prisma: PrismaClient) {}
-
-	async getAll() {
-		return await this.prisma.shelf.findMany({
-			include: {
-				racks: {
-					include: {
-						slots: true,
-					},
-				},
-			},
+export class ShelfPrismaReadAccessor
+	extends PrismaReadAccessor
+	implements ShelfReadAccessor
+{
+	async existSlotByIds(ids: number[]): Promise<boolean> {
+		const count = await this.client.slot.count({
+			where: { id: { in: ids } },
 		});
-	}
 
-	async existSlotByIds(ids: number[]) {
-		const count = await this.prisma.slot.count({
-			where: {
-				id: { in: ids },
-			},
-		});
 		return count === ids.length;
 	}
 }

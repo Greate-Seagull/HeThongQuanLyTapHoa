@@ -1,4 +1,4 @@
-import { Read, Write } from "../../types/decorators";
+import { Read, Required, Relation, Write } from "../../types/decorators";
 import { BaseEntity } from "../abstracts/entity";
 import { UserId } from "./user";
 

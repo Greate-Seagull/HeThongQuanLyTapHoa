@@ -73,24 +73,6 @@ export class Promotion extends BaseEntity<PromotionId> {
 		return entity;
 	}
 
-	public update(input: any) {
-		if (input.name !== undefined) this.name = input.name;
-		if (input.description !== undefined) this.description = input.description;
-		if (input.condition !== undefined) this.condition = input.condition;
-		if (input.value !== undefined) this.value = input.value;
-		if (input.promotionType !== undefined) this.promotionType = input.promotionType;
-
-		if (input.startedAt !== undefined || input.endedAt !== undefined) {
-			const start = input.startedAt !== undefined ? input.startedAt : this.startedAt;
-			const end = input.endedAt !== undefined ? input.endedAt : this.endedAt;
-			this.updateDates(start, end);
-		}
-
-		if (input.promotionDetails !== undefined) {
-			this.promotionDetails = input.promotionDetails.map((d: any) => PromotionDetail.create(d.productId));
-		}
-	}
-
 	private updateDates(startedAt: Date, endedAt: Date) {
 		if (startedAt >= endedAt)
 			throw Error(
@@ -164,6 +146,8 @@ export class Promotion extends BaseEntity<PromotionId> {
 	}
 
 	private set promotionDetails(value: PromotionDetail[]) {
+		if (value.length < 1)
+			throw Error(`Expect promotion to have at least one product Id`);
 		this._promotionDetails = value;
 	}
 

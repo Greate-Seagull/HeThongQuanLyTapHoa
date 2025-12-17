@@ -9,7 +9,7 @@ import { logger, maskPhone } from "../../../domain/services/logger.service";
 import { UserRepository } from "../../repositories/user.repository";
 import { TransactionManager } from "../../transactions/base.transaction";
 import { AccountRepository } from "../../repositories/account.repository";
-import { AccountReadAccessor } from "../../../infrastructure/read-accessors/prisma/account.read-accessor";
+import { AccountPrismaReadAccessor } from "../../../infrastructure/read-accessors/prisma/account.read-accessor";
 
 const inputSchema = z.object({
 	name: z.string(),
@@ -25,7 +25,7 @@ type SignUpOutput = z.infer<typeof outputSchema>;
 
 export class SignUpUsecase {
 	constructor(
-		private readonly accountRead: AccountReadAccessor,
+		private readonly accountRead: AccountPrismaReadAccessor,
 		private readonly userRepo: UserRepository,
 		private readonly accountRepo: AccountRepository,
 		private readonly transactionMag: TransactionManager,
