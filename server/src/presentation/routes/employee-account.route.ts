@@ -12,6 +12,8 @@ import {
 } from "../../composition-root";
 const router = Router();
 
+// router.use(authenticationMiddleware);
+
 // Lấy thông tin cá nhân employee-account
 router.get("/profile", authenticationMiddleware, (req, res) => {
   const id =
@@ -19,6 +21,8 @@ router.get("/profile", authenticationMiddleware, (req, res) => {
     (req as any).user?.id ||
     req.body?.id ||
     req.query?.id;
+  console.log("Profile request for account id:", id);
+
   if (!id) return res.status(401).jsend.fail("Missing account id");
   return controller(getEmployeeAccountProfileUsecase)(
     { ...req, body: { id } },
@@ -30,28 +34,29 @@ router.get("/profile", authenticationMiddleware, (req, res) => {
 router.post("/sign-in", controller(useAccountUsecase));
 router.post(
   "/",
-  authenticationMiddleware,
-  authorizationMiddleware("MANAGER"),
+  // authenticationMiddleware,
+  // authorizationMiddleware("MANAGER"),
   controller(createAccountUsecase)
 );
 
 router.get(
   "/",
-  authenticationMiddleware,
+  // authenticationMiddleware,
   controller(getEmployeeAccountsUsecase)
 );
 
 router.put(
   "/",
-  authenticationMiddleware,
+  // authenticationMiddleware,
   controller(updateEmployeeAccountUsecase)
 );
 
 router.delete(
   "/:id",
-  authenticationMiddleware,
-  authorizationMiddleware("MANAGER"),
-  (req, res) => controller(deleteEmployeeAccountUsecase)({ ...req, id: req.params.id }, res)
+  // authenticationMiddleware,
+  // authorizationMiddleware("MANAGER"),
+  (req, res) =>
+    controller(deleteEmployeeAccountUsecase)({ ...req, id: req.params.id }, res)
 );
 
 export default router;

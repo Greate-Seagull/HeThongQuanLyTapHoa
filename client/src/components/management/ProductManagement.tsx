@@ -12,6 +12,14 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -95,6 +103,7 @@ export function ProductManagement() {
   const [searchTerm, setSearchTerm] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: number; name: string }>({
     open: false,
@@ -149,11 +158,13 @@ export function ProductManagement() {
     }
   }
 
-  const filteredProducts = products.filter(
-    (product) =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.barcode.toString().includes(searchTerm)
-  )
+  const filteredProducts = products
+    .filter(
+      (product) =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.barcode.toString().includes(searchTerm)
+    )
+    .sort((a, b) => b.id - a.id)
 
   const handleAdd = () => {
     setEditingProduct(null)
@@ -220,10 +231,11 @@ export function ProductManagement() {
       return
     }
     if (!formData.supplierId || formData.supplierId === 0) {
-      alert('Vui lòng chọn nhà cung cấp')
+      toast.error('Vui lòng chọn nhà cung cấp')
       return
     }
 
+    setIsSaving(true)
     try {
       if (editingProduct) {
         const response = await apiClient.put<Product>(`/products`, {
@@ -245,7 +257,7 @@ export function ProductManagement() {
         const response = await apiClient.post<Product>('/products', {
           name: formData.name,
           price: formData.price,
-          amount: formData.amount,
+          amount: 0,
           unit: formData.unit,
           barcode: formData.barcode,
           categoryId: formData.categoryId,
@@ -257,287 +269,295 @@ export function ProductManagement() {
           await fetchProducts()
         }
       }
-    } catch (error) {
+    } catch (error: any) {
+      if (
+        error?.message?.includes('barcode') ||
+        error?.message?.includes('unique') ||
+        error?.message?.includes('duplicate')
+      ) {
+        toast.error('Mã vạch đã tồn tại trong hệ thống')
+      } else {
+        toast.error('Mã vạch đã tồn tại trong hệ thống')
+      }
       console.error('Error saving product:', error)
+    } finally {
+      setIsSaving(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <Card className="border-blue-200 shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600">
-            <CardTitle className="text-2xl text-white">Quản lý sản phẩm</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="mb-6 flex items-center justify-between">
-              <div className="flex max-w-md flex-1 gap-2">
-                <Input
-                  placeholder="Tìm kiếm theo tên hoặc mã vạch..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="border-blue-200"
-                />
-                <Button className="bg-blue-600 hover:bg-blue-700">
-                  <Search className="h-4 w-4" />
-                </Button>
-              </div>
-              <Button onClick={handleAdd} className="bg-blue-600 hover:bg-blue-700">
-                <Plus className="mr-2 h-4 w-4" />
-                Thêm sản phẩm
+    <div className="space-y-6">
+      <Card className="border-blue-200 shadow-lg">
+        <CardHeader className="bg-blue-50">
+          <CardTitle className="text-blue-900">Quản lý Sản Phẩm</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex max-w-md flex-1 gap-2">
+              <Input
+                placeholder="Tìm kiếm theo tên hoặc mã vạch..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="border-blue-200"
+              />
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <Search className="h-4 w-4" />
               </Button>
             </div>
+            <Button onClick={handleAdd} className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="mr-2 h-4 w-4" />
+              Thêm sản phẩm
+            </Button>
+          </div>
 
-            {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-              </div>
-            ) : (
-              <div className="overflow-hidden rounded-lg border border-blue-200">
-                <table className="w-full">
-                  <thead className="bg-blue-50">
-                    <tr>
-                      <th className="p-4 text-left font-semibold text-blue-900">ID</th>
-                      <th className="p-4 text-left font-semibold text-blue-900">Mã vạch</th>
-                      <th className="p-4 text-left font-semibold text-blue-900">Tên sản phẩm</th>
-                      <th className="p-4 text-left font-semibold text-blue-900">Danh mục</th>
-                      <th className="p-4 text-left font-semibold text-blue-900">Nhà cung cấp</th>
-                      <th className="p-4 text-left font-semibold text-blue-900">Đơn vị</th>
-                      <th className="p-4 text-left font-semibold text-blue-900">Giá bán</th>
-                      <th className="p-4 text-left font-semibold text-blue-900">Số lượng</th>
-                      <th className="p-4 text-right font-semibold text-blue-900">Thao tác</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredProducts.map((product) => (
-                      <tr key={product.id} className="border-t border-blue-100 hover:bg-blue-50">
-                        <td className="p-4 font-medium">{product.id}</td>
-                        <td className="p-4 font-mono text-blue-600">{product.barcode}</td>
-                        <td className="p-4 font-medium">{product.name}</td>
-                        <td className="p-4 text-sm text-gray-600">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-lg border border-blue-200">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-blue-50">
+                    <TableHead className="text-blue-900">ID</TableHead>
+                    <TableHead className="text-blue-900">Mã vạch</TableHead>
+                    <TableHead className="text-blue-900">Tên sản phẩm</TableHead>
+                    <TableHead className="text-blue-900">Danh mục</TableHead>
+                    <TableHead className="text-blue-900">Nhà cung cấp</TableHead>
+                    <TableHead className="text-blue-900">Đơn vị</TableHead>
+                    <TableHead className="text-blue-900">Giá bán</TableHead>
+                    <TableHead className="text-blue-900">Số lượng</TableHead>
+                    <TableHead className="text-right text-blue-900">Thao tác</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredProducts.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={9} className="py-8 text-center text-gray-500">
+                        Không tìm thấy sản phẩm
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredProducts.map((product) => (
+                      <TableRow key={product.id} className="hover:bg-blue-50">
+                        <TableCell className="font-medium">{product.id}</TableCell>
+                        <TableCell className="font-mono text-blue-600">{product.barcode}</TableCell>
+                        <TableCell className="font-medium">{product.name}</TableCell>
+                        <TableCell className="text-sm text-gray-600">
                           {product.category?.name ?? 'Chưa phân loại'}
-                        </td>{' '}
-                        <td className="p-4 text-sm text-gray-600">
+                        </TableCell>
+                        <TableCell className="text-sm text-gray-600">
                           {product.supplier?.name ?? 'Chưa có nhà cung cấp'}
-                        </td>
-                        <td className="p-4">
+                        </TableCell>
+                        <TableCell>
                           <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700">
                             {unitLabels[product.unit]}
                           </span>
-                        </td>
-                        <td className="p-4 font-semibold text-blue-700">
+                        </TableCell>
+                        <TableCell className="font-semibold text-blue-700">
                           {product.price.toLocaleString('vi-VN')}đ
-                        </td>
-                        <td className="p-4">{product.amount}</td>
-                        <td className="p-4">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEdit(product)}
-                              className=" text-blue-600 hover:bg-blue-50 hover:text-blue-700"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDelete(product.id, product.name)}
-                              className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                        </TableCell>
+                        <TableCell>{product.amount}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(product)}
+                            className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(product.id, product.name)}
+                            className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="border-blue-200">
-            <DialogHeader>
-              <DialogTitle className="text-xl text-blue-900">
-                {editingProduct ? 'Sửa thông tin sản phẩm' : 'Thêm sản phẩm mới'}
-              </DialogTitle>
-              <DialogDescription className="text-sm text-gray-500">
-                {editingProduct
-                  ? 'Cập nhật thông tin sản phẩm.'
-                  : 'Tạo sản phẩm mới trong hệ thống.'}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="border-blue-200">
+          <DialogHeader>
+            <DialogTitle className=" text-blue-900">
+              {editingProduct ? 'Sửa thông tin sản phẩm' : 'Thêm sản phẩm mới'}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-500">
+              {editingProduct ? 'Cập nhật thông tin sản phẩm.' : 'Tạo sản phẩm mới trong hệ thống.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-sm font-medium">
+                Tên sản phẩm *
+              </Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="border-blue-200"
+                placeholder="Nhập tên sản phẩm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="barcode" className="text-sm font-medium">
+                Mã vạch *
+              </Label>
+              <Input
+                id="barcode"
+                type="number"
+                value={formData.barcode || ''}
+                onChange={(e) =>
+                  setFormData({ ...formData, barcode: parseInt(e.target.value) || 0 })
+                }
+                className="border-blue-200"
+                placeholder="Nhập mã vạch"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-sm font-medium">
-                  Tên sản phẩm *
-                </Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="border-blue-200"
-                  placeholder="Nhập tên sản phẩm"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="barcode" className="text-sm font-medium">
-                  Mã vạch *
-                </Label>
-                <Input
-                  id="barcode"
-                  type="number"
-                  value={formData.barcode || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, barcode: parseInt(e.target.value) || 0 })
-                  }
-                  className="border-blue-200"
-                  placeholder="Nhập mã vạch"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="category" className="text-sm font-medium">
-                    Danh mục *
-                  </Label>
-                  <Select
-                    value={formData.categoryId.toString()}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, categoryId: parseInt(value) })
-                    }
-                  >
-                    <SelectTrigger className="border-blue-200">
-                      <SelectValue placeholder="Chọn danh mục" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id.toString()}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="supplier" className="text-sm font-medium">
-                    Nhà cung cấp *
-                  </Label>
-                  <Select
-                    value={formData.supplierId.toString()}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, supplierId: parseInt(value) })
-                    }
-                  >
-                    <SelectTrigger className="border-blue-200">
-                      <SelectValue placeholder="Chọn nhà cung cấp" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {suppliers.map((supplier) => (
-                        <SelectItem key={supplier.id} value={supplier.id.toString()}>
-                          {supplier.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="price" className="text-sm font-medium">
-                    Giá bán (VNĐ) *
-                  </Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    value={formData.price || ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, price: parseInt(e.target.value) || 0 })
-                    }
-                    className="border-blue-200"
-                    placeholder="Nhập giá bán"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="amount" className="text-sm font-medium">
-                    Số lượng *
-                  </Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    value={formData.amount || ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, amount: parseInt(e.target.value) || 0 })
-                    }
-                    className="border-blue-200"
-                    placeholder="Nhập số lượng"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="unit" className="text-sm font-medium">
-                  Đơn vị tính *
+                <Label htmlFor="category" className="text-sm font-medium">
+                  Danh mục *
                 </Label>
                 <Select
-                  value={formData.unit}
+                  value={formData.categoryId.toString()}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, unit: value as ProductUnit })
+                    setFormData({ ...formData, categoryId: parseInt(value) })
                   }
                 >
                   <SelectTrigger className="border-blue-200">
-                    <SelectValue />
+                    <SelectValue placeholder="Chọn danh mục" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={ProductUnit.BOTTLE}>Chai</SelectItem>
-                    <SelectItem value={ProductUnit.CAN}>Lon</SelectItem>
-                    <SelectItem value={ProductUnit.PACKAGE}>Gói</SelectItem>
-                    <SelectItem value={ProductUnit.BOX}>Hộp</SelectItem>
-                    <SelectItem value={ProductUnit.PIECE}>Cái</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id.toString()}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="supplier" className="text-sm font-medium">
+                  Nhà cung cấp *
+                </Label>
+                <Select
+                  value={formData.supplierId.toString()}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, supplierId: parseInt(value) })
+                  }
+                >
+                  <SelectTrigger className="border-blue-200">
+                    <SelectValue placeholder="Chọn nhà cung cấp" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {suppliers.map((supplier) => (
+                      <SelectItem key={supplier.id} value={supplier.id.toString()}>
+                        <span className="block max-w-[200px] truncate" title={supplier.name}>
+                          {supplier.name}
+                        </span>
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setIsDialogOpen(false)}
+            <div className="space-y-2">
+              <Label htmlFor="price" className="text-sm font-medium">
+                Giá bán (VNĐ) *
+              </Label>
+              <Input
+                id="price"
+                type="number"
+                value={formData.price || ''}
+                onChange={(e) => setFormData({ ...formData, price: parseInt(e.target.value) || 0 })}
                 className="border-blue-200"
+                placeholder="Nhập giá bán"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="unit" className="text-sm font-medium">
+                Đơn vị tính *
+              </Label>
+              <Select
+                value={formData.unit}
+                onValueChange={(value) => setFormData({ ...formData, unit: value as ProductUnit })}
               >
-                Hủy
-              </Button>
-              <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
-                <Save className="mr-2 h-4 w-4" />
-                Lưu
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+                <SelectTrigger className="border-blue-200">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ProductUnit.BOTTLE}>Chai</SelectItem>
+                  <SelectItem value={ProductUnit.CAN}>Lon</SelectItem>
+                  <SelectItem value={ProductUnit.PACKAGE}>Gói</SelectItem>
+                  <SelectItem value={ProductUnit.BOX}>Hộp</SelectItem>
+                  <SelectItem value={ProductUnit.PIECE}>Cái</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDialogOpen(false)}
+              className="border-blue-200"
+              disabled={isSaving}
+            >
+              Hủy
+            </Button>
+            <Button
+              onClick={handleSave}
+              className="bg-blue-600 hover:bg-blue-700"
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Đang lưu...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Lưu
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-        <AlertDialog
-          open={deleteConfirm.open}
-          onOpenChange={(open) => setDeleteConfirm({ ...deleteConfirm, open })}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
-              <AlertDialogDescription>
-                Bạn có chắc chắn muốn xóa sản phẩm "{deleteConfirm.name}"? Hành động này không thể
-                hoàn tác.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setDeleteConfirm({ open: false, id: 0, name: '' })}>
-                Hủy
-              </AlertDialogCancel>
-              <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
-                Xóa
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
+      <AlertDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) => setDeleteConfirm({ ...deleteConfirm, open })}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn xóa sản phẩm "{deleteConfirm.name}"? Hành động này không thể
+              hoàn tác.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteConfirm({ open: false, id: 0, name: '' })}>
+              Hủy
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
+              Xóa
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

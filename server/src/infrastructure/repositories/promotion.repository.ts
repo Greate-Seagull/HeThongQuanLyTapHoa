@@ -36,17 +36,22 @@ export class PromotionRepository implements PromotionRepository {
 		const data = toPersistenceObject(promotion);
 		const diff = this.tracker.diff(promotion.id, data);
 
-		// Xử lý update nested relation: Xóa cũ -> Tạo mới (Full Replacement Strategy)
-		if (diff.promotionDetails) {
-			const details = diff.promotionDetails;
-			delete diff.promotionDetails;
-			if (Array.isArray(details)) {
-				diff.promotionDetails = {
-					deleteMany: {}, // Xóa tất cả chi tiết cũ của promotion này
-					create: details.map(toPersistenceObject), // Tạo lại danh sách mới
-				};
-			}
-		}
+		   // Xử lý update nested relation: Xóa cũ -> Tạo mới (Full Replacement Strategy)
+		   if (diff.promotionDetails) {
+			   const details = diff.promotionDetails;
+			   delete diff.promotionDetails;
+			   if (Array.isArray(details) && details.length > 0) {
+				   diff.promotionDetails = {
+					   deleteMany: {}, // Xóa tất cả chi tiết cũ của promotion này
+					   create: details.map(toPersistenceObject), // Tạo lại danh sách mới
+				   };
+			   } else {
+				   // Nếu mảng rỗng thì chỉ xóa hết
+				   diff.promotionDetails = {
+					   deleteMany: {}
+				   };
+			   }
+		   }
 
 		const raw = await this.prisma.promotion.update({
 			where: { id: promotion.id },
