@@ -6,8 +6,21 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Plus, Edit, Trash2, Search, FolderOpen } from 'lucide-react'
 import { toast } from 'sonner'
@@ -54,9 +67,10 @@ export function ProductCategoryManagement() {
     }
   }
 
-  const filteredCategories = categories.filter(category =>
-    category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    category.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCategories = categories.filter(
+    (category) =>
+      category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      category.description?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const handleOpenDialog = (category?: ProductCategory) => {
@@ -136,35 +150,33 @@ export function ProductCategoryManagement() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <FolderOpen className="h-5 w-5" />
-            Quản Lý Loại Sản Phẩm
-          </CardTitle>
-          <Button onClick={() => handleOpenDialog()} disabled={isLoading}>
-            <Plus className="mr-2 h-4 w-4" />
-            Thêm Loại Sản Phẩm
-          </Button>
+        <CardHeader className="bg-blue-50">
+          <CardTitle className="text-blue-900">Quản Lý Loại Sản Phẩm</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Search */}
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+        <CardContent className="p-6">
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex max-w-md flex-1 gap-2">
               <Input
-                placeholder="Tìm kiếm loại sản phẩm (tên, mô tả)..."
+                placeholder="Tìm kiếm theo tên loại sản phẩm..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="border-blue-200"
               />
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <Search className="h-4 w-4" />
+              </Button>
             </div>
+            <Button onClick={() => handleOpenDialog()} className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="mr-2 h-4 w-4" />
+              Thêm Loại Sản Phẩm
+            </Button>
           </div>
 
           {/* Table */}
-          <div className="rounded-md border">
+          <div className="overflow-hidden rounded-lg border border-blue-200">
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="bg-blue-50">
                   <TableHead className="w-[50px]">ID</TableHead>
                   <TableHead>Tên Loại</TableHead>
                   <TableHead>Mô Tả</TableHead>
@@ -175,13 +187,13 @@ export function ProductCategoryManagement() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">
+                    <TableCell colSpan={5} className="py-8 text-center">
                       Đang tải...
                     </TableCell>
                   </TableRow>
                 ) : filteredCategories.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={5} className="py-8 text-center text-gray-500">
                       Không tìm thấy loại sản phẩm nào
                     </TableCell>
                   </TableRow>
@@ -202,7 +214,7 @@ export function ProductCategoryManagement() {
                           size="sm"
                           onClick={() => handleOpenDialog(category)}
                           disabled={isLoading}
-                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -211,7 +223,7 @@ export function ProductCategoryManagement() {
                           size="sm"
                           onClick={() => handleDelete(category.id, category.name)}
                           disabled={isLoading}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="text-red-600 hover:bg-red-50 hover:text-red-700"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

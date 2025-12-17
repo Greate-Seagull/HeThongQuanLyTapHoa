@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/select'
 import { apiClient } from '@/services/api-client'
 import { toast } from 'sonner'
+import { set } from 'react-hook-form'
 
 interface Slot {
   id: number
@@ -85,7 +86,9 @@ export function LocationManagement() {
   const [shelfFormData, setShelfFormData] = useState({ name: '' })
   const [rackFormData, setRackFormData] = useState({ name: '', shelfId: 0 })
   const [slotFormData, setSlotFormData] = useState({ name: '', rackId: 0 })
-
+  const [isSavingShelf, setIsSavingShelf] = useState(false)
+  const [isSavingRack, setIsSavingRack] = useState(false)
+  const [isSavingSlot, setIsSavingSlot] = useState(false)
   useEffect(() => {
     fetchLocations()
   }, [])
@@ -93,8 +96,21 @@ export function LocationManagement() {
   const fetchLocations = async () => {
     try {
       setLoading(true)
-      const response = await apiClient.get<ApiResponse>('/shelves')
-      setShelves(response)
+      const response: Shelf[] = await apiClient.get('/shelves') // Bỏ <ApiResponse>
+
+      // response đã là array Shelf[] luôn, không cần .data
+      const sortedData = response
+        .map((shelf: Shelf) => ({
+          ...shelf,
+          racks: shelf.racks
+            .map((rack) => ({
+              ...rack,
+              slots: rack.slots.sort((a, b) => b.id - a.id),
+            }))
+            .sort((a, b) => b.id - a.id),
+        }))
+        .sort((a, b) => b.id - a.id)
+      setShelves(sortedData)
       setError(null)
     } catch (err) {
       setError('Không thể tải dữ liệu vị trí')
@@ -155,6 +171,7 @@ export function LocationManagement() {
   }
 
   const handleSaveShelf = async () => {
+    setIsSavingShelf(true)
     try {
       if (editingShelf) {
         // TODO: Call PUT API
@@ -177,6 +194,8 @@ export function LocationManagement() {
     } catch (err) {
       console.error('Error saving shelf:', err)
       toast.error('Không thể lưu kệ')
+    } finally {
+      setIsSavingShelf(false)
     }
   }
 
@@ -204,6 +223,7 @@ export function LocationManagement() {
   }
 
   const handleSaveRack = async () => {
+    setIsSavingRack(true)
     try {
       if (editingRack) {
         const data = await apiClient.put<Rack>(`/racks/${editingRack.id}`, {
@@ -228,6 +248,8 @@ export function LocationManagement() {
     } catch (err) {
       console.error('Error saving rack:', err)
       toast.error('Không thể lưu ngăn')
+    } finally {
+      setIsSavingRack(false)
     }
   }
 
@@ -255,6 +277,7 @@ export function LocationManagement() {
   }
 
   const handleSaveSlot = async () => {
+    setIsSavingSlot(true)
     try {
       if (editingSlot) {
         const data = await apiClient.put<Slot>(`/slots/${editingSlot.id}`, {
@@ -279,6 +302,8 @@ export function LocationManagement() {
     } catch (err) {
       console.error('Error saving slot:', err)
       toast.error('Không thể lưu ô')
+    } finally {
+      setIsSavingSlot(false)
     }
   }
 
@@ -588,8 +613,12 @@ export function LocationManagement() {
             >
               Hủy
             </Button>
-            <Button onClick={handleSaveShelf} className="bg-blue-600 hover:bg-blue-700">
-              Lưu
+            <Button
+              onClick={handleSaveShelf}
+              className="bg-blue-600 hover:bg-blue-700"
+              disabled={isSavingShelf}
+            >
+              {isSavingShelf ? 'Đang lưu...' : 'Lưu'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -645,8 +674,12 @@ export function LocationManagement() {
             >
               Hủy
             </Button>
-            <Button onClick={handleSaveRack} className="bg-blue-600 hover:bg-blue-700">
-              Lưu
+            <Button
+              onClick={handleSaveRack}
+              className="bg-blue-600 hover:bg-blue-700"
+              disabled={isSavingRack}
+            >
+              {isSavingRack ? 'Đang lưu...' : 'Lưu'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -705,8 +738,12 @@ export function LocationManagement() {
             >
               Hủy
             </Button>
-            <Button onClick={handleSaveSlot} className="bg-blue-600 hover:bg-blue-700">
-              Lưu
+            <Button
+              onClick={handleSaveSlot}
+              className="bg-blue-600 hover:bg-blue-700"
+              disabled={isSavingSlot}
+            >
+              {isSavingSlot ? 'Đang lưu...' : 'Lưu'}
             </Button>
           </DialogFooter>
         </DialogContent>

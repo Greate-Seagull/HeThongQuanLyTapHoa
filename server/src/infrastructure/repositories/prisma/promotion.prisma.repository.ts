@@ -13,9 +13,17 @@ export class PromotionPrismaRepository
 
 	protected buildUpdateData(entity: Promotion): Partial<PromotionDto> {
 		let persitence = this.toPersistence(entity) as any;
-		persitence.promotionDetails = {
-			connect: persitence.promotionDetails,
-		};
+		   // Chỉ dùng deleteMany + create, không dùng connect khi update
+		   if (Array.isArray(persitence.promotionDetails) && persitence.promotionDetails.length > 0) {
+			   persitence.promotionDetails = {
+				   deleteMany: {},
+				   create: persitence.promotionDetails,
+			   };
+		   } else {
+			   persitence.promotionDetails = {
+				   deleteMany: {}
+			   };
+		   }
 		return persitence;
 	}
 

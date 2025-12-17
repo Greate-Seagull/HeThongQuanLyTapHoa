@@ -28,6 +28,7 @@ import {
 } from 'lucide-react'
 import { apiClient } from '@/services/api-client'
 import { toast } from 'sonner'
+import { set } from 'react-hook-form'
 
 enum EmployeePosition {
   SALES = 'SALES',
@@ -58,6 +59,7 @@ export function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
 
   const [formData, setFormData] = useState({
     id: 0,
@@ -124,20 +126,21 @@ export function ProfilePage() {
   }
 
   const handleSave = async () => {
+    setIsSaving(true)
     // Validation
     if (!formData.name.trim()) {
-      alert('Vui lòng nhập họ và tên')
+      toast.error('Vui lòng nhập họ và tên')
       return
     }
 
     if (!formData.username.trim()) {
-      alert('Vui lòng nhập tên đăng nhập')
+      toast.error('Vui lòng nhập tên đăng nhập')
       return
     }
 
     try {
       const response = await apiClient.put<UserProfile>('/employee-accounts', {
-        id : formData.id,
+        id: formData.id,
         name: formData.name,
         username: formData.username,
       })
@@ -147,7 +150,9 @@ export function ProfilePage() {
       toast.success('Cập nhật thông tin thành công!')
     } catch (error) {
       console.error('Error updating profile:', error)
-      alert('Có lỗi xảy ra, vui lòng thử lại')
+      toast.error('Có lỗi xảy ra, vui lòng thử lại')
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -164,27 +169,27 @@ export function ProfilePage() {
   const handleChangePassword = async () => {
     // Validation
     if (!passwordData.currentPassword.trim()) {
-      alert('Vui lòng nhập mật khẩu hiện tại')
+      toast.error('Vui lòng nhập mật khẩu hiện tại')
       return
     }
 
     if (!passwordData.newPassword.trim()) {
-      alert('Vui lòng nhập mật khẩu mới')
+      toast.error('Vui lòng nhập mật khẩu mới')
       return
     }
 
     if (passwordData.newPassword.length < 6) {
-      alert('Mật khẩu mới phải có tối thiểu 6 ký tự')
+      toast.error('Mật khẩu mới phải có tối thiểu 6 ký tự')
       return
     }
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert('Mật khẩu xác nhận không khớp')
+      toast.error('Mật khẩu xác nhận không khớp')
       return
     }
 
     if (passwordData.currentPassword === passwordData.newPassword) {
-      alert('Mật khẩu mới phải khác mật khẩu hiện tại')
+      toast.error('Mật khẩu mới phải khác mật khẩu hiện tại')
       return
     }
 
@@ -203,7 +208,7 @@ export function ProfilePage() {
 
       const result = await response.json()
       if (result.status === 'success') {
-        alert('Đổi mật khẩu thành công!')
+        toast.success('Đổi mật khẩu thành công!')
         setPasswordData({
           currentPassword: '',
           newPassword: '',
@@ -211,11 +216,11 @@ export function ProfilePage() {
         })
         setIsChangePasswordOpen(false)
       } else {
-        alert(result.message || 'Mật khẩu hiện tại không đúng')
+        toast.error(result.message || 'Mật khẩu hiện tại không đúng')
       }
     } catch (error) {
       console.error('Error changing password:', error)
-      alert('Có lỗi xảy ra, vui lòng thử lại')
+      toast.error('Có lỗi xảy ra, vui lòng thử lại')
     }
   }
 
@@ -302,7 +307,11 @@ export function ProfilePage() {
                   </div>
                   <div
                     className={`absolute bottom-0 right-0 flex h-10 w-10 items-center justify-center rounded-full border-4 border-white ${
-                      user.type === 'CUSTOMER' ? 'bg-yellow-500' : user.position === EmployeePosition.MANAGER ? 'bg-purple-500' : 'bg-blue-500'
+                      user.type === 'CUSTOMER'
+                        ? 'bg-yellow-500'
+                        : user.position === EmployeePosition.MANAGER
+                          ? 'bg-purple-500'
+                          : 'bg-blue-500'
                     }`}
                   >
                     {user.type === 'CUSTOMER' ? (
@@ -330,8 +339,12 @@ export function ProfilePage() {
                     <span className="font-medium text-gray-900">#{user.id}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">{user.type === 'CUSTOMER' ? 'SĐT:' : 'Username:'}</span>
-                    <span className="font-medium text-gray-900">{user.type === 'CUSTOMER' ? user.phoneNumber : user.username}</span>
+                    <span className="text-gray-600">
+                      {user.type === 'CUSTOMER' ? 'SĐT:' : 'Username:'}
+                    </span>
+                    <span className="font-medium text-gray-900">
+                      {user.type === 'CUSTOMER' ? user.phoneNumber : user.username}
+                    </span>
                   </div>
                   {user.type === 'CUSTOMER' && (
                     <div className="flex items-center justify-between text-sm">
@@ -392,7 +405,10 @@ export function ProfilePage() {
 
                   {/* Username hoặc Số điện thoại */}
                   <div className="space-y-2">
-                    <Label htmlFor={user.type === 'CUSTOMER' ? "phoneNumber" : "username"} className="flex items-center gap-2">
+                    <Label
+                      htmlFor={user.type === 'CUSTOMER' ? 'phoneNumber' : 'username'}
+                      className="flex items-center gap-2"
+                    >
                       {user.type === 'CUSTOMER' ? (
                         <Phone className="h-4 w-4 text-gray-500" />
                       ) : (
@@ -402,14 +418,16 @@ export function ProfilePage() {
                     </Label>
                     {isEditing ? (
                       <Input
-                        id={user.type === 'CUSTOMER' ? "phoneNumber" : "username"}
+                        id={user.type === 'CUSTOMER' ? 'phoneNumber' : 'username'}
                         value={user.type === 'CUSTOMER' ? formData.phoneNumber : formData.username}
-                        onChange={(e) => 
-                          user.type === 'CUSTOMER' 
+                        onChange={(e) =>
+                          user.type === 'CUSTOMER'
                             ? setFormData({ ...formData, phoneNumber: e.target.value })
                             : setFormData({ ...formData, username: e.target.value })
                         }
-                        placeholder={user.type === 'CUSTOMER' ? "Nhập số điện thoại" : "Nhập tên đăng nhập"}
+                        placeholder={
+                          user.type === 'CUSTOMER' ? 'Nhập số điện thoại' : 'Nhập tên đăng nhập'
+                        }
                         disabled={user.type === 'CUSTOMER'} // Thường SĐT là định danh, không cho sửa dễ dàng
                       />
                     ) : (
@@ -436,9 +454,22 @@ export function ProfilePage() {
                   {/* Action Buttons */}
                   {isEditing && (
                     <div className="flex gap-3 border-t border-gray-200 pt-4">
-                      <Button onClick={handleSave} className="flex-1 bg-blue-600 hover:bg-blue-700">
-                        <Save className="mr-2 h-4 w-4" />
-                        Lưu thay đổi
+                      <Button
+                        onClick={handleSave}
+                        className="flex-1 bg-blue-600 hover:bg-blue-700"
+                        disabled={isSaving}
+                      >
+                        {isSaving ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Đang lưu...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="mr-2 h-4 w-4" />
+                            Lưu thay đổi
+                          </>
+                        )}
                       </Button>
                       <Button
                         onClick={handleCancel}

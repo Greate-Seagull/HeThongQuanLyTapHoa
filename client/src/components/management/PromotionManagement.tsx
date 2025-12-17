@@ -77,6 +77,8 @@ export function PromotionManagement() {
   const [editingPromotion, setEditingPromotion] = useState<Promotion | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: number; name: string }>({
     open: false,
     id: 0,
@@ -135,13 +137,14 @@ export function PromotionManagement() {
     }
   }
 
-  const filteredPromotions = promotions.filter((promo) =>
-    promo.name.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredPromotions = promotions
+    .filter((promo) => promo.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    .sort((a, b) => b.id - a.id)
 
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
-    product.barcode.toString().includes(productSearchTerm)
+  const filteredProducts = products.filter(
+    (product) =>
+      product.name.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
+      product.barcode.toString().includes(productSearchTerm)
   )
 
   const handleAdd = () => {
@@ -198,11 +201,45 @@ export function PromotionManagement() {
       // Optimistic update
     } catch (err) {
       console.error('Error deleting promotion:', err)
-      alert('Không thể xóa khuyến mãi')
+      toast.error('Không thể xóa khuyến mãi')
     }
   }
 
   const handleSave = async () => {
+    if (!formData.name.trim()) {
+      toast.error('Vui lòng nhập tên khuyến mãi')
+      return
+    }
+
+    if (!formData.startedAt || !formData.endedAt) {
+      toast.error('Vui lòng chọn ngày bắt đầu và ngày kết thúc')
+      return
+    }
+
+    const startDate = new Date(formData.startedAt)
+    const endDate = new Date(formData.endedAt)
+
+    if (startDate >= endDate) {
+      toast.error('Ngày bắt đầu phải nhỏ hơn ngày kết thúc')
+      return
+    }
+
+    if (formData.promotionType === PromotionType.PERCENTAGE && formData.value > 100) {
+      toast.error('Phần trăm khuyến mãi không được vượt quá 100%')
+      return
+    }
+
+    if (formData.value <= 0) {
+      toast.error('Giá trị khuyến mãi phải lớn hơn 0')
+      return
+    }
+
+    if (formData.selectedProducts.length === 0) {
+      toast.error('Vui lòng chọn ít nhất một sản phẩm áp dụng')
+      return
+    }
+    setIsSaving(true)
+
     try {
       const promotionData = {
         name: formData.name,
@@ -240,7 +277,9 @@ export function PromotionManagement() {
       setIsDialogOpen(false)
     } catch (err) {
       console.error('Error saving promotion:', err)
-      alert('Không thể lưu khuyến mãi')
+      toast.error('Không thể lưu khuyến mãi')
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -375,7 +414,10 @@ export function PromotionManagement() {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto border-blue-200" aria-describedby={undefined}>
+        <DialogContent
+          className="max-h-[90vh] max-w-2xl overflow-y-auto border-blue-200"
+          aria-describedby={undefined}
+        >
           <DialogHeader>
             <DialogTitle className="text-blue-900">
               {editingPromotion ? 'Sửa khuyến mãi' : 'Thêm khuyến mãi mới'}
@@ -386,7 +428,8 @@ export function PromotionManagement() {
                 : 'Tạo một khuyến mãi mới'}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 pr-2">{/* Added padding-right for scrollbar */}
+          <div className="space-y-4 pr-2">
+            {/* Added padding-right for scrollbar */}
             <div className="space-y-2">
               <Label htmlFor="name">Tên khuyến mãi</Label>
               <Input
@@ -434,19 +477,27 @@ export function PromotionManagement() {
                   id="value"
                   type="number"
                   value={formData.value || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, value: parseFloat(e.target.value) || 0 })
-                  }
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value) || 0
+                    const maxVal =
+                      formData.promotionType === PromotionType.PERCENTAGE ? 100 : Infinity
+                    setFormData({ ...formData, value: Math.min(val, maxVal) })
+                  }}
                   className="border-blue-200"
+                  min="0"
+                  max={formData.promotionType === PromotionType.PERCENTAGE ? '100' : undefined}
                 />
+                {formData.promotionType === PromotionType.PERCENTAGE && formData.value > 100 && (
+                  <p className="text-xs text-red-600">Tối đa 100%</p>
+                )}
               </div>
             </div>
-            
+
             {/* Selected Products Section */}
             <div className="space-y-2">
               <Label>Sản phẩm áp dụng</Label>
               {formData.selectedProducts.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-2">
+                <div className="mb-2 flex flex-wrap gap-2">
                   {formData.selectedProducts.map((productId) => {
                     const product = products.find((p) => p.id === productId)
                     if (!product) return null
@@ -462,7 +513,7 @@ export function PromotionManagement() {
                   })}
                 </div>
               )}
-              
+
               {/* Search box for products */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -470,10 +521,10 @@ export function PromotionManagement() {
                   placeholder="Tìm kiếm sản phẩm theo tên hoặc mã..."
                   value={productSearchTerm}
                   onChange={(e) => setProductSearchTerm(e.target.value)}
-                  className="pl-9 border-blue-200"
+                  className="border-blue-200 pl-9"
                 />
               </div>
-              
+
               <div className="max-h-40 overflow-y-auto rounded border border-blue-200 p-3">
                 {products.length === 0 ? (
                   <p className="text-center text-gray-500">Đang tải sản phẩm...</p>
@@ -527,6 +578,11 @@ export function PromotionManagement() {
                   onChange={(e) => setFormData({ ...formData, endedAt: e.target.value })}
                   className="border-blue-200"
                 />
+                {formData.startedAt &&
+                  formData.endedAt &&
+                  new Date(formData.startedAt) >= new Date(formData.endedAt) && (
+                    <p className="text-xs text-red-600">Ngày bắt đầu phải nhỏ hơn ngày kết thúc</p>
+                  )}
               </div>
             </div>
           </div>
@@ -538,8 +594,12 @@ export function PromotionManagement() {
             >
               Hủy
             </Button>
-            <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
-              Lưu
+            <Button
+              onClick={handleSave}
+              className="bg-blue-600 hover:bg-blue-700"
+              disabled={isSaving}
+            >
+              {isSaving ? 'Đang lưu...' : 'Lưu'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -559,4 +619,3 @@ export function PromotionManagement() {
     </div>
   )
 }
-

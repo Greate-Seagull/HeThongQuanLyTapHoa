@@ -19,7 +19,7 @@ const inputSchema = z.object({
     .optional(),
   value: z.number().optional(),
   promotionType: z.string().optional(),
-  promotionDetails: z.array(z.object({ productId: z.number() })).optional(),
+  promotionDetails: z.array(z.object({ productId: z.number() })).optional().default([]),
 });
 
 const outputSchema = z.object({
@@ -67,10 +67,7 @@ export class UpdatePromotionUsecase {
       }
     }
 
-    // Remove promotionDetails if present (from DB or client)
-    if ("promotionDetails" in parsedInput) {
-      delete parsedInput.promotionDetails;
-    }
+    // Không xóa promotionDetails trước khi update, giữ nguyên để update đầy đủ
     promotion.update(parsedInput);
 
     const savedPromotion = await this.promotionRepo.update(promotion);

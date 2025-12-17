@@ -26,10 +26,12 @@ export class CreateAccountUsecase {
   ) {}
 
   async execute(input: any) {
+    console.log("RAW INPUT:", input);
     const parsed = inputSchema.parse(input);
     const log = logger.child({ task: "Create employee account" });
     log.info("Task started");
     const salt = this.passwordService.generateSalt();
+    console.log("payload", parsed);
 
     const hashedPassword = await this.passwordService.hashPassword("123", salt);
 

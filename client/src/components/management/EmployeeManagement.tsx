@@ -4,6 +4,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -31,6 +39,7 @@ import {
 } from '@/components/ui/select'
 import { apiClient } from '@/services/api-client'
 import { toast } from 'sonner'
+import { set } from 'react-hook-form'
 
 enum EmployeePosition {
   SALES = 'SALES',
@@ -68,6 +77,7 @@ const API_BASE_URL = 'http://localhost:3002/employee-accounts' // Thay đổi UR
 export function EmployeeManagement() {
   const [accounts, setAccounts] = useState<Account[]>([])
   const [searchTerm, setSearchTerm] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingAccount, setEditingAccount] = useState<Account | null>(null)
@@ -101,11 +111,13 @@ export function EmployeeManagement() {
     }
   }
 
-  const filteredAccounts = accounts.filter(
-    (account) =>
-      account.employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      account.username.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredAccounts = accounts
+    .filter(
+      (account) =>
+        account.employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        account.username.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => b.employee.id - a.employee.id)
 
   const handleAdd = () => {
     setEditingAccount(null)
@@ -143,6 +155,7 @@ export function EmployeeManagement() {
   }
 
   const handleSave = async () => {
+    setIsSaving(true)
     try {
       if (editingAccount) {
         // Update existing account
@@ -175,58 +188,68 @@ export function EmployeeManagement() {
       setIsDialogOpen(false)
     } catch (error) {
       toast.error('Đã xảy ra lỗi. Vui lòng thử lại.')
+    } finally {
+      setIsSaving(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <Card className="border-blue-200 shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600">
-            <CardTitle className="text-2xl text-white">Quản lý tài khoản nhân viên</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="mb-6 flex items-center justify-between">
-              <div className="flex max-w-md flex-1 gap-2">
-                <Input
-                  placeholder="Tìm kiếm theo tên hoặc username..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="border-blue-200"
-                />
-                <Button className="bg-blue-600 hover:bg-blue-700">
-                  <Search className="h-4 w-4" />
-                </Button>
-              </div>
-              <Button onClick={handleAdd} className="bg-blue-600 hover:bg-blue-700">
-                <Plus className="mr-2 h-4 w-4" />
-                Thêm tài khoản
+    <div className="space-y-6">
+      <Card className="border-blue-200 shadow-lg">
+        <CardHeader className="bg-blue-50">
+          <CardTitle className="text-blue-900">Quản lý tài khoản nhân viên</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex max-w-md flex-1 gap-2">
+              <Input
+                placeholder="Tìm kiếm theo tên hoặc username..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="border-blue-200"
+              />
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <Search className="h-4 w-4" />
               </Button>
             </div>
+            <Button onClick={handleAdd} className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="mr-2 h-4 w-4" />
+              Thêm tài khoản
+            </Button>
+          </div>
 
-            {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-              </div>
-            ) : (
-              <div className="overflow-hidden rounded-lg border border-blue-200">
-                <table className="w-full">
-                  <thead className="bg-blue-50">
-                    <tr>
-                      <th className="p-4 text-left font-semibold text-blue-900">ID Tài khoản</th>
-                      <th className="p-4 text-left font-semibold text-blue-900">Username</th>
-                      <th className="p-4 text-left font-semibold text-blue-900">Tên nhân viên</th>
-                      <th className="p-4 text-left font-semibold text-blue-900">Chức vụ</th>
-                      <th className="p-4 text-right font-semibold text-blue-900">Thao tác</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredAccounts.map((account) => (
-                      <tr key={account.id} className="border-t border-blue-100 hover:bg-blue-50">
-                        <td className="p-4 font-medium">{account.employee.id}</td>
-                        <td className="p-4 font-medium text-blue-600">{account.username}</td>
-                        <td className="p-4">{account.employee.name}</td>
-                        <td className="p-4">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-lg border border-blue-200">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-blue-50">
+                    <TableHead className="text-blue-900">ID Tài khoản</TableHead>
+                    <TableHead className="text-blue-900">Username</TableHead>
+                    <TableHead className="text-blue-900">Tên nhân viên</TableHead>
+                    <TableHead className="text-blue-900">Chức vụ</TableHead>
+                    <TableHead className="text-right text-blue-900">Thao tác</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredAccounts.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="py-8 text-center text-gray-500">
+                        Không tìm thấy tài khoản
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredAccounts.map((account) => (
+                      <TableRow key={account.id} className="hover:bg-blue-50">
+                        <TableCell className="font-medium">{account.employee.id}</TableCell>
+                        <TableCell className="font-medium text-blue-600">
+                          {account.username}
+                        </TableCell>
+                        <TableCell>{account.employee.name}</TableCell>
+                        <TableCell>
                           <span
                             className={`inline-block rounded-full px-3 py-1 text-sm font-medium ${
                               account.employee.position === EmployeePosition.SALES
@@ -240,13 +263,13 @@ export function EmployeeManagement() {
                           >
                             {positionLabels[account.employee.position]}
                           </span>
-                        </td>
-                        <td className="p-4 text-right">
+                        </TableCell>
+                        <TableCell className="text-right">
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleEdit(account)}
-                            className="mr-2 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                            className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -258,114 +281,125 @@ export function EmployeeManagement() {
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="border-blue-200">
-            <DialogHeader>
-              <DialogTitle className="text-xl text-blue-900">
-                {editingAccount ? 'Sửa thông tin tài khoản' : 'Thêm tài khoản mới'}
-              </DialogTitle>
-              <DialogDescription className="text-sm text-gray-500">
-                {editingAccount
-                  ? 'Cập nhật thông tin tài khoản và nhân viên.'
-                  : 'Tạo tài khoản mới cho nhân viên.'}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="username" className="text-sm font-medium">
-                  Username
-                </Label>
-                <Input
-                  id="username"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  className="border-blue-200"
-                  placeholder="Nhập username"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="name" className="text-sm font-medium">
-                  Tên nhân viên
-                </Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="border-blue-200"
-                  placeholder="Nhập tên nhân viên"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="position" className="text-sm font-medium">
-                  Chức vụ
-                </Label>
-                <Select
-                  value={formData.position}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, position: value as EmployeePosition })
-                  }
-                >
-                  <SelectTrigger className="border-blue-200">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={EmployeePosition.SALES}>Nhân viên hóa đơn</SelectItem>
-                    <SelectItem value={EmployeePosition.INVENTORY}>Nhân viên kiểm kê</SelectItem>
-                    <SelectItem value={EmployeePosition.RECEIVING}>Nhân viên nhập hàng</SelectItem>
-                    <SelectItem value={EmployeePosition.MANAGER}>Quản lý</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
             </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setIsDialogOpen(false)}
-                className="border-blue-200"
-              >
-                Hủy
-              </Button>
-              <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
-                Lưu
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          )}
+        </CardContent>
+      </Card>
 
-        {/* Delete Confirmation Dialog */}
-        <AlertDialog
-          open={deleteConfirm.open}
-          onOpenChange={(open) => setDeleteConfirm({ ...deleteConfirm, open })}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
-              <AlertDialogDescription>
-                Bạn có chắc chắn muốn xóa tài khoản của "{deleteConfirm.name}"? Hành động này không
-                thể hoàn tác.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setDeleteConfirm({ open: false, id: 0, name: '' })}>
-                Hủy
-              </AlertDialogCancel>
-              <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
-                Xóa
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="border-blue-200">
+          <DialogHeader>
+            <DialogTitle className="text-blue-900">
+              {editingAccount ? 'Sửa thông tin tài khoản' : 'Thêm tài khoản mới'}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-500">
+              {editingAccount
+                ? 'Cập nhật thông tin tài khoản và nhân viên.'
+                : 'Tạo tài khoản mới cho nhân viên.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="username" className="text-sm font-medium">
+                Username
+              </Label>
+              <Input
+                id="username"
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                className="border-blue-200"
+                placeholder="Nhập username"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-sm font-medium">
+                Tên nhân viên
+              </Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="border-blue-200"
+                placeholder="Nhập tên nhân viên"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="position" className="text-sm font-medium">
+                Chức vụ
+              </Label>
+              <Select
+                value={formData.position}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, position: value as EmployeePosition })
+                }
+              >
+                <SelectTrigger className="border-blue-200">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={EmployeePosition.SALES}>Nhân viên hóa đơn</SelectItem>
+                  <SelectItem value={EmployeePosition.INVENTORY}>Nhân viên kiểm kê</SelectItem>
+                  <SelectItem value={EmployeePosition.RECEIVING}>Nhân viên nhập hàng</SelectItem>
+                  <SelectItem value={EmployeePosition.MANAGER}>Quản lý</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDialogOpen(false)}
+              className="border-blue-200"
+            >
+              Hủy
+            </Button>
+            <Button
+              onClick={handleSave}
+              className="bg-blue-600 hover:bg-blue-700"
+              disabled={isSaving} // ← Thêm dòng này
+            >
+              {isSaving ? ( // ← Thêm dòng này
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Đang lưu...
+                </>
+              ) : (
+                'Lưu'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) => setDeleteConfirm({ ...deleteConfirm, open })}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn xóa tài khoản của "{deleteConfirm.name}"? Hành động này không
+              thể hoàn tác.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteConfirm({ open: false, id: 0, name: '' })}>
+              Hủy
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
+              Xóa
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

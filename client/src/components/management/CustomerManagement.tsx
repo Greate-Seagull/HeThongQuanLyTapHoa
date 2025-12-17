@@ -1,58 +1,68 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Loader2 } from 'lucide-react';
-import { apiClient } from '@/services/api-client';
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Search, Loader2 } from 'lucide-react'
+import { apiClient } from '@/services/api-client'
 
 interface User {
-  id: number;
-  name: string;
-  point: number;
+  id: number
+  name: string
+  point: number
 }
 
 interface Account {
-  id: number;
-  phoneNumber: string;
-  user: User;
+  id: number
+  phoneNumber: string
+  user: User
 }
 
 interface ApiResponse {
-  status: string;
-  data: Account[];
+  status: string
+  data: Account[]
 }
 
 export function CustomerManagement() {
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [accounts, setAccounts] = useState<Account[]>([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchCustomers();
-  }, []);
+    fetchCustomers()
+  }, [])
 
   const fetchCustomers = async () => {
     try {
-      setLoading(true);
-      const response = await apiClient.get('/accounts');
-      console.log(response);
-      
-      setAccounts(response);
-      setError(null);
-    } catch (err) {
-      setError('Không thể tải dữ liệu khách hàng');
-      console.error('Error fetching customers:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+      setLoading(true)
+      const response: Account[] = await apiClient.get('/accounts')
+      console.log(response)
 
-  const filteredAccounts = accounts.filter(account =>
-    account.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    account.phoneNumber.includes(searchTerm)
-  );
+      setAccounts(response)
+      setError(null)
+    } catch (err) {
+      setError('Không thể tải dữ liệu khách hàng')
+      console.error('Error fetching customers:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const filteredAccounts = accounts
+    .filter(
+      (account) =>
+        account.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        account.phoneNumber.includes(searchTerm)
+    )
+    .sort((a, b) => b.user.id - a.user.id)
 
   return (
     <div className="space-y-6">
@@ -61,8 +71,8 @@ export function CustomerManagement() {
           <CardTitle className="text-blue-900">Quản Lý Khách Hàng</CardTitle>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex gap-2 flex-1 max-w-md">
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex max-w-md flex-1 gap-2">
               <Input
                 placeholder="Tìm kiếm theo tên hoặc số điện thoại..."
                 value={searchTerm}
@@ -75,18 +85,15 @@ export function CustomerManagement() {
             </div>
           </div>
 
-          <div className="border border-blue-200 rounded-lg overflow-hidden">
+          <div className="overflow-hidden rounded-lg border border-blue-200">
             {loading ? (
-              <div className="flex justify-center items-center py-12">
+              <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
               </div>
             ) : error ? (
-              <div className="text-center py-12 text-red-600">
+              <div className="py-12 text-center text-red-600">
                 {error}
-                <Button 
-                  onClick={fetchCustomers} 
-                  className="ml-4 bg-blue-600 hover:bg-blue-700"
-                >
+                <Button onClick={fetchCustomers} className="ml-4 bg-blue-600 hover:bg-blue-700">
                   Thử lại
                 </Button>
               </div>
@@ -103,7 +110,7 @@ export function CustomerManagement() {
                 <TableBody>
                   {filteredAccounts.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center py-8 text-gray-500">
+                      <TableCell colSpan={4} className="py-8 text-center text-gray-500">
                         Không tìm thấy khách hàng
                       </TableCell>
                     </TableRow>
@@ -114,7 +121,7 @@ export function CustomerManagement() {
                         <TableCell>{account.user.name}</TableCell>
                         <TableCell>{account.phoneNumber}</TableCell>
                         <TableCell>
-                          <span className="px-2 py-1 rounded text-sm bg-blue-100 text-blue-700">
+                          <span className="rounded bg-blue-100 px-2 py-1 text-sm text-blue-700">
                             {account.user.point} điểm
                           </span>
                         </TableCell>
@@ -128,5 +135,5 @@ export function CustomerManagement() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
