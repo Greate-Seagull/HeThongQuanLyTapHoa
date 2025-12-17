@@ -126,7 +126,6 @@ export const PromotionScalarFieldEnum = {
   description: 'description',
   startedAt: 'startedAt',
   endedAt: 'endedAt',
-  condition: 'condition',
   value: 'value',
   promotionType: 'promotionType'
 } as const

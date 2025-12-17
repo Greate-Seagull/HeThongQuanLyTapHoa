@@ -41,7 +41,6 @@ export type PromotionMinAggregateOutputType = {
   description: string | null
   startedAt: Date | null
   endedAt: Date | null
-  condition: string | null
   value: number | null
   promotionType: $Enums.PromotionType | null
 }
@@ -52,7 +51,6 @@ export type PromotionMaxAggregateOutputType = {
   description: string | null
   startedAt: Date | null
   endedAt: Date | null
-  condition: string | null
   value: number | null
   promotionType: $Enums.PromotionType | null
 }
@@ -63,7 +61,6 @@ export type PromotionCountAggregateOutputType = {
   description: number
   startedAt: number
   endedAt: number
-  condition: number
   value: number
   promotionType: number
   _all: number
@@ -86,7 +83,6 @@ export type PromotionMinAggregateInputType = {
   description?: true
   startedAt?: true
   endedAt?: true
-  condition?: true
   value?: true
   promotionType?: true
 }
@@ -97,7 +93,6 @@ export type PromotionMaxAggregateInputType = {
   description?: true
   startedAt?: true
   endedAt?: true
-  condition?: true
   value?: true
   promotionType?: true
 }
@@ -108,7 +103,6 @@ export type PromotionCountAggregateInputType = {
   description?: true
   startedAt?: true
   endedAt?: true
-  condition?: true
   value?: true
   promotionType?: true
   _all?: true
@@ -206,7 +200,6 @@ export type PromotionGroupByOutputType = {
   description: string | null
   startedAt: Date
   endedAt: Date
-  condition: string | null
   value: number
   promotionType: $Enums.PromotionType
   _count: PromotionCountAggregateOutputType | null
@@ -240,7 +233,6 @@ export type PromotionWhereInput = {
   description?: Prisma.StringNullableFilter<"Promotion"> | string | null
   startedAt?: Prisma.DateTimeFilter<"Promotion"> | Date | string
   endedAt?: Prisma.DateTimeFilter<"Promotion"> | Date | string
-  condition?: Prisma.StringNullableFilter<"Promotion"> | string | null
   value?: Prisma.FloatFilter<"Promotion"> | number
   promotionType?: Prisma.EnumPromotionTypeFilter<"Promotion"> | $Enums.PromotionType
   invoiceDetails?: Prisma.InvoiceDetailListRelationFilter
@@ -253,7 +245,6 @@ export type PromotionOrderByWithRelationInput = {
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   endedAt?: Prisma.SortOrder
-  condition?: Prisma.SortOrderInput | Prisma.SortOrder
   value?: Prisma.SortOrder
   promotionType?: Prisma.SortOrder
   invoiceDetails?: Prisma.InvoiceDetailOrderByRelationAggregateInput
@@ -269,7 +260,6 @@ export type PromotionWhereUniqueInput = Prisma.AtLeast<{
   description?: Prisma.StringNullableFilter<"Promotion"> | string | null
   startedAt?: Prisma.DateTimeFilter<"Promotion"> | Date | string
   endedAt?: Prisma.DateTimeFilter<"Promotion"> | Date | string
-  condition?: Prisma.StringNullableFilter<"Promotion"> | string | null
   value?: Prisma.FloatFilter<"Promotion"> | number
   promotionType?: Prisma.EnumPromotionTypeFilter<"Promotion"> | $Enums.PromotionType
   invoiceDetails?: Prisma.InvoiceDetailListRelationFilter
@@ -282,7 +272,6 @@ export type PromotionOrderByWithAggregationInput = {
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   endedAt?: Prisma.SortOrder
-  condition?: Prisma.SortOrderInput | Prisma.SortOrder
   value?: Prisma.SortOrder
   promotionType?: Prisma.SortOrder
   _count?: Prisma.PromotionCountOrderByAggregateInput
@@ -301,7 +290,6 @@ export type PromotionScalarWhereWithAggregatesInput = {
   description?: Prisma.StringNullableWithAggregatesFilter<"Promotion"> | string | null
   startedAt?: Prisma.DateTimeWithAggregatesFilter<"Promotion"> | Date | string
   endedAt?: Prisma.DateTimeWithAggregatesFilter<"Promotion"> | Date | string
-  condition?: Prisma.StringNullableWithAggregatesFilter<"Promotion"> | string | null
   value?: Prisma.FloatWithAggregatesFilter<"Promotion"> | number
   promotionType?: Prisma.EnumPromotionTypeWithAggregatesFilter<"Promotion"> | $Enums.PromotionType
 }
@@ -311,7 +299,6 @@ export type PromotionCreateInput = {
   description?: string | null
   startedAt: Date | string
   endedAt: Date | string
-  condition?: string | null
   value: number
   promotionType: $Enums.PromotionType
   invoiceDetails?: Prisma.InvoiceDetailCreateNestedManyWithoutPromotionInput
@@ -324,7 +311,6 @@ export type PromotionUncheckedCreateInput = {
   description?: string | null
   startedAt: Date | string
   endedAt: Date | string
-  condition?: string | null
   value: number
   promotionType: $Enums.PromotionType
   invoiceDetails?: Prisma.InvoiceDetailUncheckedCreateNestedManyWithoutPromotionInput
@@ -336,7 +322,6 @@ export type PromotionUpdateInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  condition?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   value?: Prisma.FloatFieldUpdateOperationsInput | number
   promotionType?: Prisma.EnumPromotionTypeFieldUpdateOperationsInput | $Enums.PromotionType
   invoiceDetails?: Prisma.InvoiceDetailUpdateManyWithoutPromotionNestedInput
@@ -349,7 +334,6 @@ export type PromotionUncheckedUpdateInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  condition?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   value?: Prisma.FloatFieldUpdateOperationsInput | number
   promotionType?: Prisma.EnumPromotionTypeFieldUpdateOperationsInput | $Enums.PromotionType
   invoiceDetails?: Prisma.InvoiceDetailUncheckedUpdateManyWithoutPromotionNestedInput
@@ -362,7 +346,6 @@ export type PromotionCreateManyInput = {
   description?: string | null
   startedAt: Date | string
   endedAt: Date | string
-  condition?: string | null
   value: number
   promotionType: $Enums.PromotionType
 }
@@ -372,7 +355,6 @@ export type PromotionUpdateManyMutationInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  condition?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   value?: Prisma.FloatFieldUpdateOperationsInput | number
   promotionType?: Prisma.EnumPromotionTypeFieldUpdateOperationsInput | $Enums.PromotionType
 }
@@ -383,7 +365,6 @@ export type PromotionUncheckedUpdateManyInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  condition?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   value?: Prisma.FloatFieldUpdateOperationsInput | number
   promotionType?: Prisma.EnumPromotionTypeFieldUpdateOperationsInput | $Enums.PromotionType
 }
@@ -394,7 +375,6 @@ export type PromotionCountOrderByAggregateInput = {
   description?: Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   endedAt?: Prisma.SortOrder
-  condition?: Prisma.SortOrder
   value?: Prisma.SortOrder
   promotionType?: Prisma.SortOrder
 }
@@ -410,7 +390,6 @@ export type PromotionMaxOrderByAggregateInput = {
   description?: Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   endedAt?: Prisma.SortOrder
-  condition?: Prisma.SortOrder
   value?: Prisma.SortOrder
   promotionType?: Prisma.SortOrder
 }
@@ -421,7 +400,6 @@ export type PromotionMinOrderByAggregateInput = {
   description?: Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   endedAt?: Prisma.SortOrder
-  condition?: Prisma.SortOrder
   value?: Prisma.SortOrder
   promotionType?: Prisma.SortOrder
 }
@@ -492,7 +470,6 @@ export type PromotionCreateWithoutPromotionDetailsInput = {
   description?: string | null
   startedAt: Date | string
   endedAt: Date | string
-  condition?: string | null
   value: number
   promotionType: $Enums.PromotionType
   invoiceDetails?: Prisma.InvoiceDetailCreateNestedManyWithoutPromotionInput
@@ -504,7 +481,6 @@ export type PromotionUncheckedCreateWithoutPromotionDetailsInput = {
   description?: string | null
   startedAt: Date | string
   endedAt: Date | string
-  condition?: string | null
   value: number
   promotionType: $Enums.PromotionType
   invoiceDetails?: Prisma.InvoiceDetailUncheckedCreateNestedManyWithoutPromotionInput
@@ -531,7 +507,6 @@ export type PromotionUpdateWithoutPromotionDetailsInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  condition?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   value?: Prisma.FloatFieldUpdateOperationsInput | number
   promotionType?: Prisma.EnumPromotionTypeFieldUpdateOperationsInput | $Enums.PromotionType
   invoiceDetails?: Prisma.InvoiceDetailUpdateManyWithoutPromotionNestedInput
@@ -543,7 +518,6 @@ export type PromotionUncheckedUpdateWithoutPromotionDetailsInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  condition?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   value?: Prisma.FloatFieldUpdateOperationsInput | number
   promotionType?: Prisma.EnumPromotionTypeFieldUpdateOperationsInput | $Enums.PromotionType
   invoiceDetails?: Prisma.InvoiceDetailUncheckedUpdateManyWithoutPromotionNestedInput
@@ -554,7 +528,6 @@ export type PromotionCreateWithoutInvoiceDetailsInput = {
   description?: string | null
   startedAt: Date | string
   endedAt: Date | string
-  condition?: string | null
   value: number
   promotionType: $Enums.PromotionType
   promotionDetails?: Prisma.PromotionDetailCreateNestedManyWithoutPromotionInput
@@ -566,7 +539,6 @@ export type PromotionUncheckedCreateWithoutInvoiceDetailsInput = {
   description?: string | null
   startedAt: Date | string
   endedAt: Date | string
-  condition?: string | null
   value: number
   promotionType: $Enums.PromotionType
   promotionDetails?: Prisma.PromotionDetailUncheckedCreateNestedManyWithoutPromotionInput
@@ -593,7 +565,6 @@ export type PromotionUpdateWithoutInvoiceDetailsInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  condition?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   value?: Prisma.FloatFieldUpdateOperationsInput | number
   promotionType?: Prisma.EnumPromotionTypeFieldUpdateOperationsInput | $Enums.PromotionType
   promotionDetails?: Prisma.PromotionDetailUpdateManyWithoutPromotionNestedInput
@@ -605,7 +576,6 @@ export type PromotionUncheckedUpdateWithoutInvoiceDetailsInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  condition?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   value?: Prisma.FloatFieldUpdateOperationsInput | number
   promotionType?: Prisma.EnumPromotionTypeFieldUpdateOperationsInput | $Enums.PromotionType
   promotionDetails?: Prisma.PromotionDetailUncheckedUpdateManyWithoutPromotionNestedInput
@@ -657,7 +627,6 @@ export type PromotionSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   description?: boolean
   startedAt?: boolean
   endedAt?: boolean
-  condition?: boolean
   value?: boolean
   promotionType?: boolean
   invoiceDetails?: boolean | Prisma.Promotion$invoiceDetailsArgs<ExtArgs>
@@ -671,7 +640,6 @@ export type PromotionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   description?: boolean
   startedAt?: boolean
   endedAt?: boolean
-  condition?: boolean
   value?: boolean
   promotionType?: boolean
 }, ExtArgs["result"]["promotion"]>
@@ -682,7 +650,6 @@ export type PromotionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   description?: boolean
   startedAt?: boolean
   endedAt?: boolean
-  condition?: boolean
   value?: boolean
   promotionType?: boolean
 }, ExtArgs["result"]["promotion"]>
@@ -693,12 +660,11 @@ export type PromotionSelectScalar = {
   description?: boolean
   startedAt?: boolean
   endedAt?: boolean
-  condition?: boolean
   value?: boolean
   promotionType?: boolean
 }
 
-export type PromotionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "description" | "startedAt" | "endedAt" | "condition" | "value" | "promotionType", ExtArgs["result"]["promotion"]>
+export type PromotionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "description" | "startedAt" | "endedAt" | "value" | "promotionType", ExtArgs["result"]["promotion"]>
 export type PromotionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   invoiceDetails?: boolean | Prisma.Promotion$invoiceDetailsArgs<ExtArgs>
   promotionDetails?: boolean | Prisma.Promotion$promotionDetailsArgs<ExtArgs>
@@ -719,7 +685,6 @@ export type $PromotionPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     description: string | null
     startedAt: Date
     endedAt: Date
-    condition: string | null
     value: number
     promotionType: $Enums.PromotionType
   }, ExtArgs["result"]["promotion"]>
@@ -1152,7 +1117,6 @@ export interface PromotionFieldRefs {
   readonly description: Prisma.FieldRef<"Promotion", 'String'>
   readonly startedAt: Prisma.FieldRef<"Promotion", 'DateTime'>
   readonly endedAt: Prisma.FieldRef<"Promotion", 'DateTime'>
-  readonly condition: Prisma.FieldRef<"Promotion", 'String'>
   readonly value: Prisma.FieldRef<"Promotion", 'Float'>
   readonly promotionType: Prisma.FieldRef<"Promotion", 'PromotionType'>
 }

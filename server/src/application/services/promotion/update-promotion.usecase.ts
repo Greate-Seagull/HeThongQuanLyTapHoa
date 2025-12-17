@@ -17,17 +17,9 @@ const inputSchema = z.object({
     .string()
     .transform((val) => new Date(val))
     .optional(),
-  condition: z.string().optional().nullable(),
   value: z.number().optional(),
   promotionType: z.string().optional(),
-  promotionDetails: z
-    .array(
-      z.object({
-        productId: z.number(),
-      })
-    )
-    .optional()
-    .nullable(),
+  promotionDetails: z.array(z.object({ productId: z.number() })).optional(),
 });
 
 const outputSchema = z.object({
@@ -41,7 +33,17 @@ export class UpdatePromotionUsecase {
   ) {}
 
   async execute(input: any) {
-    const parsedInput = inputSchema.parse(input);
+    console.log('=== UPDATE PROMOTION INPUT ===');
+    console.log('Raw input:', JSON.stringify(input, null, 2));
+    // Extract productIds from promotionDetails if present
+    let parsedInput = input;
+    if (input.promotionDetails) {
+      parsedInput = {
+        ...input,
+        productIds: input.promotionDetails.map((d: any) => d.productId),
+      };
+    }
+    parsedInput = inputSchema.parse(parsedInput);
     const log = logger.child({
       task: "Updating promotion",
       employeeId: parsedInput.authId,
@@ -55,15 +57,20 @@ export class UpdatePromotionUsecase {
     }
     const promotion = promotions[0];
 
-    const details = parsedInput.promotionDetails;
-    if (details && details.length > 0) {
-      const productIds = details.map((p) => p.productId);
+    const productIds = parsedInput.promotionDetails
+      ? parsedInput.promotionDetails.map((d: any) => d.productId)
+      : undefined;
+    if (productIds && productIds.length > 0) {
       const doExist = await this.productReadAccessor.existByIds(productIds);
       if (!doExist) {
         throw Error(`Expect all products to be exist`);
       }
     }
 
+    // Remove promotionDetails if present (from DB or client)
+    if ("promotionDetails" in parsedInput) {
+      delete parsedInput.promotionDetails;
+    }
     promotion.update(parsedInput);
 
     const savedPromotion = await this.promotionRepo.update(promotion);
