@@ -8,12 +8,21 @@ describe("Get products integration test", () => {
 	let output;
 
 	beforeAll(async () => {
+		// Xóa trước để tránh trùng barcode
+		await prisma.product.deleteMany({
+			where: { 
+				OR: [
+					{ id: { in: [product1.id, product2.id] } },
+					{ barcode: { in: [product1.barcode, product2.barcode] } }
+				]
+			},
+		});
 		await prisma.product.createMany({ data: [product1, product2] });
 	});
 
 	afterAll(async () => {
 		await prisma.product.deleteMany({
-			where: { id: { in: [product1.id, product2.id] } },
+			where: { barcode: { in: [product1.barcode, product2.barcode] } },
 		});
 	});
 
@@ -27,14 +36,14 @@ describe("Get products integration test", () => {
 			const foundProduct = output.products.find(
 				(p) => p.id === product1.id
 			);
-			expect(foundProduct).toMatchSnapshot(product1);
+			expect(foundProduct).toMatchObject(product1);
 		});
 
 		it("Should return correct product 2", () => {
 			const foundProduct = output.products.find(
 				(p) => p.id === product2.id
 			);
-			expect(foundProduct).toMatchSnapshot(product2);
+			expect(foundProduct).toMatchObject(product2);
 		});
 	});
 });

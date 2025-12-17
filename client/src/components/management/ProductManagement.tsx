@@ -314,8 +314,12 @@ export function ProductManagement() {
                         <td className="p-4 font-medium">{product.id}</td>
                         <td className="p-4 font-mono text-blue-600">{product.barcode}</td>
                         <td className="p-4 font-medium">{product.name}</td>
-                        <td className="p-4 text-sm text-gray-600">{product.category.name}</td>
-                        <td className="p-4 text-sm text-gray-600">{product.supplier.name}</td>
+                        <td className="p-4 text-sm text-gray-600">
+                          {product.category?.name ?? 'Chưa phân loại'}
+                        </td>{' '}
+                        <td className="p-4 text-sm text-gray-600">
+                          {product.supplier?.name ?? 'Chưa có nhà cung cấp'}
+                        </td>
                         <td className="p-4">
                           <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700">
                             {unitLabels[product.unit]}

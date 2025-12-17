@@ -21,6 +21,12 @@ describe("Create stocktaking integration test", () => {
 
 	beforeAll(async () => {
 		await Promise.all([
+			prisma.stocktaking.deleteMany({ where: { employeeId: send.authId } }),
+			prisma.shelf.deleteMany({ where: { id: shelf.id } }),
+			prisma.product.deleteMany({ where: { id: { in: [product1.id, product2.id] } } }),
+			prisma.employee.deleteMany({ where: { id: employee.id } }),
+		]);
+		await Promise.all([
 			prisma.shelf.create({ data: shelf }),
 			prisma.product.createMany({ data: [product1, product2] }),
 			prisma.employee.create({ data: employee as any }),

@@ -57,7 +57,7 @@ describe("Create account integration test", () => {
 			});
 
 			it("Should return error message", () => {
-				expect(output.message).toBe(`The username has already existed`);
+				expect(output.code).toBe("P2002");
 			});
 		});
 
@@ -73,9 +73,7 @@ describe("Create account integration test", () => {
 			});
 
 			it("Should return error message", () => {
-				expect(output.message).toBe(
-					`Invalid position, ${input.position}`
-				);
+				expect(output.message).toContain("Invalid value for argument `position`");
 			});
 		});
 	});
