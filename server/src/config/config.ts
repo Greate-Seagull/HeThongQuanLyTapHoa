@@ -5,7 +5,7 @@ export const config = {
 		URL: String(process.env.DATABASE_URL),
 	},
 
-	port: 3002,
+	port: 3000,
 
 	bcrypt: {
 		saltRound: Number(process.env.SALT_ROUND),

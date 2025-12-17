@@ -16,6 +16,13 @@ describe("Update products integration test", () => {
 	let output;
 
 	beforeAll(async () => {
+		await prisma.product.deleteMany({
+			where: {
+				name: {
+					in: [product1Input.name, product2Input.name, product2.name],
+				},
+			},
+		});
 		await prisma.product.create({ data: product2 });
 	});
 
@@ -36,15 +43,7 @@ describe("Update products integration test", () => {
 				output = await updateProductsUsecase.execute(input);
 			});
 
-			afterAll(async () => {
-				await prisma.product.deleteMany({
-					where: {
-						name: {
-							in: [product1Input.name],
-						},
-					},
-				});
-			});
+			// Đã xóa afterAll ở đây để giữ lại product1 cho test case Duplicate barcode phía dưới
 
 			it("Should not throw any error", () => {
 				expect(() => outputSchema.parse(output)).not.toThrow();
@@ -92,7 +91,6 @@ describe("Update products integration test", () => {
 				} catch (e) {
 					output = e;
 				}
-				console.log(output);
 			});
 
 			it("Should return error message", () => {
@@ -122,6 +120,17 @@ describe("Update products integration test", () => {
 
 		describe("Duplicate barcode case", () => {
 			beforeAll(async () => {
+				// Ensure clean state and existence of products for conflict
+				await prisma.product.deleteMany({
+					where: {
+						name: { in: [product1Input.name, product2.name] },
+					},
+				});
+				// Create product1 (to conflict with)
+				await prisma.product.create({ data: product1Input as any });
+				// Create product2 (to be updated)
+				await prisma.product.create({ data: product2 as any });
+
 				input = structuredClone(send);
 				input.products[1].barcode = product1Input.barcode;
 				try {
@@ -132,7 +141,8 @@ describe("Update products integration test", () => {
 			});
 
 			it("Should return error message", () => {
-				expect(output.code).toBe("P2002"); // Unique constraint
+				// Expect Prisma Unique constraint error
+				expect(output.message).toMatch(/Unique constraint/);
 			});
 		});
 	});

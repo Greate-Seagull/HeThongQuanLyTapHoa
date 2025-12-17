@@ -24,9 +24,21 @@ describe("Create good receipt integration test", () => {
 	let input;
 	let output;
 	beforeAll(async () => {
+		await prisma.goodReceipt.deleteMany({
+			where: { employeeId: employee.id },
+		});
 		await Promise.all([
-			prisma.employee.create({ data: employee as any }),
-			prisma.product.create({ data: product1 }),
+			prisma.employee.deleteMany({ where: { id: employee.id } }),
+			prisma.product.deleteMany({ where: { id: product1.id } }),
+		]);
+
+		// Sanitize data
+		const cleanEmployee = JSON.parse(JSON.stringify(employee));
+		const cleanProduct1 = JSON.parse(JSON.stringify(product1));
+
+		await Promise.all([
+			prisma.employee.create({ data: cleanEmployee }),
+			prisma.product.create({ data: cleanProduct1 }),
 		]);
 	});
 
@@ -64,7 +76,7 @@ describe("Create good receipt integration test", () => {
 			});
 
 			it("Should return error message", () => {
-				expect(output.message).toBe(`Expect all products to be valid`);
+				expect(output.message).toBe("Expect all products to be valid");
 			});
 		});
 
@@ -86,7 +98,7 @@ describe("Create good receipt integration test", () => {
 			});
 		});
 
-		describe("Invalid import quantity case", () => {
+		describe("Invalid price case", () => {
 			beforeAll(async () => {
 				input = structuredClone(send);
 				input.items[0].price = -1;

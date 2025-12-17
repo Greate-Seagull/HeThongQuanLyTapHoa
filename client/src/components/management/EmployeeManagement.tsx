@@ -63,7 +63,7 @@ const positionLabels: Record<EmployeePosition, string> = {
   [EmployeePosition.MANAGER]: 'Quản lý',
 }
 
-const API_BASE_URL = 'http://localhost:3002/employee-accounts' // Thay đổi URL này
+const API_BASE_URL = 'http://localhost:3001/employee-accounts' // Thay đổi URL này
 
 export function EmployeeManagement() {
   const [accounts, setAccounts] = useState<Account[]>([])

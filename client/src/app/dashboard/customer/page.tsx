@@ -135,7 +135,7 @@ export default function CustomerDashboardPage() {
       setIsLoadingInvoices(true)
       try {
         const response = await apiClient.get<ApiResponse>(`/invoices/mine`)
-        setInvoices(response || [])
+        setInvoices(response)
       } catch (error) {
         console.error('Failed to fetch invoices:', error)
         setInvoices([])

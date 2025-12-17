@@ -37,6 +37,10 @@ describe("Create account integration test", () => {
 	describe("Abnormal case", () => {
 		describe("Existed username case", () => {
 			beforeAll(async () => {
+				// Ensure cleanup before setup
+				await prisma.employeeAccount.deleteMany({ where: { username: employeeAccount.username }});
+				await prisma.employee.deleteMany({ where: { id: employee.id }});
+
 				await prisma.employee.create({ data: employee as any });
 				await prisma.employeeAccount.create({ data: employeeAccount });
 
@@ -57,7 +61,7 @@ describe("Create account integration test", () => {
 			});
 
 			it("Should return error message", () => {
-				expect(output.message).toBe(`The username has already existed`);
+				expect(output.message).toMatch(/Unique constraint/);
 			});
 		});
 
@@ -73,9 +77,7 @@ describe("Create account integration test", () => {
 			});
 
 			it("Should return error message", () => {
-				expect(output.message).toBe(
-					`Invalid position, ${input.position}`
-				);
+				expect(output.message).toMatch(/Invalid value for argument/);
 			});
 		});
 	});

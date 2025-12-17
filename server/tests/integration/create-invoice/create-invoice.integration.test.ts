@@ -16,6 +16,23 @@ describe("Create invoice integration test", () => {
 	let output;
 
 	beforeAll(async () => {
+		// Clean up all related data first
+		await prisma.invoice.deleteMany({
+			where: { employeeId: employee.id },
+		});
+		await Promise.all([
+			prisma.employee.deleteMany({ where: { id: employee.id } }),
+			prisma.user.deleteMany({ where: { id: user.id } }),
+			prisma.product.deleteMany({
+				where: { id: { in: [product1.id, product2.id] } },
+			}),
+			prisma.promotion.deleteMany({
+				where: { id: { in: [promotion1.id, promotion2.id] } },
+			}),
+		]);
+
+		// Create fresh data
+		// Use 'as any' to avoid type issues and potential JSON serialization data loss
 		await Promise.all([
 			prisma.employee.create({ data: employee as any }),
 			prisma.user.create({ data: user }),
