@@ -74,6 +74,8 @@ export function CustomerProfileContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
 
   const [formData, setFormData] = useState({
     id: 0,
@@ -133,17 +135,19 @@ export function CustomerProfileContent() {
   }
 
   const handleSave = async () => {
+    if (isSaving) return;
     // Validation
     if (!formData.name.trim()) {
       toast.error('Vui lòng nhập họ và tên')
       return
     }
 
+    setIsSaving(true)
     try {
-      // TODO: Thay đổi endpoint phù hợp với API của bạn
+      // Gửi cả name và phoneNumber (phoneNumber không cho sửa, nhưng backend yêu cầu)
       const response = await apiClient.put<AccountResponse>('/accounts/profile', {
         name: formData.name,
-        // phoneNumber thường không cho sửa vì là identifier
+        phoneNumber: formData.phoneNumber, // Đảm bảo luôn gửi lên
       })
 
       // Update user state with new data
@@ -168,6 +172,8 @@ export function CustomerProfileContent() {
     } catch (error) {
       console.error('Error updating profile:', error)
       toast.error('Có lỗi xảy ra, vui lòng thử lại')
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -184,6 +190,7 @@ export function CustomerProfileContent() {
   }
 
   const handleChangePassword = async () => {
+    if (isChangingPassword) return;
     // Validation
     if (!passwordData.currentPassword.trim()) {
       toast.error('Vui lòng nhập mật khẩu hiện tại')
@@ -210,6 +217,7 @@ export function CustomerProfileContent() {
       return
     }
 
+    setIsChangingPassword(true)
     try {
       // TODO: Cập nhật endpoint change password
       await apiClient.post('/accounts/change-password', {
@@ -231,6 +239,8 @@ export function CustomerProfileContent() {
       } else {
         toast.error('Có lỗi xảy ra, vui lòng thử lại')
       }
+    } finally {
+      setIsChangingPassword(false)
     }
   }
 
@@ -456,14 +466,19 @@ export function CustomerProfileContent() {
                   {/* Action Buttons */}
                   {isEditing && (
                     <div className="flex gap-3 border-t border-gray-200 pt-4">
-                      <Button onClick={handleSave} className="flex-1 bg-blue-600 hover:bg-blue-700">
+                      <Button
+                        onClick={handleSave}
+                        className="flex-1 bg-blue-600 hover:bg-blue-700"
+                        disabled={isSaving}
+                      >
                         <Save className="mr-2 h-4 w-4" />
-                        Lưu thay đổi
+                        {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
                       </Button>
                       <Button
                         onClick={handleCancel}
                         variant="outline"
                         className="flex-1 border-gray-300 hover:bg-gray-50"
+                        disabled={isSaving}
                       >
                         <X className="mr-2 h-4 w-4" />
                         Hủy
@@ -584,9 +599,10 @@ export function CustomerProfileContent() {
             <Button
               onClick={handleChangePassword}
               className="bg-blue-600 text-white hover:bg-blue-700"
+              disabled={isChangingPassword}
             >
               <Save className="mr-2 h-4 w-4" />
-              Lưu mật khẩu
+              {isChangingPassword ? 'Đang lưu...' : 'Lưu mật khẩu'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -430,7 +430,7 @@ export function ProductManagement() {
                   Danh mục *
                 </Label>
                 <Select
-                  value={formData.categoryId.toString()}
+                  value={formData.categoryId != null ? formData.categoryId.toString() : ''}
                   onValueChange={(value) =>
                     setFormData({ ...formData, categoryId: parseInt(value) })
                   }
@@ -452,7 +452,7 @@ export function ProductManagement() {
                   Nhà cung cấp *
                 </Label>
                 <Select
-                  value={formData.supplierId.toString()}
+                  value={formData.supplierId != null ? formData.supplierId.toString() : ''}
                   onValueChange={(value) =>
                     setFormData({ ...formData, supplierId: parseInt(value) })
                   }

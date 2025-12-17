@@ -60,6 +60,7 @@ export function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
 
   const [formData, setFormData] = useState({
     id: 0,
@@ -126,15 +127,18 @@ export function ProfilePage() {
   }
 
   const handleSave = async () => {
+    if (isSaving) return;
     setIsSaving(true)
     // Validation
     if (!formData.name.trim()) {
       toast.error('Vui lòng nhập họ và tên')
+      setIsSaving(false)
       return
     }
 
     if (!formData.username.trim()) {
       toast.error('Vui lòng nhập tên đăng nhập')
+      setIsSaving(false)
       return
     }
 
@@ -167,60 +171,70 @@ export function ProfilePage() {
   }
 
   const handleChangePassword = async () => {
+    if (isChangingPassword) return;
+    setIsChangingPassword(true);
     // Validation
     if (!passwordData.currentPassword.trim()) {
       toast.error('Vui lòng nhập mật khẩu hiện tại')
+      setIsChangingPassword(false);
       return
     }
 
     if (!passwordData.newPassword.trim()) {
       toast.error('Vui lòng nhập mật khẩu mới')
+      setIsChangingPassword(false);
       return
     }
 
     if (passwordData.newPassword.length < 6) {
       toast.error('Mật khẩu mới phải có tối thiểu 6 ký tự')
+      setIsChangingPassword(false);
       return
     }
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast.error('Mật khẩu xác nhận không khớp')
+      setIsChangingPassword(false);
       return
     }
 
     if (passwordData.currentPassword === passwordData.newPassword) {
       toast.error('Mật khẩu mới phải khác mật khẩu hiện tại')
+      setIsChangingPassword(false);
       return
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/profile/change-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
+      let response;
+      if (user?.type === 'EMPLOYEE' && user.position === EmployeePosition.MANAGER) {
+        // Gọi API đổi mật khẩu manager
+        response = await apiClient.post('/accounts/manager/change-password', {
           currentPassword: passwordData.currentPassword,
           newPassword: passwordData.newPassword,
-        }),
-      })
-
-      const result = await response.json()
-      if (result.status === 'success') {
-        toast.success('Đổi mật khẩu thành công!')
-        setPasswordData({
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: '',
-        })
-        setIsChangePasswordOpen(false)
+        });
       } else {
-        toast.error(result.message || 'Mật khẩu hiện tại không đúng')
+        // Gọi API đổi mật khẩu customer
+        response = await apiClient.post('/accounts/change-password', {
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+        });
       }
-    } catch (error) {
-      console.error('Error changing password:', error)
-      toast.error('Có lỗi xảy ra, vui lòng thử lại')
+      toast.success('Đổi mật khẩu thành công!');
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+      setIsChangePasswordOpen(false);
+    } catch (error: any) {
+      console.error('Error changing password:', error);
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error('Có lỗi xảy ra, vui lòng thử lại');
+      }
+    } finally {
+      setIsChangingPassword(false);
     }
   }
 
@@ -595,9 +609,10 @@ export function ProfilePage() {
             <Button
               onClick={handleChangePassword}
               className="bg-blue-600 text-white hover:bg-blue-700"
+              disabled={isChangingPassword}
             >
               <Save className="mr-2 h-4 w-4" />
-              Lưu mật khẩu
+              {isChangingPassword ? 'Đang lưu...' : 'Lưu mật khẩu'}
             </Button>
           </DialogFooter>
         </DialogContent>

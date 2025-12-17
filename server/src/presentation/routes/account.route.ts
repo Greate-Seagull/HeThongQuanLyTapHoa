@@ -1,3 +1,10 @@
+import { changeManagerPasswordUsecase } from '../../composition-root';
+// Đổi mật khẩu cho manager (employee account)
+
+
+// Đổi mật khẩu cho customer (hoặc employee nếu muốn dùng chung)
+import { changeCustomerPasswordUsecase } from '../../composition-root';
+
 import { Router } from "express";
 import { authenticationMiddleware } from "../middlewares/authentication.middleware";
 import { authorizationMiddleware } from "../middlewares/authorization.middleware";
@@ -54,11 +61,16 @@ router.post(
   controller(createCustomerAccountUsecase)
 );
 
+
+// Cập nhật profile cá nhân (customer)
 router.put(
-  "/:id",
+  "/profile",
   authenticationMiddleware,
-//   authorizationMiddleware("MANAGER"),
-  (req, res) => controller(updateCustomerAccountUsecase)({ ...req, id: req.params.id }, res)
+  (req, res) => {
+    // Gán id vào body để controller merge đúng input
+    req.body = { ...req.body, id: (req as any).authId };
+    controller(updateCustomerAccountUsecase)(req, res);
+  }
 );
 
 router.delete(
@@ -66,6 +78,25 @@ router.delete(
   authenticationMiddleware,
   authorizationMiddleware("MANAGER"),
   (req, res) => controller(deleteCustomerAccountUsecase)({ ...req, id: req.params.id }, res)
+);
+
+router.post(
+  '/change-password',
+  authenticationMiddleware,
+  (req, res) => {
+    req.body = { ...req.body, id: (req as any).authId };
+    controller(changeCustomerPasswordUsecase)(req, res);
+  }
+);
+
+router.post(
+  '/manager/change-password',
+  authenticationMiddleware,
+  authorizationMiddleware('MANAGER'),
+  (req, res) => {
+    req.body = { ...req.body, id: (req as any).authId };
+    controller(changeManagerPasswordUsecase)(req, res);
+  }
 );
 
 export default router;
