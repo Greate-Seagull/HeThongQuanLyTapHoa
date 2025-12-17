@@ -7,145 +7,176 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Award, Star, Receipt, Eye, ShoppingCart, Loader2 } from 'lucide-react'
+import { Award, Star, Receipt, Eye, ShoppingCart } from 'lucide-react'
 import { useAuthStore } from '@/store/auth-store'
 import { useRouter } from 'next/navigation'
-import { CustomerProfileContent } from '@/components/CustomerProfileContent'
-import { apiClient } from '@/services/api-client'
 
-// API Response Types
-interface Product {
+// Mock Invoice data - sẽ thay bằng API call
+interface Invoice {
   id: number
-  name: string
-  barcode: number
-  unit: string
-}
-
-interface Promotion {
-  id: number
-  name: string
-  description: string
-  startedAt: string
-  endedAt: string
-  condition: string
-  value: number
-  promotionType: 'PERCENTAGE' | 'FIXED'
+  customerId: number
+  employeeId: number
+  createdAt: Date
+  total: number
+  pointsUsed: number
+  employee: { id: number; name: string }
+  details: InvoiceDetail[]
+  subtotal: number
+  totalDiscount: number
+  pointsDiscount: number
 }
 
 interface InvoiceDetail {
-  invoiceId: number
+  id: number
   productId: number
   quantity: number
-  promotionId: number | null
-  product: Product
-  promotion?: Promotion
+  price: number
+  discount: number
+  subtotal: number
+  product: { id: number; name: string }
+  promotion?: { id: number; name: string }
 }
 
-interface Invoice {
-  id: number
-  employeeId: number
-  userId: number
-  usedPoint: number
-  total: number
-  createdAt: string
-  invoiceDetails: InvoiceDetail[]
-}
-
-interface ApiResponse {
-  status: string
-  data: Invoice[]
-}
+// Mock invoices - synced with ProductManagement
+const mockInvoices: Invoice[] = [
+  {
+    id: 1,
+    customerId: 1,
+    employeeId: 3,
+    createdAt: new Date('2024-12-01'),
+    total: 36500,
+    pointsUsed: 50,
+    subtotal: 41500,
+    totalDiscount: 5000,
+    pointsDiscount: 5000,
+    employee: { id: 3, name: 'Lê Văn Bán' },
+    details: [
+      {
+        id: 1,
+        productId: 1,
+        quantity: 2,
+        price: 10000,
+        discount: 0,
+        subtotal: 20000,
+        product: { id: 1, name: 'Coca Cola 330ml' },
+      },
+      {
+        id: 2,
+        productId: 3,
+        quantity: 1,
+        price: 15000,
+        discount: 1500,
+        subtotal: 13500,
+        product: { id: 3, name: 'Bánh Oreo' },
+        promotion: { id: 1, name: 'Giảm 10%' },
+      },
+      {
+        id: 3,
+        productId: 4,
+        quantity: 2,
+        price: 4000,
+        discount: 0,
+        subtotal: 8000,
+        product: { id: 4, name: 'Mì Hảo Hảo' },
+      },
+    ],
+  },
+  {
+    id: 2,
+    customerId: 1,
+    employeeId: 3,
+    createdAt: new Date('2024-11-28'),
+    total: 42000,
+    pointsUsed: 0,
+    subtotal: 44000,
+    totalDiscount: 2000,
+    pointsDiscount: 0,
+    employee: { id: 3, name: 'Lê Văn Bán' },
+    details: [
+      {
+        id: 4,
+        productId: 2,
+        quantity: 2,
+        price: 9500,
+        discount: 0,
+        subtotal: 19000,
+        product: { id: 2, name: 'Pepsi 330ml' },
+      },
+      {
+        id: 5,
+        productId: 5,
+        quantity: 1,
+        price: 28000,
+        discount: 3000,
+        subtotal: 25000,
+        product: { id: 5, name: 'Sữa TH True Milk' },
+        promotion: { id: 2, name: 'Giảm 3k' },
+      },
+    ],
+  },
+  {
+    id: 3,
+    customerId: 1,
+    employeeId: 3,
+    createdAt: new Date('2024-11-20'),
+    total: 24000,
+    pointsUsed: 100,
+    subtotal: 34000,
+    totalDiscount: 10000,
+    pointsDiscount: 10000,
+    employee: { id: 3, name: 'Lê Văn Bán' },
+    details: [
+      {
+        id: 6,
+        productId: 4,
+        quantity: 5,
+        price: 4000,
+        discount: 0,
+        subtotal: 20000,
+        product: { id: 4, name: 'Mì Hảo Hảo' },
+      },
+      {
+        id: 7,
+        productId: 1,
+        quantity: 1,
+        price: 10000,
+        discount: 6000,
+        subtotal: 4000,
+        product: { id: 1, name: 'Coca Cola 330ml' },
+        promotion: { id: 3, name: 'Flash Sale -6k' },
+      },
+      {
+        id: 8,
+        productId: 3,
+        quantity: 1,
+        price: 15000,
+        discount: 5000,
+        subtotal: 10000,
+        product: { id: 3, name: 'Bánh Oreo' },
+        promotion: { id: 4, name: 'Combo giảm 5k' },
+      },
+    ],
+  },
+]
 
 export default function CustomerDashboardPage() {
-  const { user, login } = useAuthStore() as any
+  const { user } = useAuthStore()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
-  const [isLoadingInvoices, setIsLoadingInvoices] = useState(false)
   const [activeMenu, setActiveMenu] = useState('points')
   const [viewingInvoice, setViewingInvoice] = useState<Invoice | null>(null)
   const [showInvoiceDialog, setShowInvoiceDialog] = useState(false)
-  const [invoices, setInvoices] = useState<Invoice[]>([])
-  const [customerProfile, setCustomerProfile] = useState<any>(null)
 
   useEffect(() => {
-    const checkAuth = async () => {
-      // Nếu đã có user và đúng role -> OK
-      if (user?.role === 'customer') {
-        setIsLoading(false)
-        return
-      }
-
-      // Nếu có user nhưng sai role -> Login
-      if (user && user.role !== 'customer') {
-        router.push('/auth/login')
-        return
-      }
-
-      // Nếu chưa có user (F5), kiểm tra token
-      const token = localStorage.getItem('accessToken')
-      if (!token) {
-        router.push('/auth/login')
-        return
-      }
-
-      // Có token, thử lấy lại thông tin user
-      try {
-        const response = await apiClient.get<any>('/accounts/profile')
-        // Khôi phục state user
-        const userData = {
-          username: response.phoneNumber,
-          role: 'customer',
-          customerId: response.user.id,
-        }
-        login(userData, token)
-        setIsLoading(false)
-      } catch (error) {
-        console.error('Session restore failed:', error)
-        localStorage.removeItem('accessToken')
-        router.push('/auth/login')
-      }
+    // Check authentication after mount
+    if (!user) {
+      router.push('/auth/login')
+    } else if (user.role !== 'customer') {
+      router.push('/auth/login')
+    } else {
+      setIsLoading(false)
     }
-
-    checkAuth()
-  }, [user, router, login])
-
-  // Fetch customer profile
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (!user?.customerId) return
-
-      try {
-        const response = await apiClient.get<any>('/accounts/profile')
-        setCustomerProfile(response.user)
-      } catch (error) {
-        console.error('Failed to fetch profile:', error)
-      }
-    }
-
-    if (user?.customerId) {
-      fetchProfile()
-    }
-  }, [user?.customerId])
-
-  // Fetch invoices khi chuyển sang tab invoices
-  useEffect(() => {
-    const fetchInvoices = async () => {
-      if (activeMenu !== 'invoices' || !user?.customerId) return
-
-      setIsLoadingInvoices(true)
-      try {
-        const response = await apiClient.get<ApiResponse>(`/invoices/mine`)
-        setInvoices(response || [])
-      } catch (error) {
-        console.error('Failed to fetch invoices:', error)
-        setInvoices([])
-      } finally {
-        setIsLoadingInvoices(false)
-      }
-    }
-
-    fetchInvoices()
-  }, [activeMenu, user?.customerId])
+  }, [user, router])
 
   const menuItems = [
     { id: 'points', label: 'Điểm tích lũy', icon: <Award className="h-4 w-4" /> },
@@ -153,59 +184,13 @@ export default function CustomerDashboardPage() {
     { id: 'profile', label: 'Thông tin cá nhân', icon: <Star className="h-4 w-4" /> },
   ]
 
-  // Tính toán điểm từ profile và invoices
-  const currentPoints = customerProfile?.point || 0
-  const totalPointsUsed = invoices.reduce((sum, inv) => sum + (inv.usedPoint || 0), 0)
-  const totalPointsEarned = currentPoints + totalPointsUsed
-
-  // Tính toán chi tiết hóa đơn với giá gốc ước tính
-  const calculateInvoiceDetails = (invoice: Invoice) => {
-    const details = invoice.invoiceDetails.map(detail => {
-      let originalPrice = 0
-      let discount = 0
-      let subtotal = 0
-
-      if (detail.promotion) {
-        if (detail.promotion.promotionType === 'PERCENTAGE') {
-          // Ước tính giá gốc từ % giảm giá
-          const avgPriceAfterDiscount = invoice.total / invoice.invoiceDetails.reduce((sum, d) => sum + d.quantity, 0)
-          originalPrice = Math.round(avgPriceAfterDiscount / (1 - detail.promotion.value / 100))
-          discount = Math.round(originalPrice * detail.promotion.value / 100) * detail.quantity
-          subtotal = originalPrice * detail.quantity - discount
-        } else {
-          // Giảm cố định
-          discount = detail.promotion.value * detail.quantity
-          originalPrice = Math.round((invoice.total + totalPointsUsed * 100 + discount) / invoice.invoiceDetails.reduce((sum, d) => sum + d.quantity, 0))
-          subtotal = originalPrice * detail.quantity - discount
-        }
-      } else {
-        // Không có khuyến mãi
-        originalPrice = Math.round((invoice.total + invoice.usedPoint * 100) / invoice.invoiceDetails.reduce((sum, d) => sum + d.quantity, 0))
-        discount = 0
-        subtotal = originalPrice * detail.quantity
-      }
-
-      return {
-        ...detail,
-        price: originalPrice,
-        discount,
-        subtotal,
-      }
-    })
-
-    const subtotalBeforeDiscount = details.reduce((sum, d) => sum + d.price * d.quantity, 0)
-    const promotionDiscount = details.reduce((sum, d) => sum + d.discount, 0)
-    const pointsDiscount = invoice.usedPoint * 100 // 1 điểm = 100đ
-    const totalDiscount = promotionDiscount + pointsDiscount
-
-    return {
-      details,
-      subtotal: subtotalBeforeDiscount,
-      promotionDiscount,
-      pointsDiscount,
-      totalDiscount,
-    }
-  }
+  // Lọc hóa đơn của khách hàng hiện tại
+  const customerInvoices = mockInvoices.filter(inv => inv.customerId === (user?.customerId || 1))
+  
+  // Tính tổng điểm tích lũy và đã sử dụng
+  const totalPointsEarned = 2500
+  const totalPointsUsed = customerInvoices.reduce((sum, inv) => sum + inv.pointsUsed, 0)
+  const currentPoints = totalPointsEarned - totalPointsUsed
 
   const handleViewInvoice = (invoice: Invoice) => {
     setViewingInvoice(invoice)
@@ -260,8 +245,7 @@ export default function CustomerDashboardPage() {
                 </div>
 
                 <div className="text-base text-gray-600 pt-4 bg-yellow-50 p-4 rounded-lg">
-                  💡 Tích lũy thêm điểm để nhận được nhiều ưu đãi hấp dẫn!<br />
-                  <span className="text-sm">(1 điểm = 100đ khi sử dụng)</span>
+                  💡 Tích lũy thêm điểm để nhận được nhiều ưu đãi hấp dẫn!
                 </div>
               </div>
             </CardContent>
@@ -269,15 +253,15 @@ export default function CustomerDashboardPage() {
         </div>
       )}
 
-      {activeMenu === 'profile' && customerProfile && (
-        <CustomerProfileContent
+      {activeMenu === 'profile' && (
+        <ProfilePage
           user={{
             id: user?.customerId || 1,
-            name: customerProfile.name || 'Khách hàng',
-            phone: customerProfile.phoneNumber || '',
-            phoneNumber: customerProfile.phoneNumber || '',
+            name: 'Nguyễn Văn A',
+            phone: '0901234567',
+            phoneNumber: '0901234567',
             point: currentPoints,
-            loggedAt: new Date(customerProfile.loggedAt || new Date()),
+            loggedAt: new Date(),
           }}
           role="customer"
         />
@@ -292,12 +276,7 @@ export default function CustomerDashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            {isLoadingInvoices ? (
-              <div className="text-center py-12">
-                <Loader2 className="h-12 w-12 mx-auto mb-3 animate-spin text-blue-600" />
-                <p className="text-gray-500">Đang tải hóa đơn...</p>
-              </div>
-            ) : invoices.length === 0 ? (
+            {customerInvoices.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
                 <ShoppingCart className="h-12 w-12 mx-auto mb-3 opacity-20" />
                 <p>Chưa có hóa đơn nào</p>
@@ -310,6 +289,7 @@ export default function CustomerDashboardPage() {
                     <TableRow className="bg-blue-50">
                       <TableHead className="text-blue-900">Mã HĐ</TableHead>
                       <TableHead className="text-blue-900">Ngày mua</TableHead>
+                      <TableHead className="text-blue-900">Nhân viên</TableHead>
                       <TableHead className="text-blue-900">Số mặt hàng</TableHead>
                       <TableHead className="text-blue-900">Tổng tiền</TableHead>
                       <TableHead className="text-blue-900">Điểm dùng</TableHead>
@@ -317,17 +297,18 @@ export default function CustomerDashboardPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {invoices.map((invoice) => (
+                    {customerInvoices.map((invoice) => (
                       <TableRow key={invoice.id} className="hover:bg-blue-50">
                         <TableCell>HD{invoice.id.toString().padStart(3, '0')}</TableCell>
-                        <TableCell>{new Date(invoice.createdAt).toLocaleDateString('vi-VN')}</TableCell>
-                        <TableCell>{invoice.invoiceDetails.length} mặt hàng</TableCell>
+                        <TableCell>{invoice.createdAt.toLocaleDateString('vi-VN')}</TableCell>
+                        <TableCell>{invoice.employee.name}</TableCell>
+                        <TableCell>{invoice.details.length} mặt hàng</TableCell>
                         <TableCell className="text-green-600 font-semibold">
                           {invoice.total.toLocaleString('vi-VN')}đ
                         </TableCell>
                         <TableCell>
-                          {invoice.usedPoint > 0 ? (
-                            <span className="text-orange-600">{invoice.usedPoint} điểm</span>
+                          {invoice.pointsUsed > 0 ? (
+                            <span className="text-orange-600">{invoice.pointsUsed} điểm</span>
                           ) : (
                             <span className="text-gray-400">-</span>
                           )}
@@ -362,98 +343,93 @@ export default function CustomerDashboardPage() {
             </DialogDescription>
           </DialogHeader>
 
-          {viewingInvoice && (() => {
-            const calculated = calculateInvoiceDetails(viewingInvoice)
-            return (
-              <div className="space-y-4">
-                {/* Thông tin hóa đơn */}
-                <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50 rounded-lg">
-                  <div>
-                    <p className="text-sm text-gray-600">Ngày mua</p>
-                    <p className="font-semibold">{new Date(viewingInvoice.createdAt).toLocaleDateString('vi-VN')}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Giờ mua</p>
-                    <p className="font-semibold">{new Date(viewingInvoice.createdAt).toLocaleTimeString('vi-VN')}</p>
-                  </div>
+          {viewingInvoice && (
+            <div className="space-y-4">
+              {/* Thông tin hóa đơn */}
+              <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50 rounded-lg">
+                <div>
+                  <p className="text-sm text-gray-600">Nhân viên bán</p>
+                  <p className="font-semibold">{viewingInvoice.employee.name}</p>
                 </div>
-
-                {/* Danh sách sản phẩm */}
-                <div className="border border-blue-200 rounded-lg overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-blue-50">
-                        <TableHead className="text-blue-900">Sản phẩm</TableHead>
-                        <TableHead className="text-blue-900">Đơn giá</TableHead>
-                        <TableHead className="text-blue-900">SL</TableHead>
-                        <TableHead className="text-blue-900">Khuyến mãi</TableHead>
-                        <TableHead className="text-blue-900">Giảm giá</TableHead>
-                        <TableHead className="text-blue-900">Thành tiền</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {calculated.details.map((detail, index) => (
-                        <TableRow key={`${detail.invoiceId}-${detail.productId}-${index}`} className="hover:bg-blue-50">
-                          <TableCell>{detail.product.name}</TableCell>
-                          <TableCell>{detail.price.toLocaleString('vi-VN')}đ</TableCell>
-                          <TableCell>{detail.quantity}</TableCell>
-                          <TableCell>
-                            {detail.promotion ? (
-                              <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded">
-                                {detail.promotion.name}
-                              </span>
-                            ) : (
-                              <span className="text-gray-400">-</span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-red-600">
-                            {detail.discount > 0 ? `-${detail.discount.toLocaleString('vi-VN')}đ` : '-'}
-                          </TableCell>
-                          <TableCell className="font-semibold">
-                            {detail.subtotal.toLocaleString('vi-VN')}đ
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-
-                {/* Tổng kết */}
-                <div className="space-y-2 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Tạm tính:</span>
-                    <span>{calculated.subtotal.toLocaleString('vi-VN')}đ</span>
-                  </div>
-                  {calculated.promotionDiscount > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Giảm giá khuyến mãi:</span>
-                      <span className="text-red-600">
-                        -{calculated.promotionDiscount.toLocaleString('vi-VN')}đ
-                      </span>
-                    </div>
-                  )}
-                  {viewingInvoice.usedPoint > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Giảm giá từ điểm ({viewingInvoice.usedPoint} điểm):</span>
-                      <span className="text-red-600">-{calculated.pointsDiscount.toLocaleString('vi-VN')}đ</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-sm border-t pt-2">
-                    <span className="text-gray-600">Tổng giảm giá:</span>
-                    <span className="text-red-600 font-semibold">
-                      -{calculated.totalDiscount.toLocaleString('vi-VN')}đ
-                    </span>
-                  </div>
-                  <div className="flex justify-between border-t pt-2">
-                    <span className="font-semibold">Tổng thanh toán:</span>
-                    <span className="font-semibold text-green-600 text-lg">
-                      {viewingInvoice.total.toLocaleString('vi-VN')}đ
-                    </span>
-                  </div>
+                <div>
+                  <p className="text-sm text-gray-600">Ngày mua</p>
+                  <p className="font-semibold">{viewingInvoice.createdAt.toLocaleDateString('vi-VN')}</p>
                 </div>
               </div>
-            )
-          })()}
+
+              {/* Danh sách sản phẩm */}
+              <div className="border border-blue-200 rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-blue-50">
+                      <TableHead className="text-blue-900">Sản phẩm</TableHead>
+                      <TableHead className="text-blue-900">Đơn giá</TableHead>
+                      <TableHead className="text-blue-900">SL</TableHead>
+                      <TableHead className="text-blue-900">Khuyến mãi</TableHead>
+                      <TableHead className="text-blue-900">Giảm giá</TableHead>
+                      <TableHead className="text-blue-900">Thành tiền</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {viewingInvoice.details.map((detail) => (
+                      <TableRow key={detail.id} className="hover:bg-blue-50">
+                        <TableCell>{detail.product.name}</TableCell>
+                        <TableCell>{detail.price.toLocaleString('vi-VN')}đ</TableCell>
+                        <TableCell>{detail.quantity}</TableCell>
+                        <TableCell>
+                          {detail.promotion ? (
+                            <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded">
+                              {detail.promotion.name}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-red-600">
+                          {detail.discount > 0 ? `-${detail.discount.toLocaleString('vi-VN')}đ` : '-'}
+                        </TableCell>
+                        <TableCell className="font-semibold">
+                          {detail.subtotal.toLocaleString('vi-VN')}đ
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Tổng kết */}
+              <div className="space-y-2 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Tạm tính:</span>
+                  <span>{viewingInvoice.subtotal.toLocaleString('vi-VN')}đ</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Giảm giá khuyến mãi:</span>
+                  <span className="text-red-600">
+                    -{(viewingInvoice.totalDiscount - viewingInvoice.pointsDiscount).toLocaleString('vi-VN')}đ
+                  </span>
+                </div>
+                {viewingInvoice.pointsUsed > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Giảm giá từ điểm ({viewingInvoice.pointsUsed} điểm):</span>
+                    <span className="text-red-600">-{viewingInvoice.pointsDiscount.toLocaleString('vi-VN')}đ</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm border-t pt-2">
+                  <span className="text-gray-600">Tổng giảm giá:</span>
+                  <span className="text-red-600 font-semibold">
+                    -{viewingInvoice.totalDiscount.toLocaleString('vi-VN')}đ
+                  </span>
+                </div>
+                <div className="flex justify-between border-t pt-2">
+                  <span className="font-semibold">Tổng thanh toán:</span>
+                  <span className="font-semibold text-green-600">
+                    {viewingInvoice.total.toLocaleString('vi-VN')}đ
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
           <DialogFooter>
             <Button

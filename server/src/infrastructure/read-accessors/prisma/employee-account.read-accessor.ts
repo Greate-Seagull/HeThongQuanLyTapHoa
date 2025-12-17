@@ -1,31 +1,17 @@
-import { PrismaClient } from "@prisma/client";
+import { EmployeeAccountReadAccessor } from "../../../application/services/read-accessors/employee-account.read-accessor";
+import { PrismaReadAccessor } from "./prisma.read-accessor";
 
-export class EmployeeAccountReadAccessor {
-  constructor(private readonly prisma: PrismaClient) {}
+export class EmployeeAccountPrismaReadAccessor
+	extends PrismaReadAccessor
+	implements EmployeeAccountReadAccessor
+{
+	async existByUsername(username: string): Promise<boolean> {
+		const count = await this.client.employeeAccount.count({
+			where: {
+				username,
+			},
+		});
 
-  async existByUsername(username: string) {
-    const count = await this.prisma.employeeAccount.count({
-      where: {
-        username: username,
-      },
-    });
-
-    return count === 1;
-  }
-
-  async getAll() {
-    return this.prisma.employeeAccount.findMany({
-      select: {
-        id: true,
-        username: true,
-        employee: {
-          select: {
-            id: true,
-            name: true,
-            position: true,
-          },
-        },
-      },
-    });
-  }
+		return count === 1;
+	}
 }

@@ -21,11 +21,6 @@ export class Employee extends BaseEntity<EmployeeId> {
 		return employee;
 	}
 
-	update(name?: string, position?: string) {
-		if (name !== undefined) this.name = name;
-		if (position !== undefined) this.position = position as EmployeePosition;
-	}
-
 	// Setters
 	private set name(value: string) {
 		this._name = value;

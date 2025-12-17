@@ -30,10 +30,6 @@ export class EmployeeAccount extends BaseEntity<EmployeeAccountId> {
 		this._loggedAt = new Date();
 	}
 
-	updateUsername(username: string) {
-		this.username = username;
-	}
-
 	// Setters
 	private set username(value: string) {
 		this._username = value;

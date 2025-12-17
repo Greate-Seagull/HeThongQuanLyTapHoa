@@ -1,27 +1,12 @@
-import { Prisma, PrismaClient } from "@prisma/client";
-
-export interface TransactionManager {
-	transaction(
-		callback: (tx: Prisma.TransactionClient) => Promise<any>
-	): Promise<any>;
-}
+import { Prisma, PrismaClient } from "../../generated/client";
+import { TransactionManager } from "./base.transaction";
 
 export class PrismaTransactionManager implements TransactionManager {
 	constructor(protected readonly prisma: PrismaClient) {}
 
-	async transaction(
-		callback: (tx: Prisma.TransactionClient) => Promise<any>
-	): Promise<any> {
+	async transaction<T>(
+		callback: (tx: Prisma.TransactionClient) => Promise<T>
+	): Promise<T> {
 		return await this.prisma.$transaction(callback);
-	}
-}
-
-export class TestTransactionManager {
-	constructor(protected readonly transactionClient: PrismaClient) {}
-
-	async transaction(
-		callback: (tx: Prisma.TransactionClient) => Promise<any>
-	): Promise<any> {
-		return await callback(this.transactionClient);
 	}
 }

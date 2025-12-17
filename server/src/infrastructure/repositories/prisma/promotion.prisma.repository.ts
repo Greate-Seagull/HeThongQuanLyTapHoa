@@ -35,12 +35,4 @@ export class PromotionPrismaRepository
 		if (transaction) return transaction.promotion;
 		return this.client.promotion;
 	}
-
-	async update(promotion: Promotion): Promise<Promotion> {
-		return this.save(promotion);
-	}
-
-	async delete(id: number): Promise<void> {
-		await this.getRepository().delete({ where: { id } });
-	}
 }
