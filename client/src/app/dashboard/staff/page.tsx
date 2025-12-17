@@ -10,11 +10,13 @@ import { ClipboardCheck, PackagePlus, FileText, User } from 'lucide-react'
 import { useAuthStore } from '@/store/auth-store'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { apiClient } from '@/services/api-client'
 
 export default function StaffDashboardPage() {
-  const { user } = useAuthStore()
+  const { user, login } = useAuthStore() as any
   const router = useRouter()
   const [activeMenu, setActiveMenu] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
 
   // Determine menu items based on staff position
   const getMenuItems = () => {
@@ -51,20 +53,56 @@ export default function StaffDashboardPage() {
   const menuItems = getMenuItems()
   
   useEffect(() => {
-    // Check authentication
-    if (!user || user.role !== 'staff') {
-      router.push('/auth/login')
-      return
+    const checkAuth = async () => {
+      // Nếu đã có user và đúng role -> OK
+      if (user?.role === 'staff') {
+        setIsLoading(false)
+        return
+      }
+
+      // Nếu có user nhưng sai role -> Login
+      if (user && user.role !== 'staff') {
+        router.push('/auth/login')
+        return
+      }
+
+      // Nếu chưa có user (F5), kiểm tra token
+      const token = localStorage.getItem('accessToken')
+      if (!token) {
+        router.push('/auth/login')
+        return
+      }
+
+      // Có token, thử lấy lại thông tin nhân viên
+      try {
+        const response = await apiClient.get<any>('/employee-accounts/profile')
+        // Khôi phục state user
+        const userData = {
+          username: response.username,
+          role: 'staff',
+          employeeData: response,
+        }
+        login(userData, token)
+        setIsLoading(false)
+      } catch (error) {
+        console.error('Session restore failed:', error)
+        localStorage.removeItem('accessToken')
+        router.push('/auth/login')
+      }
     }
     
-    // Set default active menu based on first menu item
-    if (!activeMenu && menuItems.length > 0) {
+    checkAuth()
+  }, [user, router, login])
+
+  // Set default active menu when user is loaded
+  useEffect(() => {
+    if (!isLoading && user && !activeMenu && menuItems.length > 0) {
       setActiveMenu(menuItems[0].id)
     }
-  }, [user, router, activeMenu, menuItems])
+  }, [isLoading, user, activeMenu, menuItems])
 
   const renderContent = () => {
-    if (!user || !user.employeeData) {
+    if (isLoading || !user || !user.employeeData) {
       return (
         <div className="flex items-center justify-center h-full">
           <p className="text-gray-500">Đang tải thông tin nhân viên...</p>

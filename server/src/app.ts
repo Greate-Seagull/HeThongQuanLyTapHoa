@@ -10,6 +10,10 @@ import accountRouter from "./presentation/routes/account.route";
 import employeeAccountRouter from "./presentation/routes/employee-account.route";
 import supplierRouter from "./presentation/routes/supplier.route";
 import productCategoryRouter from "./presentation/routes/product-category.route";
+import shelfRouter from "./presentation/routes/shelf.route";
+import slotRouter from "./presentation/routes/slot.route";
+import rackRouter from "./presentation/routes/rack.route";
+
 import { reportRouter } from "./presentation/routes/report.route";
 import * as compositionRoot from "./composition-root";
 
@@ -18,15 +22,15 @@ const app = express();
 // CORS configuration - Allow frontend to access API
 const corsOptions = {
   origin: [
-    'http://localhost:3000',      // Development - Frontend port 3000
-    'http://localhost:3001',      // Development - Frontend port 3001
-    'http://localhost:3002',      // Development - Frontend port 3002
+    "http://localhost:3000", // Development - Frontend port 3000
+    "http://localhost:3001", // Development - Frontend port 3001
+    "http://localhost:3002", // Development - Frontend port 3002
     // Add production URLs when deploying
     // 'https://your-frontend.netlify.app',
   ],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 };
 
 app.use(cors(corsOptions));
@@ -41,13 +45,20 @@ app.use("/accounts", accountRouter);
 app.use("/employee-accounts", employeeAccountRouter);
 app.use("/suppliers", supplierRouter);
 app.use("/product-categories", productCategoryRouter);
-app.use("/reports", reportRouter({
-	getInventoryReportUsecase: compositionRoot.getInventoryReportUsecase,
-	getGoodsReceiptReportUsecase: compositionRoot.getGoodsReceiptReportUsecase,
-	getSalesReportUsecase: compositionRoot.getSalesReportUsecase,
-	getCustomerReportUsecase: compositionRoot.getCustomerReportUsecase,
-	getStocktakingReportUsecase: compositionRoot.getStocktakingReportUsecase,
-	getRevenueProfitReportUsecase: compositionRoot.getRevenueProfitReportUsecase,
-}));
+app.use("/shelves", shelfRouter);
+app.use("/slots", slotRouter);
+app.use("/racks", rackRouter);
+app.use(
+  "/reports",
+  reportRouter({
+    getInventoryReportUsecase: compositionRoot.getInventoryReportUsecase,
+    getGoodsReceiptReportUsecase: compositionRoot.getGoodsReceiptReportUsecase,
+    getSalesReportUsecase: compositionRoot.getSalesReportUsecase,
+    getCustomerReportUsecase: compositionRoot.getCustomerReportUsecase,
+    getStocktakingReportUsecase: compositionRoot.getStocktakingReportUsecase,
+    getRevenueProfitReportUsecase:
+      compositionRoot.getRevenueProfitReportUsecase,
+  })
+);
 
 export default app;

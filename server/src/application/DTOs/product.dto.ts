@@ -3,7 +3,7 @@ import { EntitySchema } from "./base.dto";
 import { Product } from "../../domain/entities/product";
 
 const schema = z.object({
-	id: z.number().nullable().optional(),
+	_id: z.number().nullable().optional(),
 	name: z.string(),
 	unit: z.string(),
 	price: z.number(),
