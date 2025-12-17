@@ -123,7 +123,11 @@ describe("Update products integration test", () => {
 				// Ensure clean state and existence of products for conflict
 				await prisma.product.deleteMany({
 					where: {
-						name: { in: [product1Input.name, product2.name] },
+						OR: [
+							{ name: { in: [product1Input.name, product2.name] } },
+							{ barcode: { in: [product1Input.barcode, product2.barcode] } },
+							{ id: product2.id },
+						],
 					},
 				});
 				// Create product1 (to conflict with)

@@ -61,7 +61,7 @@ describe("Create account integration test", () => {
 			});
 
 			it("Should return error message", () => {
-				expect(output.message).toMatch(/Unique constraint/);
+				expect(output.message).toBe("The username has already existed");
 			});
 		});
 

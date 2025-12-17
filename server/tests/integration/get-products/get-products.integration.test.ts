@@ -37,7 +37,6 @@ describe("Get products integration test", () => {
 				price: product1.price,
 				unit: "PIECE",
 				barcode: product1.barcode,
-				amount: 0,
 			});
 		});
 
@@ -51,7 +50,6 @@ describe("Get products integration test", () => {
 				price: product2.price,
 				unit: "PIECE",
 				barcode: product2.barcode,
-				amount: 0,
 			});
 		});
 	});
