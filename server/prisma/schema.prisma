@@ -50,7 +50,6 @@ model Promotion {
   description      String?
   startedAt        DateTime
   endedAt          DateTime
-  condition        String?
   value            Float
   promotionType    PromotionType
   invoiceDetails   InvoiceDetail[]

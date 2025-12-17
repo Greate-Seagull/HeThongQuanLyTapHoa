@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/dialog'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Textarea } from '@/components/ui/textarea'
-import { Plus, Edit, Trash2, Search, Loader2 } from 'lucide-react'
+import { Plus, Edit, Trash2, Search, Loader2, X } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -29,6 +29,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Badge } from '@/components/ui/badge'
 import { apiClient } from '@/services/api-client'
 import { toast } from 'sonner'
 
@@ -43,9 +45,22 @@ interface Promotion {
   description: string | null
   startedAt: Date | string
   endedAt: Date | string
-  condition: string | null
   value: number
   promotionType: PromotionType
+  promotionDetails?: PromotionDetail[]
+}
+
+interface PromotionDetail {
+  productId: number
+  promotionId: number
+  product?: Product
+}
+
+interface Product {
+  id: number
+  name: string
+  barcode: number
+  price: number
 }
 
 interface ApiResponse {
@@ -55,7 +70,9 @@ interface ApiResponse {
 
 export function PromotionManagement() {
   const [promotions, setPromotions] = useState<Promotion[]>([])
+  const [products, setProducts] = useState<Product[]>([])
   const [searchTerm, setSearchTerm] = useState('')
+  const [productSearchTerm, setProductSearchTerm] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingPromotion, setEditingPromotion] = useState<Promotion | null>(null)
   const [loading, setLoading] = useState(true)
@@ -70,26 +87,51 @@ export function PromotionManagement() {
     description: '',
     startedAt: '',
     endedAt: '',
-    condition: '',
+    selectedProducts: [] as number[],
     value: 0,
     promotionType: PromotionType.PERCENTAGE,
   })
 
   useEffect(() => {
     fetchPromotions()
+    fetchProducts()
   }, [])
 
   const fetchPromotions = async () => {
     try {
       setLoading(true)
-      const response = await apiClient.get<ApiResponse>('/promotions')
-      setPromotions(response)
+      const response = await apiClient.get<any>('/promotions')
+      const promotionsData = response.data?.data || response.data || response
+      if (Array.isArray(promotionsData)) {
+        setPromotions(promotionsData)
+      } else {
+        console.error('Promotions data is not an array:', promotionsData)
+        setPromotions([])
+      }
       setError(null)
     } catch (err) {
       setError('Không thể tải dữ liệu khuyến mãi')
       console.error('Error fetching promotions:', err)
+      setPromotions([])
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchProducts = async () => {
+    try {
+      const response = await apiClient.get<any>('/products')
+      // API returns {products: [...]} format
+      const productsData = response.products || response.data?.products || response.data || response
+      if (Array.isArray(productsData)) {
+        setProducts(productsData)
+      } else {
+        console.error('Products data is not an array:', productsData)
+        setProducts([])
+      }
+    } catch (err) {
+      console.error('Error fetching products:', err)
+      setProducts([])
     }
   }
 
@@ -97,14 +139,20 @@ export function PromotionManagement() {
     promo.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
+    product.barcode.toString().includes(productSearchTerm)
+  )
+
   const handleAdd = () => {
     setEditingPromotion(null)
+    setProductSearchTerm('')
     setFormData({
       name: '',
       description: '',
       startedAt: '',
       endedAt: '',
-      condition: '',
+      selectedProducts: [],
       value: 0,
       promotionType: PromotionType.PERCENTAGE,
     })
@@ -113,15 +161,21 @@ export function PromotionManagement() {
 
   const handleEdit = (promotion: Promotion) => {
     setEditingPromotion(promotion)
+    setProductSearchTerm('')
     const startDate = new Date(promotion.startedAt).toISOString().split('T')[0]
     const endDate = new Date(promotion.endedAt).toISOString().split('T')[0]
+
+    const productIds = promotion.promotionDetails?.map((pd) => pd.productId) || []
+    console.log('Editing promotion:', promotion.name)
+    console.log('Promotion details:', promotion.promotionDetails)
+    console.log('Selected product IDs:', productIds)
 
     setFormData({
       name: promotion.name,
       description: promotion.description || '',
       startedAt: startDate,
       endedAt: endDate,
-      condition: promotion.condition || '',
+      selectedProducts: productIds,
       value: promotion.value,
       promotionType: promotion.promotionType,
     })
@@ -155,10 +209,14 @@ export function PromotionManagement() {
         description: formData.description || null,
         startedAt: new Date(formData.startedAt).toISOString(),
         endedAt: new Date(formData.endedAt).toISOString(),
-        condition: formData.condition || null,
         value: formData.value,
         promotionType: formData.promotionType,
+        promotionDetails: formData.selectedProducts.map((id) => ({ productId: id })),
       }
+
+      console.log('=== SAVING PROMOTION ===')
+      console.log('Is editing:', !!editingPromotion)
+      console.log('Promotion data:', promotionData)
 
       if (editingPromotion) {
         // TODO: Call PUT/PATCH API here
@@ -184,6 +242,22 @@ export function PromotionManagement() {
       console.error('Error saving promotion:', err)
       alert('Không thể lưu khuyến mãi')
     }
+  }
+
+  const toggleProduct = (productId: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      selectedProducts: prev.selectedProducts.includes(productId)
+        ? prev.selectedProducts.filter((id) => id !== productId)
+        : [...prev.selectedProducts, productId],
+    }))
+  }
+
+  const removeProduct = (productId: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      selectedProducts: prev.selectedProducts.filter((id) => id !== productId),
+    }))
   }
 
   const formatDate = (date: Date | string) => {
@@ -301,7 +375,7 @@ export function PromotionManagement() {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl border-blue-200" aria-describedby={undefined}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto border-blue-200" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle className="text-blue-900">
               {editingPromotion ? 'Sửa khuyến mãi' : 'Thêm khuyến mãi mới'}
@@ -312,7 +386,7 @@ export function PromotionManagement() {
                 : 'Tạo một khuyến mãi mới'}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 pr-2">{/* Added padding-right for scrollbar */}
             <div className="space-y-2">
               <Label htmlFor="name">Tên khuyến mãi</Label>
               <Input
@@ -367,16 +441,72 @@ export function PromotionManagement() {
                 />
               </div>
             </div>
+            
+            {/* Selected Products Section */}
             <div className="space-y-2">
-              <Label htmlFor="condition">Điều kiện áp dụng</Label>
-              <Input
-                id="condition"
-                value={formData.condition}
-                onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
-                className="border-blue-200"
-                placeholder="VD: Đơn hàng từ 100,000đ"
-              />
+              <Label>Sản phẩm áp dụng</Label>
+              {formData.selectedProducts.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {formData.selectedProducts.map((productId) => {
+                    const product = products.find((p) => p.id === productId)
+                    if (!product) return null
+                    return (
+                      <Badge key={productId} variant="secondary" className="gap-1">
+                        {product.name}
+                        <X
+                          className="h-3 w-3 cursor-pointer"
+                          onClick={() => removeProduct(productId)}
+                        />
+                      </Badge>
+                    )
+                  })}
+                </div>
+              )}
+              
+              {/* Search box for products */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <Input
+                  placeholder="Tìm kiếm sản phẩm theo tên hoặc mã..."
+                  value={productSearchTerm}
+                  onChange={(e) => setProductSearchTerm(e.target.value)}
+                  className="pl-9 border-blue-200"
+                />
+              </div>
+              
+              <div className="max-h-40 overflow-y-auto rounded border border-blue-200 p-3">
+                {products.length === 0 ? (
+                  <p className="text-center text-gray-500">Đang tải sản phẩm...</p>
+                ) : filteredProducts.length === 0 ? (
+                  <p className="text-center text-gray-500">Không tìm thấy sản phẩm</p>
+                ) : (
+                  <div className="space-y-2">
+                    {filteredProducts.map((product) => (
+                      <div
+                        key={product.id}
+                        className="flex items-center space-x-2 rounded p-2 hover:bg-blue-50"
+                      >
+                        <Checkbox
+                          id={`product-${product.id}`}
+                          checked={formData.selectedProducts.includes(product.id)}
+                          onCheckedChange={() => toggleProduct(product.id)}
+                        />
+                        <label
+                          htmlFor={`product-${product.id}`}
+                          className="flex-1 cursor-pointer text-sm"
+                        >
+                          <div className="font-medium">{product.name}</div>
+                          <div className="text-xs text-gray-500">
+                            Mã: {product.barcode} | Giá: {product.price.toLocaleString('vi-VN')}đ
+                          </div>
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="startedAt">Ngày bắt đầu</Label>
@@ -429,3 +559,4 @@ export function PromotionManagement() {
     </div>
   )
 }
+

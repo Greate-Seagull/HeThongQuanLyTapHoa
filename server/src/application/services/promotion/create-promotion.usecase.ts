@@ -10,18 +10,9 @@ const inputSchema = z.object({
   description: z.string().optional().nullable(),
   startedAt: z.string().transform((val) => new Date(val)),
   endedAt: z.string().transform((val) => new Date(val)),
-  condition: z.string().optional().nullable(),
   value: z.number(),
   promotionType: z.string(),
-  promotionDetails: z
-    .array(
-      z.object({
-        productId: z.number(),
-      })
-    )
-    .optional()
-    .nullable()
-    .default([]),
+  promotionDetails: z.array(z.object({ productId: z.number() })).optional().default([]),
 });
 
 const outputSchema = z.object({
@@ -44,8 +35,8 @@ export class CreatePromotionUsecase {
     });
     log.info("Task started");
 
-    const details = parsedInput.promotionDetails || [];
-    const productIds = details.map((p) => p.productId);
+    const promotionDetails = parsedInput.promotionDetails || [];
+    const productIds = promotionDetails.map((d) => d.productId);
     const doExist = await this.productReadAccessor.existByIds(productIds);
     if (!doExist) {
       log.warn("Task failed: invalid product id");
@@ -62,8 +53,7 @@ export class CreatePromotionUsecase {
       parsedInput.value,
       parsedInput.promotionType,
       productIds,
-      parsedInput.description,
-      parsedInput.condition
+      parsedInput.description
     );
 
     const savedPromotion = await this.promotionRepo.add(promotion);

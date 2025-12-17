@@ -46,7 +46,6 @@ export class Promotion extends BaseEntity<PromotionId> {
   private _description: string = null;
   private _startedAt: Date = new Date();
   private _endedAt: Date = new Date();
-  private _condition: string = null;
   private _value: number = 0;
   private _promotionType: PromotionType = PromotionType.FIXED;
   private _promotionDetails: PromotionDetail[] = [];
@@ -58,15 +57,13 @@ export class Promotion extends BaseEntity<PromotionId> {
     value: number,
     promotionType: string,
     productIds: ProductId[],
-    description?: string,
-    condition?: string
+    description?: string
   ) {
     let entity = new Promotion();
     entity.name = name;
     entity.value = value;
     entity.promotionType = promotionType as PromotionType;
     entity.description = description;
-    entity.condition = condition;
     entity.updateDates(startedAt, endedAt);
     entity.promotionDetails = productIds.map(PromotionDetail.create);
 
@@ -74,9 +71,9 @@ export class Promotion extends BaseEntity<PromotionId> {
   }
 
   public update(input: any) {
+    console.log('Promotion.update input:', JSON.stringify(input, null, 2));
     if (input.name !== undefined) this.name = input.name;
     if (input.description !== undefined) this.description = input.description;
-    if (input.condition !== undefined) this.condition = input.condition;
     if (input.value !== undefined) this.value = input.value;
     if (input.promotionType !== undefined)
       this.promotionType = input.promotionType;
@@ -88,7 +85,12 @@ export class Promotion extends BaseEntity<PromotionId> {
       this.updateDates(start, end);
     }
 
-    if (input.promotionDetails !== undefined) {
+    if (
+      input.promotionDetails &&
+      Array.isArray(input.promotionDetails) &&
+      input.promotionDetails.length > 0 &&
+      input.promotionDetails.every((d: any) => d && typeof d === 'object' && 'productId' in d)
+    ) {
       this.promotionDetails = input.promotionDetails.map((d: any) =>
         PromotionDetail.create(d.productId)
       );
@@ -152,10 +154,6 @@ export class Promotion extends BaseEntity<PromotionId> {
     this._endedAt = value;
   }
 
-  private set condition(value: string) {
-    this._condition = value;
-  }
-
   private set value(value: number) {
     if (value < 0) throw Error(`Invalid value, ${value}`);
     this._value = value;
@@ -191,11 +189,6 @@ export class Promotion extends BaseEntity<PromotionId> {
   @Write
   get endedAt(): Date {
     return this._endedAt;
-  }
-  @Read
-  @Write
-  get condition(): string {
-    return this._condition;
   }
   @Read
   @Write
