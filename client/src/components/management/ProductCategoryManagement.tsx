@@ -134,16 +134,30 @@ export function ProductCategoryManagement() {
     setDeleteConfirm({ open: true, id, name })
   }
 
-  const confirmDelete = async () => {
+ const confirmDelete = async () => {
+    // 1. Tìm loại sản phẩm đang chọn xoá
+    const category = categories.find((c) => c.id === deleteConfirm.id)
+
+    // 2. Kiểm tra ràng buộc
+    if (category && category._count && category._count.products > 0) {
+      toast.error(
+        `Không thể xóa loại sản phẩm "${category.name}" vì đang có ${category._count.products} sản phẩm.`
+      )
+      setDeleteConfirm({ ...deleteConfirm, open: false }) // Đóng dialog
+      return
+    }
+
     try {
       setIsLoading(true)
       await deleteProductCategory(deleteConfirm.id)
       toast.success('Xóa loại sản phẩm thành công!')
       loadCategories()
     } catch (error: any) {
-      toast.error(error.message)
+      // Xử lý lỗi từ backend (nếu có ràng buộc khác mà frontend chưa check hết)
+      toast.error('Không thể xóa loại sản phẩm này vì đã có dữ liệu liên quan.')
     } finally {
       setIsLoading(false)
+      setDeleteConfirm({ ...deleteConfirm, open: false })
     }
   }
 
