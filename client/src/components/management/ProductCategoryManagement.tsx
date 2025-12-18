@@ -73,6 +73,7 @@ export function ProductCategoryManagement() {
         category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         category.description?.toLowerCase().includes(searchTerm.toLowerCase())
     )
+    .sort((a, b) => b.id - a.id)
 
   const handleOpenDialog = (category?: ProductCategory) => {
     if (category) {
