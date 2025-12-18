@@ -67,11 +67,12 @@ export function ProductCategoryManagement() {
     }
   }
 
-  const filteredCategories = categories.filter(
-    (category) =>
-      category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      category.description?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredCategories = categories
+    .filter(
+      (category) =>
+        category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        category.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
 
   const handleOpenDialog = (category?: ProductCategory) => {
     if (category) {
@@ -134,7 +135,7 @@ export function ProductCategoryManagement() {
     setDeleteConfirm({ open: true, id, name })
   }
 
- const confirmDelete = async () => {
+  const confirmDelete = async () => {
     // 1. Tìm loại sản phẩm đang chọn xoá
     const category = categories.find((c) => c.id === deleteConfirm.id)
 

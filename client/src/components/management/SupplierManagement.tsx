@@ -67,12 +67,14 @@ export function SupplierManagement() {
     }
   }
 
-  const filteredSuppliers = suppliers.filter(
-    (supplier) =>
-      supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      supplier.phoneNumber?.includes(searchTerm) ||
-      supplier.address?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredSuppliers = suppliers
+    .filter(
+      (supplier) =>
+        supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        supplier.phoneNumber?.includes(searchTerm) ||
+        supplier.address?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => b.id - a.id)
 
   const handleOpenDialog = (supplier?: Supplier) => {
     if (supplier) {
@@ -157,7 +159,9 @@ export function SupplierManagement() {
       toast.success('Xóa nhà cung cấp thành công!')
       loadSuppliers()
     } catch (error: any) {
-       toast.error('Không thể xóa nhà cung cấp này vì đã có dữ liệu nhập hàng hoặc sản phẩm liên quan.')
+      toast.error(
+        'Không thể xóa nhà cung cấp này vì đã có dữ liệu nhập hàng hoặc sản phẩm liên quan.'
+      )
     } finally {
       setIsLoading(false)
       setDeleteConfirm({ ...deleteConfirm, open: false }) // Đảm bảo đóng dialog
