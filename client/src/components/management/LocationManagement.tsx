@@ -20,7 +20,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { Plus, Edit, Trash2, Search, ChevronRight, Loader2 } from 'lucide-react'
+import { Plus, Edit, Trash2, Search, Loader2 } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -30,7 +30,19 @@ import {
 } from '@/components/ui/select'
 import { apiClient } from '@/services/api-client'
 import { toast } from 'sonner'
-import { set } from 'react-hook-form'
+
+interface Product {
+  id: number
+  name: string
+}
+
+interface SlotWithProduct {
+  slotId: number
+  slotName: string
+  rackId: number
+  productId?: number
+  productName?: string
+}
 
 interface Slot {
   id: number
@@ -51,13 +63,10 @@ interface Shelf {
   racks: Rack[]
 }
 
-interface ApiResponse {
-  status: string
-  data: Shelf[]
-}
-
 export function LocationManagement() {
+  const [products, setProducts] = useState<Product[]>([])
   const [shelves, setShelves] = useState<Shelf[]>([])
+  const [slotsWithProduct, setSlotsWithProduct] = useState<SlotWithProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -85,20 +94,40 @@ export function LocationManagement() {
 
   const [shelfFormData, setShelfFormData] = useState({ name: '' })
   const [rackFormData, setRackFormData] = useState({ name: '', shelfId: 0 })
-  const [slotFormData, setSlotFormData] = useState({ name: '', rackId: 0 })
+  const [slotFormData, setSlotFormData] = useState({ name: '', rackId: 0, productId: 0 })
   const [isSavingShelf, setIsSavingShelf] = useState(false)
   const [isSavingRack, setIsSavingRack] = useState(false)
   const [isSavingSlot, setIsSavingSlot] = useState(false)
+
   useEffect(() => {
     fetchLocations()
+    fetchSlotsWithProduct()
+    fetchProducts()
   }, [])
+
+  const fetchProducts = async () => {
+    try {
+      const res = await apiClient.get<{ products: Product[] }>(`/products`)
+      setProducts(res.products || [])
+    } catch (err) {
+      setProducts([])
+    }
+  }
+
+  const fetchSlotsWithProduct = async () => {
+    try {
+      const data = await apiClient.get<SlotWithProduct[]>('/slots/list-with-product')
+      setSlotsWithProduct(data)
+    } catch (err) {
+      setSlotsWithProduct([])
+    }
+  }
 
   const fetchLocations = async () => {
     try {
       setLoading(true)
-      const response: Shelf[] = await apiClient.get('/shelves') // Bỏ <ApiResponse>
+      const response: Shelf[] = await apiClient.get('/shelves')
 
-      // response đã là array Shelf[] luôn, không cần .data
       const sortedData = response
         .map((shelf: Shelf) => ({
           ...shelf,
@@ -125,26 +154,27 @@ export function LocationManagement() {
     return shelves.flatMap((shelf) => shelf.racks)
   }
 
-  const getAllSlots = (): Slot[] => {
-    return shelves.flatMap((shelf) => shelf.racks.flatMap((rack) => rack.slots))
-  }
-
-  const getRackWithShelf = (rackId: number) => {
-    for (const shelf of shelves) {
-      const rack = shelf.racks.find((r) => r.id === rackId)
-      if (rack) return { rack, shelf }
-    }
-    return null
-  }
-
-  const getSlotWithRackAndShelf = (slotId: number) => {
-    for (const shelf of shelves) {
-      for (const rack of shelf.racks) {
-        const slot = rack.slots.find((s) => s.id === slotId)
-        if (slot) return { slot, rack, shelf }
-      }
-    }
-    return null
+  // --- LOGIC MỚI: Lấy tất cả slot từ cấu trúc Shelves (để hiển thị cả slot trống) ---
+  const getAllSlotsForDisplay = () => {
+    const allSlots: any[] = []
+    shelves.forEach((shelf) => {
+      shelf.racks.forEach((rack) => {
+        rack.slots.forEach((slot) => {
+          // Tìm thông tin sản phẩm tương ứng trong mảng slotsWithProduct
+          const productInfo = slotsWithProduct.find((p) => p.slotId === slot.id)
+          allSlots.push({
+            id: slot.id,
+            name: slot.name,
+            rackId: rack.id,
+            rackName: rack.name,
+            shelfName: shelf.name,
+            productId: productInfo?.productId,
+            productName: productInfo?.productName,
+          })
+        })
+      })
+    })
+    return allSlots
   }
 
   // Shelf handlers
@@ -161,12 +191,16 @@ export function LocationManagement() {
   }
 
   const handleDeleteShelf = (id: number, name: string) => {
+    const shelfToCheck = shelves.find((s) => s.id === id)
+    if (shelfToCheck && shelfToCheck.racks && shelfToCheck.racks.length > 0) {
+      toast.error('Không thể xoá kệ vì còn ngăn bên trong')
+      return
+    }
     setDeleteConfirm({
       open: true,
       type: 'shelf',
       id,
       name,
-      warning: 'Tất cả ngăn và ô thuộc kệ này sẽ bị xóa.',
     })
   }
 
@@ -174,21 +208,15 @@ export function LocationManagement() {
     setIsSavingShelf(true)
     try {
       if (editingShelf) {
-        // TODO: Call PUT API
         const data = await apiClient.put<Shelf>(`/shelves/${editingShelf.id}`, {
           name: shelfFormData.name,
         })
-        if (data) {
-          fetchLocations()
-        }
+        if (data) fetchLocations()
         toast.success('Kệ đã được cập nhật thành công')
       } else {
-        // TODO: Call POST API
         const data = await apiClient.post<Shelf>('/shelves', { name: shelfFormData.name })
-        if (data) {
-          fetchLocations()
-          toast.success('Kệ đã được tạo thành công')
-        }
+        if (data) fetchLocations()
+        toast.success('Kệ đã được tạo thành công')
       }
       setIsShelfDialogOpen(false)
     } catch (err) {
@@ -213,12 +241,17 @@ export function LocationManagement() {
   }
 
   const handleDeleteRack = (id: number, name: string) => {
+    const allRacks = getAllRacks()
+    const rackToCheck = allRacks.find((r) => r.id === id)
+    if (rackToCheck && rackToCheck.slots && rackToCheck.slots.length > 0) {
+      toast.error('Không thể xoá ngăn vì còn ô bên trong')
+      return
+    }
     setDeleteConfirm({
       open: true,
       type: 'rack',
       id,
       name,
-      warning: 'Tất cả ô thuộc ngăn này sẽ bị xóa.',
     })
   }
 
@@ -257,13 +290,19 @@ export function LocationManagement() {
   const handleAddSlot = () => {
     setEditingSlot(null)
     const allRacks = getAllRacks()
-    setSlotFormData({ name: '', rackId: allRacks[0]?.id || 0 })
+    // Mặc định productId là 0 (Không chọn sản phẩm)
+    setSlotFormData({ name: '', rackId: allRacks[0]?.id || 0, productId: 0 })
     setIsSlotDialogOpen(true)
   }
 
   const handleEditSlot = (slot: Slot, rackId: number) => {
     setEditingSlot(slot)
-    setSlotFormData({ name: slot.name, rackId })
+    const slotWithProduct = slotsWithProduct.find((s) => s.slotId === slot.id)
+    setSlotFormData({
+      name: slot.name,
+      rackId,
+      productId: slotWithProduct?.productId || 0, // Nếu không có sản phẩm thì set là 0
+    })
     setIsSlotDialogOpen(true)
   }
 
@@ -279,23 +318,26 @@ export function LocationManagement() {
   const handleSaveSlot = async () => {
     setIsSavingSlot(true)
     try {
+      // Logic: Nếu productId là 0 hoặc rỗng thì gửi undefined/null để backend không lưu vào SlotDetail
+      const payload = {
+        name: slotFormData.name,
+        rackId: slotFormData.rackId,
+        productId: slotFormData.productId && slotFormData.productId !== 0 ? slotFormData.productId : undefined
+      }
+
       if (editingSlot) {
-        const data = await apiClient.put<Slot>(`/slots/${editingSlot.id}`, {
-          name: slotFormData.name,
-          rackId: slotFormData.rackId,
-        })
+        const data = await apiClient.put<Slot>(`/slots/${editingSlot.id}`, payload)
         if (data) {
           toast.success('Ô đã được cập nhật thành công')
           fetchLocations()
+          fetchSlotsWithProduct() // Refresh cả thông tin sản phẩm
         }
       } else {
-        const data = await apiClient.post<Slot>('/slots', {
-          name: slotFormData.name,
-          rackId: slotFormData.rackId,
-        })
+        const data = await apiClient.post<Slot>('/slots', payload)
         if (data) {
           toast.success('Ô đã được tạo thành công')
           fetchLocations()
+          fetchSlotsWithProduct()
         }
       }
       setIsSlotDialogOpen(false)
@@ -309,10 +351,8 @@ export function LocationManagement() {
 
   const confirmDelete = async () => {
     const { type, id } = deleteConfirm
-
     try {
       if (type === 'shelf') {
-        // TODO: Call DELETE API
         const data = await apiClient.delete(`/shelves/${id}`)
         if (data) {
           toast.success('Kệ đã được xóa thành công')
@@ -338,15 +378,13 @@ export function LocationManagement() {
     }
   }
 
-  const filteredSlots = getAllSlots().filter((slot) => {
-    const slotInfo = getSlotWithRackAndShelf(slot.id)
-    if (!slotInfo) return false
-
+  // --- LỌC DỮ LIỆU HIỂN THỊ ---
+  const allSlotsForDisplay = getAllSlotsForDisplay()
+  const filteredSlots = allSlotsForDisplay.filter((slot) => {
     const searchLower = searchTerm.toLowerCase()
     return (
-      slot.name.toLowerCase().includes(searchLower) ||
-      slotInfo.rack.name.toLowerCase().includes(searchLower) ||
-      slotInfo.shelf.name.toLowerCase().includes(searchLower)
+      (slot.name?.toLowerCase().includes(searchLower) || '') ||
+      (slot.productName?.toLowerCase().includes(searchLower) || '')
     )
   })
 
@@ -496,7 +534,7 @@ export function LocationManagement() {
         </CardContent>
       </Card>
 
-      {/* Ô */}
+      {/* Ô - ĐÃ CẬP NHẬT HIỂN THỊ */}
       <Card className="border-blue-200">
         <CardHeader className="bg-blue-50">
           <div className="flex items-center justify-between">
@@ -511,7 +549,7 @@ export function LocationManagement() {
           <div className="mb-6 flex items-center justify-between">
             <div className="flex max-w-md flex-1 gap-2">
               <Input
-                placeholder="Tìm kiếm ô..."
+                placeholder="Tìm kiếm ô hoặc sản phẩm..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="border-blue-200"
@@ -528,38 +566,39 @@ export function LocationManagement() {
                 <TableRow className="bg-blue-50">
                   <TableHead className="text-blue-900">ID</TableHead>
                   <TableHead className="text-blue-900">Tên ô</TableHead>
-                  <TableHead className="text-blue-900">Vị trí</TableHead>
+                  <TableHead className="text-blue-900">Vị trí (Kệ - Ngăn)</TableHead>
+                  <TableHead className="text-blue-900">Tên sản phẩm</TableHead>
                   <TableHead className="text-right text-blue-900">Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredSlots.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="py-8 text-center text-gray-500">
+                    <TableCell colSpan={5} className="py-8 text-center text-gray-500">
                       Không tìm thấy ô
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredSlots.map((slot) => {
-                    const slotInfo = getSlotWithRackAndShelf(slot.id)
-                    if (!slotInfo) return null
-
                     return (
                       <TableRow key={slot.id} className="hover:bg-blue-50">
                         <TableCell>{slot.id}</TableCell>
                         <TableCell>{slot.name}</TableCell>
+                        <TableCell className="text-sm text-gray-500">
+                          {slot.shelfName} - {slot.rackName}
+                        </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-1 text-sm">
-                            <span className="text-gray-600">{slotInfo.shelf.name}</span>
-                            <ChevronRight className="h-3 w-3 text-gray-400" />
-                            <span className="text-gray-600">{slotInfo.rack.name}</span>
-                          </div>
+                            {slot.productName ? (
+                              <span className="font-medium text-blue-700">{slot.productName}</span>
+                            ) : (
+                              <span className="text-gray-400 italic">Trống</span>
+                            )}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleEditSlot(slot, slotInfo.rack.id)}
+                            onClick={() => handleEditSlot(slot, slot.rackId)}
                             className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
                           >
                             <Edit className="h-4 w-4" />
@@ -656,7 +695,7 @@ export function LocationManagement() {
                 <SelectTrigger className="border-blue-200">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[300px]">
                   {shelves.map((shelf) => (
                     <SelectItem key={shelf.id} value={shelf.id.toString()}>
                       {shelf.name}
@@ -717,7 +756,7 @@ export function LocationManagement() {
                 <SelectTrigger className="border-blue-200">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[300px]">
                   {getAllRacks().map((rack) => {
                     const shelf = shelves.find((s) => s.id === rack.shelfId)
                     return (
@@ -726,6 +765,28 @@ export function LocationManagement() {
                       </SelectItem>
                     )
                   })}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="productId">Sản phẩm (Không bắt buộc)</Label>
+              <Select
+                value={slotFormData.productId?.toString() || '0'}
+                onValueChange={(value) =>
+                  setSlotFormData({ ...slotFormData, productId: parseInt(value) })
+                }
+              >
+                <SelectTrigger className="border-blue-200">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px]">
+                  {/* Thêm option để chọn không có sản phẩm */}
+                  <SelectItem value="0">-- Không có sản phẩm --</SelectItem>
+                  {products.map((product) => (
+                    <SelectItem key={product.id} value={product.id.toString()}>
+                      {product.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

@@ -142,15 +142,21 @@ export function EmployeeManagement() {
   const confirmDelete = async () => {
     try {
       const response = await apiClient.delete(`/employee-accounts/${deleteConfirm.id}`)
+      
+      // Kiểm tra kỹ response, tuỳ vào cách setup axios/fetch của bạn mà data trả về khác nhau
       if (response) {
         fetchAccounts()
         toast.success('Tài khoản nhân viên đã được xóa thành công!')
-        setDeleteConfirm({ open: false, id: 0, name: '' })
-      } else {
-        toast.error('Xóa tài khoản thất bại. Vui lòng thử lại.')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting account:', error)
+      // Hiển thị thông báo nghiệp vụ thay vì lỗi chung chung
+      toast.error(
+        `Không thể xóa nhân viên "${deleteConfirm.name}". Nhân viên này đã có dữ liệu hoạt động (Hóa đơn, Nhập hàng hoặc Kiểm kê).`
+      )
+    } finally {
+        // Luôn đóng dialog dù thành công hay thất bại
+        setDeleteConfirm({ open: false, id: 0, name: '' })
     }
   }
 

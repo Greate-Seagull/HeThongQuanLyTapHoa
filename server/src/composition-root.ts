@@ -1,3 +1,6 @@
+import { ListSlotWithProductUsecase } from "./application/services/slot/list-slot-with-product.usecase";
+import { SlotDetailRepository } from "./infrastructure/repositories/slot-detail.repository";
+import { SlotDetailUsecase } from "./application/services/slot/slot-detail.usecase";
 import { ChangeManagerPasswordUsecase } from "./application/services/employee-account/change-manager-password.usecase";
 import { ChangeCustomerPasswordUsecase } from "./application/services/customer-account/change-customer-password.usecase";
 import { config } from "./config/config";
@@ -162,6 +165,7 @@ const reportReadAccessor = new ReportReadAccessor(prisma);
 const shelfRepo = new ShelfRepository(prisma);
 const rackRepo = new RackRepository(prisma);
 const slotRepo = new SlotRepository(prisma);
+// Removed duplicate slotDetailRepo and slotDetailUsecase declarations (already declared above)
 const invoiceReadAccessor = new InvoiceReadAccessor(prisma);
 
 //Domain services
@@ -341,8 +345,12 @@ export const getShelvesUsecase = new GetShelvesUsecase(shelfReadAccessor);
 export const createRackUsecase = new CreateRackUsecase(rackRepo, shelfRepo);
 export const updateRackUsecase = new UpdateRackUsecase(rackRepo);
 export const deleteRackUsecase = new DeleteRackUsecase(rackRepo);
-export const createSlotUsecase = new CreateSlotUsecase(slotRepo, rackRepo);
-export const updateSlotUsecase = new UpdateSlotUsecase(slotRepo);
+
+const slotDetailRepo = new SlotDetailRepository(prisma);
+const slotDetailUsecase = new SlotDetailUsecase(slotDetailRepo);
+export const createSlotUsecase = new CreateSlotUsecase(slotRepo, rackRepo, slotDetailUsecase);
+export const updateSlotUsecase = new UpdateSlotUsecase(slotRepo, slotDetailUsecase);
+export const listSlotWithProductUsecase = new ListSlotWithProductUsecase(slotDetailUsecase);
 export const deleteSlotUsecase = new DeleteSlotUsecase(slotRepo);
 export const updatePromotionUsecase = new UpdatePromotionUsecase(
   productReadAccessor,
@@ -363,3 +371,4 @@ export const changeManagerPasswordUsecase = new ChangeManagerPasswordUsecase(
   transactionManager,
   passwordService
 );
+

@@ -199,17 +199,31 @@ export function ProductManagement() {
   }
 
   const confirmDelete = async () => {
+    // 1. Tìm sản phẩm để kiểm tra thông tin
+    const product = products.find((p) => p.id === deleteConfirm.id)
+
+    // 2. Kiểm tra tồn kho (Nếu > 0 tức là đã nhập hàng và còn hàng -> Chặn xóa)
+    if (product && product.amount > 0) {
+      toast.error(
+        `Không thể xóa sản phẩm "${product.name}" vì còn tồn kho (${product.amount} ${unitLabels[product.unit]}).`
+      )
+      setDeleteConfirm({ open: false, id: 0, name: '' })
+      return
+    }
+
     try {
       const data = await apiClient.delete(`/products/${deleteConfirm.id}`)
       if (data) {
         setDeleteConfirm({ open: false, id: 0, name: '' })
         toast.success('Sản phẩm đã được xóa thành công')
         fetchProducts()
-      } else {
       }
     } catch (error) {
-      toast.error('Không thể xóa sản phẩm do đang có đơn hàng liên quan')
+      // 3. Xử lý trường hợp amount = 0 nhưng đã từng có giao dịch (nhập/xuất)
+      // Backend sẽ trả về lỗi FK constraint
+      toast.error('Không thể xóa sản phẩm này vì đã có lịch sử nhập hàng hoặc hóa đơn.')
       console.error('Error deleting product:', error)
+      setDeleteConfirm({ open: false, id: 0, name: '' })
     }
   }
 

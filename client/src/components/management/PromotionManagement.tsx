@@ -189,19 +189,31 @@ export function PromotionManagement() {
     setDeleteConfirm({ open: true, id, name })
   }
 
-  const confirmDelete = async () => {
+const confirmDelete = async () => {
+    // 1. Tìm khuyến mãi đang chọn
+    const promotion = promotions.find((p) => p.id === deleteConfirm.id)
+
+    // 2. Kiểm tra ràng buộc: Nếu mảng details có phần tử
+    if (promotion && promotion.promotionDetails && promotion.promotionDetails.length > 0) {
+      toast.error(
+        `Không thể xóa khuyến mãi "${promotion.name}" vì đang được áp dụng cho ${promotion.promotionDetails.length} sản phẩm.`
+      )
+      setDeleteConfirm({ open: false, id: 0, name: '' })
+      return
+    }
+
     try {
-      // TODO: Call DELETE API here
       const data = await apiClient.delete(`/promotions/${deleteConfirm.id}`)
       if (data) {
         toast.success('Khuyến mãi đã được xóa thành công')
         fetchPromotions()
-        setDeleteConfirm({ open: false, id: 0, name: '' })
       }
-      // Optimistic update
     } catch (err) {
       console.error('Error deleting promotion:', err)
-      toast.error('Không thể xóa khuyến mãi')
+      // Thông báo lỗi cụ thể hơn
+      toast.error('Không thể xóa khuyến mãi. Có thể khuyến mãi này đã tồn tại trong các hóa đơn cũ.')
+    } finally {
+        setDeleteConfirm({ open: false, id: 0, name: '' })
     }
   }
 

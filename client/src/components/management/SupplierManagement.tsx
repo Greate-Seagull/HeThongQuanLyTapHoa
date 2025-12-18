@@ -139,15 +139,28 @@ export function SupplierManagement() {
   }
 
   const confirmDelete = async () => {
+    // 1. Tìm nhà cung cấp đang chọn xoá
+    const supplier = suppliers.find((s) => s.id === deleteConfirm.id)
+
+    // 2. Kiểm tra ràng buộc
+    if (supplier && supplier._count && supplier._count.products > 0) {
+      toast.error(
+        `Không thể xóa nhà cung cấp "${supplier.name}" vì đang cung cấp ${supplier._count.products} sản phẩm.`
+      )
+      setDeleteConfirm({ ...deleteConfirm, open: false })
+      return
+    }
+
     try {
       setIsLoading(true)
       await deleteSupplier(deleteConfirm.id)
       toast.success('Xóa nhà cung cấp thành công!')
       loadSuppliers()
     } catch (error: any) {
-      toast.error(error.message)
+       toast.error('Không thể xóa nhà cung cấp này vì đã có dữ liệu nhập hàng hoặc sản phẩm liên quan.')
     } finally {
       setIsLoading(false)
+      setDeleteConfirm({ ...deleteConfirm, open: false }) // Đảm bảo đóng dialog
     }
   }
 
