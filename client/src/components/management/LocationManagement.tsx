@@ -29,6 +29,14 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { apiClient } from '@/services/api-client'
+
+interface SlotWithProduct {
+  slotId: number;
+  slotName: string;
+  rackId: number;
+  productId?: number;
+  productName?: string;
+}
 import { toast } from 'sonner'
 import { set } from 'react-hook-form'
 
@@ -58,6 +66,7 @@ interface ApiResponse {
 
 export function LocationManagement() {
   const [shelves, setShelves] = useState<Shelf[]>([])
+  const [slotsWithProduct, setSlotsWithProduct] = useState<SlotWithProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -91,7 +100,17 @@ export function LocationManagement() {
   const [isSavingSlot, setIsSavingSlot] = useState(false)
   useEffect(() => {
     fetchLocations()
+    fetchSlotsWithProduct()
   }, [])
+
+  const fetchSlotsWithProduct = async () => {
+    try {
+      const data = await apiClient.get<SlotWithProduct[]>('/slots/list-with-product')
+      setSlotsWithProduct(data)
+    } catch (err) {
+      setSlotsWithProduct([])
+    }
+  }
 
   const fetchLocations = async () => {
     try {
@@ -338,15 +357,12 @@ export function LocationManagement() {
     }
   }
 
-  const filteredSlots = getAllSlots().filter((slot) => {
-    const slotInfo = getSlotWithRackAndShelf(slot.id)
-    if (!slotInfo) return false
-
+  // Filter slots with product info
+  const filteredSlotsWithProduct = slotsWithProduct.filter((slot) => {
     const searchLower = searchTerm.toLowerCase()
     return (
-      slot.name.toLowerCase().includes(searchLower) ||
-      slotInfo.rack.name.toLowerCase().includes(searchLower) ||
-      slotInfo.shelf.name.toLowerCase().includes(searchLower)
+      (slot.slotName?.toLowerCase().includes(searchLower) || "") ||
+      (slot.productName?.toLowerCase().includes(searchLower) || "")
     )
   })
 
@@ -511,7 +527,7 @@ export function LocationManagement() {
           <div className="mb-6 flex items-center justify-between">
             <div className="flex max-w-md flex-1 gap-2">
               <Input
-                placeholder="Tìm kiếm ô..."
+                placeholder="Tìm kiếm ô hoặc sản phẩm..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="border-blue-200"
@@ -528,54 +544,28 @@ export function LocationManagement() {
                 <TableRow className="bg-blue-50">
                   <TableHead className="text-blue-900">ID</TableHead>
                   <TableHead className="text-blue-900">Tên ô</TableHead>
-                  <TableHead className="text-blue-900">Vị trí</TableHead>
+                  <TableHead className="text-blue-900">Tên sản phẩm</TableHead>
                   <TableHead className="text-right text-blue-900">Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredSlots.length === 0 ? (
+                {filteredSlotsWithProduct.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={4} className="py-8 text-center text-gray-500">
                       Không tìm thấy ô
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredSlots.map((slot) => {
-                    const slotInfo = getSlotWithRackAndShelf(slot.id)
-                    if (!slotInfo) return null
-
-                    return (
-                      <TableRow key={slot.id} className="hover:bg-blue-50">
-                        <TableCell>{slot.id}</TableCell>
-                        <TableCell>{slot.name}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1 text-sm">
-                            <span className="text-gray-600">{slotInfo.shelf.name}</span>
-                            <ChevronRight className="h-3 w-3 text-gray-400" />
-                            <span className="text-gray-600">{slotInfo.rack.name}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditSlot(slot, slotInfo.rack.id)}
-                            className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteSlot(slot.id, slot.name)}
-                            className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })
+                  filteredSlotsWithProduct.map((slot) => (
+                    <TableRow key={slot.slotId} className="hover:bg-blue-50">
+                      <TableCell>{slot.slotId}</TableCell>
+                      <TableCell>{slot.slotName}</TableCell>
+                      <TableCell>{slot.productName || '-'}</TableCell>
+                      <TableCell className="text-right">
+                        {/* You can add edit/delete actions here if needed */}
+                      </TableCell>
+                    </TableRow>
+                  ))
                 )}
               </TableBody>
             </Table>

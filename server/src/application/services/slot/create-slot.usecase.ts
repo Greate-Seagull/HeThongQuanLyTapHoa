@@ -8,16 +8,19 @@ const inputSchema = z.object({
   authId: z.number(),
   name: z.string().min(1),
   rackId: z.number(),
+  productId: z.number().optional(),
 });
 
 const outputSchema = z.object({
   slotId: z.number(),
 });
 
+import { SlotDetailUsecase } from './slot-detail.usecase';
 export class CreateSlotUsecase {
   constructor(
     private readonly slotRepo: SlotRepository,
-    private readonly rackRepo: RackRepository
+    private readonly rackRepo: RackRepository,
+    private readonly slotDetailUsecase: SlotDetailUsecase
   ) {}
 
   async execute(input: any) {
@@ -36,6 +39,11 @@ export class CreateSlotUsecase {
 
     const slot = Slot.create(parsedInput);
     const savedSlot = await this.slotRepo.add(slot);
+
+    // Nếu có productId thì lưu SlotDetail
+    if (parsedInput.productId) {
+      await this.slotDetailUsecase.add(savedSlot.id, parsedInput.productId);
+    }
 
     log.info("Task completed");
     return outputSchema.parse({ slotId: savedSlot.id });
