@@ -32,33 +32,14 @@ import {
  * ⚠️ DEPENDENCY: Requires Slot system to be set up
  * (Shelf → Rack → Slot structure)
  */
-export const createStocktaking = async (
-  data: CreateStocktakingRequest
-): Promise<Stocktaking> => {
+export const createStocktaking = async (data: CreateStocktakingRequest) => {
   try {
-    const response = await apiClient.post<Stocktaking>('/stocktakings', data)
+    const response = await apiClient.post<any>('/stocktakings', data)
     return response
   } catch (error: any) {
     console.error('Create stocktaking error:', error)
-    
-    if (error.response?.status === 403) {
-      throw new Error('Bạn không có quyền tạo phiếu kiểm kê. Chỉ nhân viên kiểm kê mới được phép.')
-    }
-    
-    if (error.response?.status === 400) {
-      throw new Error(
-        error.response?.data?.message || 
-        'Dữ liệu phiếu kiểm kê không hợp lệ.'
-      )
-    }
-    
-    if (error.response?.status === 404) {
-      throw new Error('Sản phẩm hoặc vị trí kho không tồn tại.')
-    }
-    
     throw new Error(
-      error.response?.data?.message || 
-      'Không thể tạo phiếu kiểm kê. Vui lòng thử lại.'
+      error.response?.data?.message || 'Không thể tạo phiếu kiểm kê'
     )
   }
 }
@@ -83,17 +64,19 @@ export const createStocktaking = async (
  */
 
 /**
- * Get All Stocktakings (NOT IMPLEMENTED)
- * Expected: GET /stocktakings
+ * Get All Stocktakings
+ * GET /stocktakings
  */
-export const getStocktakings = async (
-  page: number = 1,
-  pageSize: number = 20
-): Promise<StocktakingWithDetails[]> => {
-  throw new Error(
-    'Chức năng lấy danh sách phiếu kiểm kê chưa được backend hỗ trợ. ' +
-    'Cần endpoint: GET /stocktakings'
-  )
+export const getStocktakings = async (page: number = 1, pageSize: number = 100) => {
+  try {
+    const response = await apiClient.get<any>(`/stocktakings?page=${page}&pageSize=${pageSize}`)
+    return response
+  } catch (error: any) {
+    console.error('Get stocktakings error:', error)
+    throw new Error(
+      error.response?.data?.message || 'Không thể tải danh sách phiếu kiểm kê'
+    )
+  }
 }
 
 /**
@@ -175,28 +158,43 @@ export const getInventoryDiscrepancies = async (): Promise<InventoryDiscrepancy[
 }
 
 /**
- * Update Stocktaking (NOT IMPLEMENTED)
- * Expected: PUT /stocktakings/:id
+ * Update Stocktaking
+ * PUT /stocktakings/:id
  */
 export const updateStocktaking = async (
-  stocktakingId: number,
-  updates: Partial<CreateStocktakingRequest>
-): Promise<Stocktaking> => {
-  throw new Error(
-    'Chức năng cập nhật phiếu kiểm kê chưa được backend hỗ trợ. ' +
-    'Cần endpoint: PUT /stocktakings/:id'
-  )
+  id: number,
+  data: CreateStocktakingRequest
+) => {
+  try {
+    const response = await apiClient.put<any>(`/stocktakings/${id}`, data)
+    return response
+  } catch (error: any) {
+    console.error('Update stocktaking error:', error)
+    if (error.response?.status === 501) {
+      throw new Error('Chức năng cập nhật phiếu kiểm kê chưa được backend hỗ trợ')
+    }
+    throw new Error(
+      error.response?.data?.message || 'Không thể cập nhật phiếu kiểm kê'
+    )
+  }
 }
 
 /**
- * Delete Stocktaking (NOT IMPLEMENTED)
- * Expected: DELETE /stocktakings/:id
+ * Delete Stocktaking
+ * DELETE /stocktakings/:id
  */
-export const deleteStocktaking = async (stocktakingId: number): Promise<void> => {
-  throw new Error(
-    'Chức năng xóa phiếu kiểm kê chưa được backend hỗ trợ. ' +
-    'Cần endpoint: DELETE /stocktakings/:id'
-  )
+export const deleteStocktaking = async (id: number) => {
+  try {
+    await apiClient.delete(`/stocktakings/${id}`)
+  } catch (error: any) {
+    console.error('Delete stocktaking error:', error)
+    if (error.response?.status === 501) {
+      throw new Error('Chức năng xóa phiếu kiểm kê chưa được backend hỗ trợ')
+    }
+    throw new Error(
+      error.response?.data?.message || 'Không thể xóa phiếu kiểm kê'
+    )
+  }
 }
 
 /**

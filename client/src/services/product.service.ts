@@ -20,8 +20,25 @@ import {
  */
 export const getProducts = async (): Promise<Product[]> => {
   try {
+    console.log('Fetching products from /products')
     const response = await apiClient.get<Product[]>('/products')
-    return response
+    console.log('Raw products response:', response)
+    
+    // Ensure response is an array
+    if (Array.isArray(response)) {
+      return response
+    }
+    
+    // If response is wrapped in data property
+    if (response && typeof response === 'object' && 'data' in response) {
+      const data = (response as any).data
+      if (Array.isArray(data)) {
+        return data
+      }
+    }
+    
+    console.error('Products response is not an array:', response)
+    return []
   } catch (error: any) {
     console.error('Get products error:', error)
     
