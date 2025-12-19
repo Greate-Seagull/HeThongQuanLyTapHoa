@@ -4,7 +4,7 @@ export const product = {
 	name: "Test Product",
 	price: 10000,
 	amount: 100,
-	barcode: 999999999, // ✅ Changed from 9999999999 - fits INT4 (max 2,147,483,647)
+	barcode: 999999999,
 	status: "GOOD",
 	unit: ProductUnit.PIECE,
 	expiryDate: null,
@@ -12,22 +12,20 @@ export const product = {
 	categoryId: null,
 };
 
-const current = new Date();
-const startedAt = new Date();
-startedAt.setDate(current.getDate() - 14);
-const endedAt = new Date();
-endedAt.setDate(current.getDate() + 14);
+// Sử dụng ngày linh hoạt thay vì fix cứng 2024
+const now = new Date();
+const nextYear = new Date();
+nextYear.setFullYear(now.getFullYear() + 1);
 
 export const promotion1 = {
 	id: 88881,
 	name: "Test Promotion 1",
 	description: "Test",
-	startedAt: new Date("2024-01-01"),
-	endedAt: new Date("2024-12-31"),
+	startedAt: new Date("2024-01-01"), // Giữ cũ hoặc đổi thành now
+	endedAt: nextYear,               // Đảm bảo còn hạn
 	value: 10,
 	promotionType: "PERCENTAGE",
 	promotionDetails: {
-		// Will be created after product is inserted
 		create: [] as any[]
 	},
 };
@@ -37,11 +35,10 @@ export const promotion2 = {
 	name: "Test Promotion 2",
 	description: "Test",
 	startedAt: new Date("2024-01-01"),
-	endedAt: new Date("2024-12-31"),
+	endedAt: nextYear,               // Đảm bảo còn hạn
 	value: 20,
 	promotionType: "PERCENTAGE",
 	promotionDetails: {
-		// Will be created after product is inserted
 		create: [] as any[]
 	},
 };
