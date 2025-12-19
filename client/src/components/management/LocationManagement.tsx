@@ -349,7 +349,7 @@ export function LocationManagement() {
     }
   }
 
-  const confirmDelete = async () => {
+ const confirmDelete = async () => {
     const { type, id } = deleteConfirm
     try {
       if (type === 'shelf') {
@@ -374,7 +374,12 @@ export function LocationManagement() {
       setDeleteConfirm({ open: false, type: 'shelf', id: 0, name: '' })
     } catch (err) {
       console.error('Error deleting:', err)
-      toast.error('Không thể xóa mục này do đang được sử dụng')
+      // Kiểm tra loại để hiển thị thông báo lỗi cụ thể
+      if (type === 'slot') {
+        toast.error('Không thể xóa ô này vì đã có trong phiếu kiểm kê hoặc dữ liệu liên quan.')
+      } else {
+        toast.error('Không thể xóa mục này do đang được sử dụng')
+      }
     }
   }
 
