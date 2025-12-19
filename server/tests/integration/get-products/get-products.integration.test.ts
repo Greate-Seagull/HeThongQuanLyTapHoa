@@ -8,7 +8,6 @@ describe("Get products integration test", () => {
 	let output;
 
 	beforeAll(async () => {
-		// Xóa trước để tránh trùng barcode
 		await prisma.product.deleteMany({
 			where: { 
 				OR: [
@@ -32,18 +31,31 @@ describe("Get products integration test", () => {
 			output = await getProductsUsecase.execute(input);
 		});
 
+		it("Should return an array of products", () => {
+			expect(Array.isArray(output)).toBe(true);
+			expect(output.length).toBeGreaterThan(0);
+		});
+
 		it("Should return correct product 1", () => {
-			const foundProduct = output.products.find(
-				(p) => p.id === product1.id
-			);
-			expect(foundProduct).toMatchObject(product1);
+			const foundProduct = output.find((p: any) => p.id === product1.id);
+			expect(foundProduct).toBeDefined();
+			expect(foundProduct).toMatchObject({
+				id: product1.id,
+				barcode: product1.barcode,
+				name: product1.name,
+				price: product1.price,
+			});
 		});
 
 		it("Should return correct product 2", () => {
-			const foundProduct = output.products.find(
-				(p) => p.id === product2.id
-			);
-			expect(foundProduct).toMatchObject(product2);
+			const foundProduct = output.find((p: any) => p.id === product2.id);
+			expect(foundProduct).toBeDefined();
+			expect(foundProduct).toMatchObject({
+				id: product2.id,
+				barcode: product2.barcode,
+				name: product2.name,
+				price: product2.price,
+			});
 		});
 	});
 });

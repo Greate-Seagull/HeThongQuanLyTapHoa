@@ -9,7 +9,7 @@ const outputSchema = z.object({
 		id: z.literal(product.id),
 		name: z.literal(product.name),
 		price: z.literal(product.price),
-		unit: z.string(), // Changed from z.literal("UNKNOWN") to z.string() since UNKNOWN no longer exists
+		unit: z.string(), // Changed from z.literal("UNKNOWN")
 	}),
 	promotion: z.object({
 		id: z.literal(promotion2.id),
@@ -24,10 +24,12 @@ describe("Search products integration test", () => {
 	let output;
 
 	beforeAll(async () => {
-		await prisma.product.create({
-			data: product as any,
+		await prisma.product.deleteMany({ where: { id: product.id } });
+		await prisma.promotion.deleteMany({
+			where: { id: { in: [promotion1.id, promotion2.id] } },
 		});
-		// Use individual create so nested relation `promotionDetails` can be created
+		
+		await prisma.product.create({ data: product as any });
 		await prisma.promotion.create({ data: promotion1 as any });
 		await prisma.promotion.create({ data: promotion2 as any });
 	});
@@ -35,9 +37,7 @@ describe("Search products integration test", () => {
 	afterAll(async () => {
 		await prisma.product.delete({ where: { id: product.id } });
 		await prisma.promotion.deleteMany({
-			where: {
-				id: { in: [promotion1.id, promotion2.id] },
-			},
+			where: { id: { in: [promotion1.id, promotion2.id] } },
 		});
 	});
 
