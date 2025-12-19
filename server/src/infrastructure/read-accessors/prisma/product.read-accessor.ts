@@ -40,7 +40,8 @@ export class ProductPrismaReadAccessor
     return count === ids.length;
   }
 
-  async getProducts() {
+  async getProducts(page: number, limit: number): Promise<any[]> {
+    const skip = (page - 1) * limit;
     return await this.client.product.findMany({
       select: {
         id: true,
@@ -49,23 +50,47 @@ export class ProductPrismaReadAccessor
         amount: true,
         unit: true,
         barcode: true,
+        status: true,
         categoryId: true,
         supplierId: true,
-        // Lấy thêm thông tin Category
         category: {
           select: {
             id: true,
             name: true,
           },
         },
-        // Lấy thêm thông tin Supplier
         supplier: {
           select: {
             id: true,
             name: true,
           },
         },
+        slotDetails: {
+          select: {
+            slotId: true,
+            slot: {
+              select: {
+                id: true,
+                name: true,
+                rack: {
+                  select: {
+                    id: true,
+                    name: true,
+                    shelf: {
+                      select: {
+                        id: true,
+                        name: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       },
+      skip,
+      take: limit,
     });
   }
 

@@ -7,7 +7,8 @@ import { ProductReadAccessor } from "../read-accessors/product.read-accessor";
 import { ShelfReadAccessor } from "../read-accessors/shelf.read-accessor";
 
 const inputSchema = z.object({
-	authId: z.number(), // EmployeeId from authenticated user
+	id: z.number(),
+	authId: z.number(),
 	products: z.array(
 		z.object({
 			barcode: z.number(),
@@ -20,7 +21,7 @@ const inputSchema = z.object({
 
 const outputSchema = z.object({});
 
-export class CreateStocktakingUsecase {
+export class UpdateStocktakingUsecase {
 	constructor(
 		private readonly productReadAccess: ProductReadAccessor,
 		private readonly shelfReadAccess: ShelfReadAccessor,
@@ -30,12 +31,20 @@ export class CreateStocktakingUsecase {
 	async execute(input: any) {
 		const parsedInput = inputSchema.parse(input);
 		const log = logger.child({
-			task: "Creating stock-taking",
+			task: "Updating stock-taking",
+			stocktakingId: parsedInput.id,
 			employeeId: parsedInput.authId,
 		});
 		log.info("Task started");
 
-		// Validate products
+		// Verify stocktaking exists
+		const existing = await this.stocktakingRepo.getById(parsedInput.id);
+		if (!existing) {
+			log.warn("Task failed: stocktaking not found");
+			throw Error(`Stocktaking with id ${parsedInput.id} not found`);
+		}
+
+		// Validate barcodes
 		const barcodes = parsedInput.products.map((p) => p.barcode);
 		const idAndBarcodes = await this.productReadAccess.getIdsByBarcodes(
 			barcodes
@@ -54,33 +63,32 @@ export class CreateStocktakingUsecase {
 			log.warn("Task failed: invalid slot id");
 			throw Error(`Expect all slots to be valid`);
 		}
-		
+
 		log.debug("Task validated", {
 			barcodes: barcodes,
 			slotIds: slotIds,
 		});
 
-		// Map barcodes to product IDs
+		// Prepare new details
 		const barcodeMap = new Map<ProductBarcode, ProductId>(
 			idAndBarcodes.map((i) => [i.barcode, i.id])
 		);
-		
-		// Prepare stocktaking details
 		const details = parsedInput.products.map((p) => ({
 			status: p.status,
 			quantity: p.quantity,
 			productId: barcodeMap.get(p.barcode),
 			slotId: p.slotId,
 		}));
-		
-		// ✅ FIX: Use authId (employeeId from authenticated user)
-		const stocktaking = Stocktaking.create(parsedInput.authId, details);
 
-		const save = await this.stocktakingRepo.add(stocktaking);
-		
+		// Update stocktaking
+		const updated = await this.stocktakingRepo.update(
+			parsedInput.id,
+			parsedInput.authId,
+			details
+		);
+
 		log.debug("Task saved", {
-			stocktakingId: save.id,
-			employeeId: save.employeeId, // Log the saved employeeId
+			stocktakingId: updated.id,
 		});
 
 		log.info("Task completed");

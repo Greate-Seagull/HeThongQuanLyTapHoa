@@ -22,7 +22,7 @@ describe("Create account integration test", () => {
 
 		afterAll(async () => {
 			await prisma.employeeAccount.deleteMany({
-				where: { username: send.username },
+				where: { username: { in: [send.username, employeeAccount.username] } },
 			});
 			await prisma.employee.deleteMany({
 				where: { name: send.name },
@@ -37,6 +37,9 @@ describe("Create account integration test", () => {
 	describe("Abnormal case", () => {
 		describe("Existed username case", () => {
 			beforeAll(async () => {
+				await prisma.employeeAccount.deleteMany({ where: { username: employeeAccount.username } });
+                await prisma.employee.deleteMany({ where: { id: employee.id } });
+
 				await prisma.employee.create({ data: employee as any });
 				await prisma.employeeAccount.create({ data: employeeAccount });
 
@@ -57,6 +60,7 @@ describe("Create account integration test", () => {
 			});
 
 			it("Should return error message", () => {
+				// Prisma error code cho Unique constraint là P2002
 				expect(output.code).toBe("P2002");
 			});
 		});

@@ -35,6 +35,7 @@ import { ProductCategoryReadAccessor } from "./infrastructure/read-accessors/pri
 import { ProductPrismaReadAccessor } from "./infrastructure/read-accessors/prisma/product.read-accessor";
 import { ReportReadAccessor } from "./infrastructure/read-accessors/prisma/report.read-accessor";
 import { ShelfReadAccessor } from "./infrastructure/read-accessors/prisma/shelf.read-accessor";
+import { StocktakingReadAccessor } from "./infrastructure/read-accessors/prisma/stocktaking.read-accessor";
 
 import { SupplierReadAccessor } from "./infrastructure/read-accessors/prisma/supplier.read-accessor";
 
@@ -77,6 +78,7 @@ import { DeleteCustomerAccountUsecase } from "./application/services/customer-ac
 import { CreateInvoiceUsecase } from "./application/services/invoice/create-invoice.usecase";
 import { CreateGoodReceiptUsecase } from "./application/services/good-receipt/create-good-receipt.usecase";
 import { CreateStocktakingUsecase } from "./application/services/stocktaking/create-stocktaking.usecase";
+import { GetStocktakingsUsecase } from "./application/services/stocktaking/get-stocktakings.usecase";
 import { GetSuppliersUsecase } from "./application/services/supplier/get-suppliers.usecase";
 import { CreateSupplierUsecase } from "./application/services/supplier/create-supplier.usecase";
 import { UpdateSupplierUsecase } from "./application/services/supplier/update-supplier.usecase";
@@ -105,6 +107,8 @@ import { RackRepository } from "./infrastructure/repositories/rack.repository";
 import { SlotRepository } from "./infrastructure/repositories/slot.repository";
 import { PromotionReadAccessor } from "./infrastructure/read-accessors/prisma/promotion.read-accessor";
 import { InvoiceReadAccessor } from "./infrastructure/read-accessors/prisma/invoice.read-accessor";
+import { UpdateStocktakingUsecase } from "./application/services/stocktaking/update-stocktaking.usecase";
+import { DeleteStocktakingUsecase } from "./application/services/stocktaking/delete-stocktaking.usecase";
 config;
 export const prisma = new PrismaClient({
   log: [
@@ -165,7 +169,7 @@ const reportReadAccessor = new ReportReadAccessor(prisma);
 const shelfRepo = new ShelfRepository(prisma);
 const rackRepo = new RackRepository(prisma);
 const slotRepo = new SlotRepository(prisma);
-// Removed duplicate slotDetailRepo and slotDetailUsecase declarations (already declared above)
+export const stocktakingReadAccessor = new StocktakingReadAccessor(prisma);
 const invoiceReadAccessor = new InvoiceReadAccessor(prisma);
 
 //Domain services
@@ -276,6 +280,17 @@ export const createGoodReceiptUsecase = new CreateGoodReceiptUsecase(
 export const createStocktakingUsecase = new CreateStocktakingUsecase(
   productReadAccessor,
   shelfReadAccessor,
+  stocktakingRepo
+);
+export const getStocktakingsUsecase = new GetStocktakingsUsecase(
+  stocktakingReadAccessor
+);
+export const updateStocktakingUsecase = new UpdateStocktakingUsecase(
+  productReadAccessor,
+  shelfReadAccessor,
+  stocktakingRepo
+);
+export const deleteStocktakingUsecase = new DeleteStocktakingUsecase(
   stocktakingRepo
 );
 

@@ -83,15 +83,23 @@ export function ProfilePage() {
   const fetchProfile = async () => {
     setIsLoading(true)
     try {
-      // Thử lấy profile nhân viên trước, bỏ qua redirect 401 nếu lỗi
+      // Thử lấy profile nhân viên trước
       try {
         const response = await apiClient.get<any>('/employee-accounts/profile', {
           skipAuthRedirect: true,
         } as any)
 
-        setUser({ ...response, type: 'EMPLOYEE' })
+        // ✅ FIX: Lưu đúng employeeId thay vì accountId
+        setUser({ 
+          id: response.id,  // EmployeeId (đúng)
+          name: response.name,
+          username: response.username,
+          position: response.position,
+          type: 'EMPLOYEE' 
+        })
+        
         setFormData({
-          id: response.id,
+          id: response.id,  // EmployeeId
           name: response.name,
           username: response.username,
           phoneNumber: '',
@@ -350,6 +358,7 @@ export function ProfilePage() {
                 <div className="w-full space-y-3 border-t border-gray-200 pt-4">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">Mã ID:</span>
+                    {/* ✅ Show Employee ID correctly */}
                     <span className="font-medium text-gray-900">#{user.id}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">

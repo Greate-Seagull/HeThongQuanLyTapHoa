@@ -5,7 +5,16 @@ export enum PromotionType {
 }
 
 export enum ProductUnit {
-  UNKNOWN = 'UNKNOWN',
+  PIECE = 'PIECE',
+  BOX = 'BOX',
+  BOTTLE = 'BOTTLE',
+  CAN = 'CAN',
+  PACKAGE = 'PACKAGE',
+  BAG = 'BAG',
+  KG = 'KG',
+  GRAM = 'GRAM',
+  LITER = 'LITER',
+  ML = 'ML',
 }
 
 export enum ProductStatus {
@@ -19,6 +28,37 @@ export enum EmployeePosition {
   RECEIVING = 'RECEIVING',
 }
 
+// Shelf, Rack, Slot Types (định nghĩa trước để Product có thể reference)
+export interface Shelf {
+  id: number
+  name: string
+  racks?: Rack[]
+}
+
+export interface Rack {
+  id: number
+  name: string
+  shelfId: number
+  shelf?: Shelf
+  slots?: Slot[]
+}
+
+export interface Slot {
+  id: number
+  name: string
+  rackId: number
+  rack?: Rack
+  slotDetails?: SlotDetail[]
+  stocktakingDetails?: StocktakingDetail[]
+}
+
+export interface SlotDetail {
+  slotId: number
+  productId: number
+  slot?: Slot
+  product?: Product
+}
+
 // Product Types
 export interface Product {
   id: number
@@ -28,13 +68,23 @@ export interface Product {
   barcode: number
   amount: number
   status: ProductStatus
+  categoryId?: number  // ✅ Add optional fields
+  supplierId?: number  // ✅ Add optional fields
+  category?: {
+    id: number
+    name: string
+  }
+  supplier?: {
+    id: number
+    name: string
+  }
+  slotDetails?: SlotDetail[]
 }
 
 export interface ProductWithDetails extends Product {
   promotionDetails?: PromotionDetail[]
   invoiceDetails?: InvoiceDetail[]
   goodReceiptDetails?: GoodReceiptDetail[]
-  slotDetails?: SlotDetail[]
   stocktakingDetails?: StocktakingDetail[]
 }
 
@@ -153,37 +203,6 @@ export interface GoodReceiptDetail {
   quantity: number
   price: number
   goodReceipt?: GoodReceipt
-  product?: Product
-}
-
-// Shelf, Rack, Slot Types
-export interface Shelf {
-  id: number
-  name: string
-  racks?: Rack[]
-}
-
-export interface Rack {
-  id: number
-  name: string
-  shelfId: number
-  shelf?: Shelf
-  slots?: Slot[]
-}
-
-export interface Slot {
-  id: number
-  name: string
-  rackId: number
-  rack?: Rack
-  slotDetails?: SlotDetail[]
-  stocktakingDetails?: StocktakingDetail[]
-}
-
-export interface SlotDetail {
-  slotId: number
-  productId: number
-  slot?: Slot
   product?: Product
 }
 
