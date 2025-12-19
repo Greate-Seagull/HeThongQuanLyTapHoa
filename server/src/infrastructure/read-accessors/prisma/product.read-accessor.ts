@@ -40,7 +40,8 @@ export class ProductPrismaReadAccessor
     return count === ids.length;
   }
 
-  async getProducts(): Promise<any[]> {
+  async getProducts(page: number, limit: number): Promise<any[]> {
+    const skip = (page - 1) * limit;
     return await this.client.product.findMany({
       select: {
         id: true,
@@ -88,6 +89,8 @@ export class ProductPrismaReadAccessor
           },
         },
       },
+      skip,
+      take: limit,
     });
   }
 

@@ -432,53 +432,6 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
 
   return (
     <div className="space-y-6">
-      {/* Debug Panel */}
-      <Card className="border-orange-200 bg-orange-50">
-        <CardHeader className="bg-orange-100 py-3">
-          <CardTitle className="text-sm text-orange-900">🔍 Debug Info</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 space-y-2 text-xs">
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <p className="font-semibold">Products:</p>
-              <p className={products.length > 0 ? 'text-green-600' : 'text-red-600'}>
-                {products.length > 0 ? `✅ ${products.length} loaded` : '❌ Not loaded'}
-              </p>
-            </div>
-            <div>
-              <p className="font-semibold">Total Slots:</p>
-              <p className={slots.length > 0 ? 'text-green-600' : 'text-red-600'}>
-                {slots.length > 0 ? `✅ ${slots.length} loaded` : '❌ Not loaded'}
-              </p>
-            </div>
-            <div>
-              <p className="font-semibold">Available Slots:</p>
-              <p className={selectedProductId ? 'text-blue-600' : 'text-gray-400'}>
-                {selectedProductId 
-                  ? `${availableSlots.length} for selected product` 
-                  : 'Select product first'}
-              </p>
-            </div>
-          </div>
-          {selectedProduct && (
-            <div className="pt-2 border-t border-orange-200">
-              <p className="font-semibold">Selected Product:</p>
-              <p className="text-gray-600">
-                {selectedProduct.name} (ID: {selectedProduct.id})
-              </p>
-              <p className="text-gray-600">
-                SlotDetails: {selectedProduct.slotDetails?.length || 0} locations
-              </p>
-              {selectedProduct.slotDetails && selectedProduct.slotDetails.length > 0 && (
-                <p className="text-blue-600">
-                  Slot IDs: {selectedProduct.slotDetails.map(sd => sd.slotId).join(', ')}
-                </p>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
       {/* Header */}
       <Card className="border-blue-200">
         <CardHeader className="bg-blue-50">
@@ -813,7 +766,12 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
               </Button>
             </div>
 
-            {stocktakings.length === 0 ? (
+            {isLoading ? (
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-3"></div>
+                <p className="text-gray-500">Đang tải danh sách kiểm kê...</p>
+              </div>
+            ) : stocktakings.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
                 <ClipboardCheck className="h-12 w-12 mx-auto mb-3 opacity-20" />
                 <p>Chưa có phiếu kiểm kê nào</p>
