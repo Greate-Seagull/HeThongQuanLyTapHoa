@@ -31,13 +31,14 @@ describe("Get products integration test", () => {
 			output = await getProductsUsecase.execute(input);
 		});
 
-		it("Should return an array of products", () => {
-			expect(Array.isArray(output)).toBe(true);
-			expect(output.length).toBeGreaterThan(0);
+		it("Should return an object with products array", () => {
+			expect(output).toHaveProperty('products');
+			expect(Array.isArray(output.products)).toBe(true);
+			expect(output.products.length).toBeGreaterThan(0);
 		});
 
 		it("Should return correct product 1", () => {
-			const foundProduct = output.find((p: any) => p.id === product1.id);
+			const foundProduct = output.products.find((p: any) => p.id === product1.id);
 			expect(foundProduct).toBeDefined();
 			expect(foundProduct).toMatchObject({
 				id: product1.id,
@@ -48,7 +49,7 @@ describe("Get products integration test", () => {
 		});
 
 		it("Should return correct product 2", () => {
-			const foundProduct = output.find((p: any) => p.id === product2.id);
+			const foundProduct = output.products.find((p: any) => p.id === product2.id);
 			expect(foundProduct).toBeDefined();
 			expect(foundProduct).toMatchObject({
 				id: product2.id,

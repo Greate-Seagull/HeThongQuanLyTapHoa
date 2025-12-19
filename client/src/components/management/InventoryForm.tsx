@@ -123,15 +123,15 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
   const loadProducts = async () => {
     try {
       console.log('Loading products...');
-      const result = await getProducts();
-      console.log('Products loaded (raw):', result);
+      const productsArray = await getProducts(); // Already returns Product[]
+      console.log('Products loaded:', productsArray);
       
-      if (Array.isArray(result)) {
-        console.log(`✅ Loaded ${result.length} products`);
-        console.log('First product example:', result[0]);
-        setProducts(result);
+      if (Array.isArray(productsArray)) {
+        console.log(`✅ Loaded ${productsArray.length} products`);
+        console.log('First product example:', productsArray[0]);
+        setProducts(productsArray);
       } else {
-        console.error('❌ Products result is not an array:', result);
+        console.error('❌ Products result is not an array:', productsArray);
         setProducts([]);
         toast.error('Dữ liệu sản phẩm không đúng định dạng');
       }
@@ -352,8 +352,10 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
     try {
       setIsLoading(true);
       
+      console.log('🔍 Current User:', currentUser); // Debug log
+      
       const requestData: any = {
-        authId: currentUser.id,
+        authId: currentUser.id, // ✅ Ensure this is the correct employee ID
         products: stocktakingDetails.map(detail => ({
           barcode: detail.product!.barcode,
           slotId: detail.slotId,
@@ -361,16 +363,18 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
           quantity: detail.quantity,
         })),
       };
+      
+      console.log('📤 Sending stocktaking request:', requestData); // Debug log
 
       if (editingStocktaking) {
-        // Update existing stocktaking
         console.log('Updating stocktaking #' + editingStocktaking.id, requestData);
         await updateStocktaking(editingStocktaking.id, requestData);
         toast.success('Cập nhật phiếu kiểm kê thành công!');
       } else {
-        // Create new stocktaking
         console.log('Creating stocktaking with data:', requestData);
-        await createStocktaking(requestData);
+        const response = await createStocktaking(requestData);
+        console.log('📥 Create stocktaking response:', response); // Debug log
+        
         toast.success('Lập phiếu kiểm kê thành công!', {
           description: `Đã tạo phiếu với ${stocktakingDetails.length} mục`,
         });
@@ -610,7 +614,7 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                       </Command>
                     </PopoverContent>
                   </Popover>
-                  {selectedProductId && (
+                  {selectedProductId > 0 && (
                     <p className="text-xs text-gray-500">
                       {availableSlots.length === 0 
                         ? '⚠️ Sản phẩm chưa được phân bổ vị trí. Vui lòng liên hệ quản lý.'

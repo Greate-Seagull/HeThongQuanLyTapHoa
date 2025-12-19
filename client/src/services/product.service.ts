@@ -12,44 +12,37 @@ import {
 /**
  * Get All Products
  * GET /products
- * Authorization: Requires ADMIN role
- * 
- * ⚠️ AUTHORIZATION ISSUE: Backend requires ADMIN role
- * Frontend has positions: SALES, INVENTORY, RECEIVING
- * Question: Should INVENTORY staff have access? (They need product management)
+ * Returns: { products: Product[] }
  */
 export const getProducts = async (): Promise<Product[]> => {
   try {
     console.log('Fetching products from /products')
-    const response = await apiClient.get<Product[]>('/products')
+    const response = await apiClient.get<{ products: Product[] }>('/products')
     console.log('Raw products response:', response)
     
-    // Ensure response is an array
+    // Backend now returns { products: [...] }
+    if (response && response.products && Array.isArray(response.products)) {
+      return response.products
+    }
+    
+    // Fallback: if response is array directly (old format)
     if (Array.isArray(response)) {
+      console.warn('⚠️ Old response format detected (array), expected { products: [...] }')
       return response
     }
     
-    // If response is wrapped in data property
-    if (response && typeof response === 'object' && 'data' in response) {
-      const data = (response as any).data
-      if (Array.isArray(data)) {
-        return data
-      }
-    }
-    
-    console.error('Products response is not an array:', response)
+    console.error('Products response is invalid:', response)
     return []
   } catch (error: any) {
     console.error('Get products error:', error)
     
-    // Handle specific errors
     if (error.response?.status === 403) {
-      throw new Error('Bạn không có quyền truy cập danh sách sản phẩm. Chỉ quản trị viên mới được phép.')
+      throw new Error('Bạn không có quyền truy cập danh sách sản phẩm')
     }
     
     throw new Error(
       error.response?.data?.message || 
-      'Không thể tải danh sách sản phẩm. Vui lòng thử lại.'
+      'Không thể tải danh sách sản phẩm'
     )
   }
 }

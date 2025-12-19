@@ -15,7 +15,13 @@ export class StocktakingReadAccessor implements IStocktakingReadAccessor {
 					createdAt: "desc",
 				},
 				include: {
-					employee: true,
+					employee: {
+						select: {
+							id: true,
+							name: true,
+							position: true,
+						},
+					},
 					stocktakingDetails: {
 						include: {
 							product: {
@@ -38,6 +44,15 @@ export class StocktakingReadAccessor implements IStocktakingReadAccessor {
 			}),
 			this.prisma.stocktaking.count(),
 		]);
+
+		// Debug log để kiểm tra
+		if (data.length > 0) {
+			console.log('🔍 First stocktaking from DB:', {
+				id: data[0].id,
+				employeeId: data[0].employeeId,
+				employeeName: data[0].employee?.name,
+			});
+		}
 
 		return {
 			data,

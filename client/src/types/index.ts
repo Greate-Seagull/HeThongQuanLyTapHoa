@@ -5,7 +5,16 @@ export enum PromotionType {
 }
 
 export enum ProductUnit {
-  UNKNOWN = 'UNKNOWN',
+  PIECE = 'PIECE',
+  BOX = 'BOX',
+  BOTTLE = 'BOTTLE',
+  CAN = 'CAN',
+  PACKAGE = 'PACKAGE',
+  BAG = 'BAG',
+  KG = 'KG',
+  GRAM = 'GRAM',
+  LITER = 'LITER',
+  ML = 'ML',
 }
 
 export enum ProductStatus {
@@ -59,6 +68,8 @@ export interface Product {
   barcode: number
   amount: number
   status: ProductStatus
+  categoryId?: number  // ✅ Add optional fields
+  supplierId?: number  // ✅ Add optional fields
   category?: {
     id: number
     name: string

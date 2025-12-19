@@ -9,7 +9,9 @@ const inputSchema = z.object({
 	limit: z.number().optional().default(1000),
 });
 
-const outputSchema = z.array(z.any());
+const outputSchema = z.object({
+	products: z.array(z.any()),
+});
 
 export class GetProductsUsecase {
 	constructor(private readonly productReadAccess: ProductReadAccessor) {}
@@ -28,6 +30,6 @@ export class GetProductsUsecase {
 
 		log.info("Task completed", { count: products.length });
 
-		return outputSchema.parse(products);
+		return outputSchema.parse({ products });
 	}
 }

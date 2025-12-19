@@ -1,13 +1,12 @@
 import { ProductUnit } from "../../../src/generated/client";
 
 export const product = {
-	id: 99999,
 	name: "Test Product",
 	price: 10000,
 	amount: 100,
-	barcode: 9999999999,
+	barcode: 999999999, // ✅ Changed from 9999999999 - fits INT4 (max 2,147,483,647)
 	status: "GOOD",
-	unit: ProductUnit.PIECE, // Use PIECE instead of UNKNOWN
+	unit: ProductUnit.PIECE,
 	expiryDate: null,
 	supplierId: null,
 	categoryId: null,
@@ -28,7 +27,8 @@ export const promotion1 = {
 	value: 10,
 	promotionType: "PERCENTAGE",
 	promotionDetails: {
-		create: [{ productId: product.id }],
+		// Will be created after product is inserted
+		create: [] as any[]
 	},
 };
 
@@ -41,6 +41,7 @@ export const promotion2 = {
 	value: 20,
 	promotionType: "PERCENTAGE",
 	promotionDetails: {
-		create: [{ productId: product.id }],
+		// Will be created after product is inserted
+		create: [] as any[]
 	},
 };
