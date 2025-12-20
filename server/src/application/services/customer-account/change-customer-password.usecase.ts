@@ -25,9 +25,9 @@ export class ChangeCustomerPasswordUsecase {
     log.info("Task started");
 
     await this.transactionManager.transaction(async (tx) => {
-      // Lấy account theo id
-      const account = await tx.account.findUnique({
-        where: { id: parsed.id },
+      // Lấy account theo userId
+      const account = await tx.account.findFirst({
+        where: { userId: parsed.id },
         select: { id: true, passwordHash: true, salt: true },
       });
       if (!account) throw new Error("Account not found");

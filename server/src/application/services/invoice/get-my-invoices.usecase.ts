@@ -6,19 +6,20 @@ export class GetMyInvoicesUsecase {
 	constructor(private readonly invoiceRead: InvoiceReadAccessor) {}
 
 	async execute(input: any) {
-		const userId =
-			input.authId || input.user?.id || input.body?.authId || input.query?.authId;
+			const userId =
+				input.authId || input.user?.id || input.body?.authId || input.query?.authId;
 
-		if (!userId) {
-			throw new Error("User ID is required to fetch invoices");
-		}
+			if (!userId) {
+				logger.error("[GetMyInvoices] Missing userId in input");
+				throw new Error("User ID is required to fetch invoices");
+			}
 
-		const log = logger.child({ task: "Get my invoices", userId });
-		log.info("Task started");
+			const log = logger.child({ task: "Get my invoices", userId });
+			log.info("Task started");
 
-		const invoices = await this.invoiceRead.getByUserId(Number(userId));
+			const invoices = await this.invoiceRead.getByUserId(Number(userId));
 
-		log.info("Task completed");
-		return invoices;
+			log.info("Task completed");
+			return invoices;
 	}
 }

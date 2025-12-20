@@ -31,7 +31,8 @@ export class GetMyAccountUsecase {
       id: parsedInput.authId,
     });
     log.info("Task started");
-    const account = await this.accountRead.getById(parsedInput.authId);
+  // authId giờ là userId, nên phải lấy account theo userId
+  const account = await this.accountRead.getByUserId(parsedInput.authId);
     if (!account) throw Error("Account not found");
     log.info("Task completed");
     return outputSchema.parse(account);

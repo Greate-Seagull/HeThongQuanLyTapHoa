@@ -1,6 +1,24 @@
+
 import { PrismaClient } from "@prisma/client";
 
 export class AccountReadAccessor {
+
+	async getByUserId(userId: number) {
+		return await this.prisma.account.findFirst({
+			where: { userId: userId },
+			select: {
+				id: true,
+				phoneNumber: true,
+				user: {
+					select: {
+						id: true,
+						name: true,
+						point: true,
+					},
+				},
+			},
+		});
+	}
 	constructor(private readonly prisma: PrismaClient) {}
 
 	async existPhoneNumber(phoneNumber: string) {

@@ -13,27 +13,15 @@ import { EmployeePosition } from '@/types'
 import { customerSignUp, employeeSignUp } from '@/services/auth.service'
 import { useAuthStore } from '@/store/auth-store'
 
-type UserRole = 'staff' | 'customer'
 
-// Mock database của users đã đăng ký (không bao gồm owner - owner chỉ có sẵn trong DB)
-const existingUsers = [
-  { username: 'nvkiem', role: 'staff', position: EmployeePosition.INVENTORY },
-  { username: 'ttnhap', role: 'staff', position: EmployeePosition.RECEIVING },
-  { username: 'lvban', role: 'staff', position: EmployeePosition.SALES },
-  { username: 'khach1', role: 'customer' },
-]
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [selectedRole, setSelectedRole] = useState<UserRole>('customer')
-  const [position, setPosition] = useState<EmployeePosition>(EmployeePosition.SALES)
   const [phone, setPhone] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [employeeId, setEmployeeId] = useState('')
-  
   const router = useRouter()
   const login = useAuthStore((state) => state.login)
 
@@ -43,106 +31,49 @@ export default function RegisterPage() {
       toast.error('Vui lòng nhập họ và tên')
       return
     }
-
     if (!username.trim()) {
       toast.error('Vui lòng nhập tên đăng nhập')
       return
     }
-
     if (!password) {
       toast.error('Vui lòng nhập mật khẩu')
       return
     }
-
     if (password.length < 6) {
       toast.error('Mật khẩu phải có ít nhất 6 ký tự')
       return
     }
-
     if (password !== confirmPassword) {
       toast.error('Mật khẩu không khớp', {
         description: 'Vui lòng kiểm tra lại mật khẩu xác nhận',
       })
       return
     }
-
-    if (selectedRole === 'customer' && !phone.trim()) {
+    if (!phone.trim()) {
       toast.error('Vui lòng nhập số điện thoại')
       return
     }
-
-    if (selectedRole === 'staff' && !employeeId.trim()) {
-      toast.error('Vui lòng nhập mã nhân viên')
-      return
-    }
-
     setIsLoading(true)
-
     try {
-      if (selectedRole === 'customer') {
-        // Customer registration: POST /accounts
-        const response = await customerSignUp({
-          name: fullName,
-          phoneNumber: phone,
-          password: password,
-        })
-
-        // ⚠️ Backend only returns token, missing user data
-        const userData = {
-          username: phone, // Using phoneNumber as username
-          role: 'customer' as const,
-          customerId: undefined,
-        }
-
-        login(userData, response.token)
-
-        toast.success('Đăng ký tài khoản khách hàng thành công!', {
-          description: 'Bạn đã có thể đăng nhập vào hệ thống',
-        })
-
-        setTimeout(() => {
-          router.push('/dashboard/customer')
-        }, 1500)
-      } else if (selectedRole === 'staff') {
-        // ⚠️ CRITICAL ISSUE: Backend expects employeeId (employee must exist first)
-        // This is a two-step process:
-        // 1. Admin must create Employee record first with position
-        // 2. Then create EmployeeAccount with employeeId reference
-        
-        try {
-          const response = await employeeSignUp({
-            employeeId: parseInt(employeeId),
-            username: username,
-            password: password,
-          })
-
-          // ⚠️ Backend only returns token, missing employee data
-          const userData = {
-            username: username,
-            role: 'staff' as const,
-            employeeData: undefined, // Cannot get position without employee data
-          }
-
-          login(userData, response.token)
-
-          toast.success('Đăng ký tài khoản nhân viên thành công!', {
-            description: 'Bạn đã có thể đăng nhập vào hệ thống',
-          })
-
-          setTimeout(() => {
-            router.push('/dashboard/staff')
-          }, 1500)
-        } catch (error: any) {
-          // If employeeId doesn't exist, show helpful error
-          if (error.message.includes('not found') || error.message.includes('không tồn tại')) {
-            toast.error('Mã nhân viên không tồn tại', {
-              description: 'Vui lòng liên hệ quản trị viên để tạo hồ sơ nhân viên trước',
-            })
-          } else {
-            throw error
-          }
-        }
+      // Customer registration: POST /accounts
+      const response = await customerSignUp({
+        name: fullName,
+        phoneNumber: phone,
+        password: password,
+      })
+      // ⚠️ Backend only returns token, missing user data
+      const userData = {
+        username: phone, // Using phoneNumber as username
+        role: 'customer' as const,
+        customerId: undefined,
       }
+      login(userData, response.token)
+      toast.success('Đăng ký tài khoản khách hàng thành công!', {
+        description: 'Bạn đã có thể đăng nhập vào hệ thống',
+      })
+      setTimeout(() => {
+        router.push('/dashboard/customer')
+      }, 1500)
     } catch (error: any) {
       console.error('Registration error:', error)
       toast.error('Đăng ký thất bại', {
@@ -179,50 +110,7 @@ export default function RegisterPage() {
           <CardDescription>Hệ thống quản lý tạp hóa - Tạo tài khoản mới để sử dụng</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Role Selection */}
-          <div className="space-y-2">
-            <Label className="text-blue-900">Vai trò đăng ký</Label>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                type="button"
-                variant={selectedRole === 'staff' ? 'default' : 'outline'}
-                onClick={() => setSelectedRole('staff')}
-                className={`flex flex-col items-center gap-1 h-auto py-3 ${selectedRole === 'staff' ? 'bg-blue-600 hover:bg-blue-700' : 'border-blue-200'}`}
-              >
-                <Users className="h-5 w-5" />
-                <span className="text-xs">Nhân viên</span>
-              </Button>
-              <Button
-                type="button"
-                variant={selectedRole === 'customer' ? 'default' : 'outline'}
-                onClick={() => setSelectedRole('customer')}
-                className={`flex flex-col items-center gap-1 h-auto py-3 ${selectedRole === 'customer' ? 'bg-blue-600 hover:bg-blue-700' : 'border-blue-200'}`}
-              >
-                <ShoppingBag className="h-5 w-5" />
-                <span className="text-xs">Khách hàng</span>
-              </Button>
-            </div>
-          </div>
 
-          {/* Employee ID for Staff (Backend requirement) */}
-          {selectedRole === 'staff' && (
-            <div className="space-y-2">
-              <Label htmlFor="employeeId" className="text-blue-900">
-                Mã nhân viên <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="employeeId"
-                type="text"
-                placeholder="Nhập mã nhân viên (yêu cầu từ quản trị viên)"
-                value={employeeId}
-                onChange={(e) => setEmployeeId(e.target.value)}
-                className="border-blue-200 focus:border-blue-600"
-              />
-              <p className="text-xs text-gray-500">
-                ⚠️ Quản trị viên phải tạo hồ sơ nhân viên trước khi đăng ký tài khoản
-              </p>
-            </div>
-          )}
 
           <div className="space-y-2">
             <Label htmlFor="fullName" className="text-blue-900">Họ và tên</Label>
@@ -248,19 +136,17 @@ export default function RegisterPage() {
             />
           </div>
 
-          {selectedRole === 'customer' && (
-            <div className="space-y-2">
-              <Label htmlFor="phone" className="text-blue-900">Số điện thoại</Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="Nhập số điện thoại"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="border-blue-200 focus:border-blue-600"
-              />
-            </div>
-          )}
+          <div className="space-y-2">
+            <Label htmlFor="phone" className="text-blue-900">Số điện thoại</Label>
+            <Input
+              id="phone"
+              type="tel"
+              placeholder="Nhập số điện thoại"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="border-blue-200 focus:border-blue-600"
+            />
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="password" className="text-blue-900">Mật khẩu</Label>

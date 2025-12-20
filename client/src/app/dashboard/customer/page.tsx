@@ -109,43 +109,37 @@ export default function CustomerDashboardPage() {
     checkAuth()
   }, [user, router, login])
 
-  // Fetch customer profile
+
+  // Luôn fetch profile và invoices khi user?.customerId thay đổi (kể cả khi vừa vào dashboard)
   useEffect(() => {
     const fetchProfile = async () => {
-      if (!user?.customerId) return
-
+      if (!user?.customerId) return;
       try {
-        const response = await apiClient.get<any>('/accounts/profile')
-        setCustomerProfile(response.user)
+        const response = await apiClient.get<any>('/accounts/profile');
+        setCustomerProfile(response.user);
       } catch (error) {
-        console.error('Failed to fetch profile:', error)
+        console.error('Failed to fetch profile:', error);
       }
-    }
-
-    if (user?.customerId) {
-      fetchProfile()
-    }
-  }, [user?.customerId])
-
-  // Fetch invoices khi chuyển sang tab invoices
-  useEffect(() => {
+    };
     const fetchInvoices = async () => {
-      if (activeMenu !== 'invoices' || !user?.customerId) return
-
-      setIsLoadingInvoices(true)
+      if (!user?.customerId) return;
+      setIsLoadingInvoices(true);
       try {
-        const response = await apiClient.get<ApiResponse>(`/invoices/mine`)
-        setInvoices(response || [])
+        const response = await apiClient.get<any>(`/invoices/mine`);
+        const invoicesData = Array.isArray(response) ? response : response?.data || response;
+        setInvoices(invoicesData || []);
       } catch (error) {
-        console.error('Failed to fetch invoices:', error)
-        setInvoices([])
+        console.error('Failed to fetch invoices:', error);
+        setInvoices([]);
       } finally {
-        setIsLoadingInvoices(false)
+        setIsLoadingInvoices(false);
       }
+    };
+    if (user?.customerId) {
+      fetchProfile();
+      fetchInvoices();
     }
-
-    fetchInvoices()
-  }, [activeMenu, user?.customerId])
+  }, [user?.customerId]);
 
   const menuItems = [
     { id: 'points', label: 'Điểm tích lũy', icon: <Award className="h-4 w-4" /> },
@@ -153,10 +147,19 @@ export default function CustomerDashboardPage() {
     { id: 'profile', label: 'Thông tin cá nhân', icon: <Star className="h-4 w-4" /> },
   ]
 
-  // Tính toán điểm từ profile và invoices
-  const currentPoints = customerProfile?.point || 0
-  const totalPointsUsed = invoices.reduce((sum, inv) => sum + (inv.usedPoint || 0), 0)
-  const totalPointsEarned = currentPoints + totalPointsUsed
+
+  // Tính toán điểm từ profile và invoices, luôn cập nhật khi invoices thay đổi
+  const [currentPoints, setCurrentPoints] = useState(0);
+  const [totalPointsUsed, setTotalPointsUsed] = useState(0);
+  const [totalPointsEarned, setTotalPointsEarned] = useState(0);
+
+  useEffect(() => {
+    const points = customerProfile?.point || 0;
+    const used = invoices.reduce((sum, inv) => sum + (inv.usedPoint || 0), 0);
+    setCurrentPoints(points);
+    setTotalPointsUsed(used);
+    setTotalPointsEarned(points + used);
+  }, [customerProfile, invoices]);
 
   // Tính toán chi tiết hóa đơn với giá gốc ước tính
   const calculateInvoiceDetails = (invoice: Invoice) => {
@@ -269,19 +272,7 @@ export default function CustomerDashboardPage() {
         </div>
       )}
 
-      {activeMenu === 'profile' && customerProfile && (
-        <CustomerProfileContent
-          user={{
-            id: user?.customerId || 1,
-            name: customerProfile.name || 'Khách hàng',
-            phone: customerProfile.phoneNumber || '',
-            phoneNumber: customerProfile.phoneNumber || '',
-            point: currentPoints,
-            loggedAt: new Date(customerProfile.loggedAt || new Date()),
-          }}
-          role="customer"
-        />
-      )}
+      {activeMenu === 'profile' && <CustomerProfileContent />}
 
       {activeMenu === 'invoices' && (
         <Card className="border-blue-200">
@@ -354,7 +345,7 @@ export default function CustomerDashboardPage() {
 
       {/* Invoice Detail Dialog */}
       <Dialog open={showInvoiceDialog} onOpenChange={setShowInvoiceDialog}>
-        <DialogContent className="border-blue-200 max-w-[95vw] lg:max-w-5xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="border-blue-200 w-full max-w-[98vw] lg:max-w-[1200px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-blue-900">Chi tiết hóa đơn</DialogTitle>
             <DialogDescription className="text-sm text-gray-500">
