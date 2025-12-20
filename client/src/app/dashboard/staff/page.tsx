@@ -11,6 +11,14 @@ import { useAuthStore } from '@/store/auth-store'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { apiClient } from '@/services/api-client'
+import type { ReactNode } from 'react' // ✅ FIX: Import ReactNode type
+
+// ✅ FIX: Use ReactNode instead of JSX.Element
+interface MenuItem {
+  id: string
+  label: string
+  icon: ReactNode
+}
 
 export default function StaffDashboardPage() {
   const { user, login } = useAuthStore() as any
@@ -18,11 +26,28 @@ export default function StaffDashboardPage() {
   const [activeMenu, setActiveMenu] = useState('')
   const [isLoading, setIsLoading] = useState(true)
 
+  // Check if user is MANAGER accessing staff features
+  const isManagerAccessingStaff = user?.employeeData?.position === 'MANAGER' && user?.role === 'staff';
+
   // Determine menu items based on staff position
-  const getMenuItems = () => {
+  const getMenuItems = (): MenuItem[] => {
     const position = user?.employeeData?.position || ''
     
-    const profileItem = { id: 'profile', label: 'Thông tin cá nhân', icon: <User className="h-4 w-4" /> }
+    // MANAGER gets ALL staff features (no profile)
+    if (position === 'MANAGER') {
+      return [
+        { id: 'inventory', label: 'Phiếu kiểm kê', icon: <ClipboardCheck className="h-4 w-4" /> },
+        { id: 'import', label: 'Phiếu nhập hàng', icon: <PackagePlus className="h-4 w-4" /> },
+        { id: 'invoice', label: 'Hóa đơn', icon: <FileText className="h-4 w-4" /> },
+      ]
+    }
+    
+    // Profile item for non-MANAGER staff
+    const profileItem: MenuItem = { 
+      id: 'profile', 
+      label: 'Thông tin cá nhân', 
+      icon: <User className="h-4 w-4" /> 
+    }
     
     if (position === 'INVENTORY') {
       return [
@@ -41,7 +66,7 @@ export default function StaffDashboardPage() {
       ]
     }
     
-    // Default: show all
+    // Default: show all with profile
     return [
       { id: 'inventory', label: 'Phiếu kiểm kê', icon: <ClipboardCheck className="h-4 w-4" /> },
       { id: 'import', label: 'Phiếu nhập hàng', icon: <PackagePlus className="h-4 w-4" /> },
@@ -72,20 +97,20 @@ export default function StaffDashboardPage() {
 
       try {
         const response = await apiClient.get<any>('/employee-accounts/profile')
-        console.log('🔍 Profile response:', response) // Debug log
+        console.log('🔍 Profile response:', response)
         
-        // ✅ FIX: Store correct employeeId
         const userData = {
           username: response.username,
           role: 'staff',
           employeeData: {
-            id: response.id,         // ✅ EmployeeId (121)
+            id: response.employeeId,
+            accountId: response.id,
             name: response.name,
             position: response.position,
           },
         }
         
-        console.log('✅ User data created:', userData) // Debug log
+        console.log('✅ User data created:', userData)
         login(userData, token)
         setIsLoading(false)
       } catch (error) {
@@ -98,7 +123,6 @@ export default function StaffDashboardPage() {
     checkAuth()
   }, [user, router, login])
 
-  // Set default active menu when user is loaded
   useEffect(() => {
     if (!isLoading && user && !activeMenu && menuItems.length > 0) {
       setActiveMenu(menuItems[0].id)
@@ -115,7 +139,7 @@ export default function StaffDashboardPage() {
     }
     
     const employeeData = user.employeeData
-    console.log('🔍 Current employee data for form:', employeeData) // Debug log
+    console.log('🔍 Current employee data for form:', employeeData)
     
     switch (activeMenu) {
       case 'inventory':
@@ -125,11 +149,19 @@ export default function StaffDashboardPage() {
       case 'invoice':
         return <InvoiceManagement currentUser={employeeData} />
       case 'profile':
-        // ✅ FIX: ProfilePage doesn't accept props - it fetches data itself
+        if (isManagerAccessingStaff) {
+          return (
+            <div className="text-center py-12">
+              <p className="text-gray-500">Quản lý không có trang thông tin cá nhân riêng ở đây.</p>
+              <p className="text-sm text-gray-400 mt-2">Vui lòng quay lại trang chủ Owner để xem thông tin.</p>
+            </div>
+          )
+        }
         return <ProfilePage />
       default:
-        // Default to first available feature based on position
-        if (employeeData.position === 'INVENTORY') {
+        if (employeeData.position === 'MANAGER') {
+          return <InventoryForm currentUser={employeeData} />
+        } else if (employeeData.position === 'INVENTORY') {
           return <InventoryForm currentUser={employeeData} />
         } else if (employeeData.position === 'RECEIVING') {
           return <ImportForm currentUser={employeeData} />

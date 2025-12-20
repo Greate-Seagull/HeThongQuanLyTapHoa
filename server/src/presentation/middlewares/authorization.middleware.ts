@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 
-export function authorizationMiddleware(position: string) {
+export function authorizationMiddleware(requiredPosition: string) {
 	return (req: Request, res: Response, next: NextFunction) => {
 		try {
-			console.log("Call authorization middleware");
-			console.log("Required position:", position);
+			console.log("🔐 Authorization middleware called");
+			console.log("Required position:", requiredPosition);
 			
-			// Get position from req object or body (for DELETE requests, use req.position)
+			// Get position from req object or body
 			const userPosition = (req as any).position || req.body?.position;
 			
 			console.log("User position:", userPosition);
@@ -15,16 +15,24 @@ export function authorizationMiddleware(position: string) {
 				throw new Error('User position not found. Authentication may have failed.');
 			}
 
-			if (position !== userPosition) {
-				throw new Error(`Access denied. Required: ${position}, Your position: ${userPosition}`);
+			// ✅ CRITICAL FIX: MANAGER has access to ALL positions
+			if (userPosition === 'MANAGER') {
+				console.log("✅ Authorization successful: MANAGER has full access");
+				next();
+				return;
 			}
 
-			console.log("Authorization successful");
+			// For non-MANAGER, check exact position match
+			if (requiredPosition !== userPosition) {
+				throw new Error(`Access denied. Required: ${requiredPosition}, Your position: ${userPosition}`);
+			}
+
+			console.log("✅ Authorization successful");
 			next();
 
 			console.log("Return authorization middleware");
 		} catch (e: any) {
-			console.error(e.message);
+			console.error("❌ Authorization failed:", e.message);
 			res.status(403).json({ message: e.message });
 		}
 	};

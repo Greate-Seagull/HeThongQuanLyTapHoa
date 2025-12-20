@@ -5,11 +5,12 @@ import { ProductId } from "./product";
 
 export type GoodReceiptId = number | null;
 
+// ✅ FIX: Export GoodReceiptDetail
 export class GoodReceiptDetail {
 	private _goodReceiptId: GoodReceiptId = null;
 	private _productId: ProductId = null;
-	private _quantity: number = null;
-	private _price: number = null;
+	private _quantity: number = 0;
+	private _price: number = 0;
 
 	public static create(
 		quantity: number,
@@ -24,24 +25,23 @@ export class GoodReceiptDetail {
 	}
 
 	// Setters
-	private set goodReceiptId(value: GoodReceiptId) {
-		if (value <= 0) throw Error(`Invalid good receipt id, ${value}`);
-
+	set goodReceiptId(value: GoodReceiptId) {
+		if (value != null && value <= 0) throw Error(`Invalid good receipt id, ${value}`);
 		this._goodReceiptId = value;
 	}
-	private set productId(value: number) {
+	
+	set productId(value: number) {
 		if (value <= 0) throw Error(`Invalid product id, ${value}`);
-
 		this._productId = value;
 	}
-	private set quantity(value: number) {
+	
+	set quantity(value: number) {
 		if (value <= 0) throw Error(`Invalid quantity, ${value}`);
-
 		this._quantity = value;
 	}
-	private set price(value: number) {
+	
+	set price(value: number) {
 		if (value <= 0) throw Error(`Invalid price, ${value}`);
-
 		this._price = value;
 	}
 
@@ -50,16 +50,19 @@ export class GoodReceiptDetail {
 	get goodReceiptId(): GoodReceiptId {
 		return this._goodReceiptId;
 	}
+	
 	@Read
 	@Write
 	get productId(): number {
 		return this._productId;
 	}
+	
 	@Read
 	@Write
 	get quantity(): number {
 		return this._quantity;
 	}
+	
 	@Read
 	@Write
 	get price(): number {
@@ -94,14 +97,16 @@ export class GoodReceipt extends BaseEntity<GoodReceiptId> {
 	}
 
 	// Setters
-	private set employeeId(value: number) {
+	set employeeId(value: number) {
 		if (value < 0) throw Error(`Invalid employee id, ${value}`);
 		this._employeeId = value;
 	}
-	private set goodReceiptDetails(value: GoodReceiptDetail[]) {
-		this._goodReceiptDetails = value;
+	
+	set goodReceiptDetails(value: GoodReceiptDetail[]) {
+		this._goodReceiptDetails = value || [];
 	}
-	private set createdAt(value: Date) {
+	
+	set createdAt(value: Date) {
 		this._createdAt = value;
 	}
 
@@ -111,15 +116,17 @@ export class GoodReceipt extends BaseEntity<GoodReceiptId> {
 	get employeeId(): number {
 		return this._employeeId;
 	}
+	
 	@Read
 	@Write
 	get createdAt(): Date {
 		return this._createdAt;
 	}
+	
 	@Read
 	@Write
 	@Relation(GoodReceiptDetail)
 	get goodReceiptDetails(): GoodReceiptDetail[] {
-		return this._goodReceiptDetails;
+		return this._goodReceiptDetails || [];
 	}
 }

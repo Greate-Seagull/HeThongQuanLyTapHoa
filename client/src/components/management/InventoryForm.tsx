@@ -339,7 +339,8 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
       return;
     }
 
-    if (currentUser.position !== 'INVENTORY') {
+    // ✅ Accept both INVENTORY and MANAGER
+    if (currentUser.position !== 'INVENTORY' && currentUser.position !== 'MANAGER') {
       toast.error('Nhân viên không có quyền kiểm kê');
       return;
     }
@@ -352,10 +353,16 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
     try {
       setIsLoading(true);
       
-      console.log('🔍 Current User:', currentUser); // Debug log
+      console.log('🔍 Current User:', currentUser);
+      console.log('🔍 Stocktaking Details:', stocktakingDetails);
       
-      const requestData: any = {
-        authId: currentUser.id, // ✅ Ensure this is the correct employee ID
+      // ✅ Validate currentUser.id exists and is a number
+      if (typeof currentUser.id !== 'number' || currentUser.id <= 0) {
+        throw new Error(`Invalid employee ID: ${currentUser.id}`);
+      }
+      
+      const requestData = {
+        authId: currentUser.id,
         products: stocktakingDetails.map(detail => ({
           barcode: detail.product!.barcode,
           slotId: detail.slotId,
@@ -396,7 +403,8 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
   };
 
   const handleEditStocktaking = (stocktaking: Stocktaking) => {
-    if (currentUser?.position !== 'INVENTORY') {
+    // ✅ Accept both INVENTORY and MANAGER
+    if (currentUser?.position !== 'INVENTORY' && currentUser?.position !== 'MANAGER') {
       toast.error('Chỉ nhân viên kiểm kê mới có quyền chỉnh sửa phiếu');
       return;
     }
@@ -410,7 +418,8 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
   };
 
   const handleDeleteStocktaking = async (id: number) => {
-    if (currentUser?.position !== 'INVENTORY') {
+    // ✅ Accept both INVENTORY and MANAGER
+    if (currentUser?.position !== 'INVENTORY' && currentUser?.position !== 'MANAGER') {
       toast.error('Chỉ nhân viên kiểm kê mới có quyền xóa phiếu');
       return;
     }
@@ -823,7 +832,7 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                               onClick={() => handleEditStocktaking(stocktaking)}
                               className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
                               title="Chỉnh sửa"
-                              disabled={currentUser?.position !== 'INVENTORY'}
+                              disabled={currentUser?.position !== 'INVENTORY' && currentUser?.position !== 'MANAGER'}
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
@@ -833,7 +842,7 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                               onClick={() => handleDeleteStocktaking(stocktaking.id)}
                               className="text-red-600 hover:text-red-700 hover:bg-red-50"
                               title="Xóa"
-                              disabled={currentUser?.position !== 'INVENTORY'}
+                              disabled={currentUser?.position !== 'INVENTORY' && currentUser?.position !== 'MANAGER'}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>

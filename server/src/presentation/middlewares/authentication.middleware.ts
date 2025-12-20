@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { tokenService } from "../../composition-root";
+import { tokenService, employeeAccountRepo } from "../../composition-root";
 import { authenticationTokenSchema } from "../../domain/services/encrypt.service";
 
 export function authenticationMiddleware(
@@ -8,34 +8,39 @@ export function authenticationMiddleware(
 	next: NextFunction
 ) {
 	try {
-		console.log("Call authentication middleware");
+		console.log("🔐 Authentication middleware called");
 
 		const result = authenticate(req.headers.authorization);
 		
-		// Attach to req object for all request types (including DELETE with no body)
-		(req as any).authId = result.id;
+		// ✅ FIX: Set BOTH EmployeeAccount.id AND Employee.id
+		(req as any).accountId = result.id; // EmployeeAccount.id (for JWT validation)
+		(req as any).authId = result.id;    // For backward compatibility
 		(req as any).position = result.position;
 		
-		// Also keep in body for backward compatibility
-		req.body = req.body || {}; // Ensure body exists
-		req.body.authId = result.id;
-		req.body.position = result.position;
+		// ✅ CRITICAL: For Employee operations (Stocktaking, GoodReceipt), we need Employee.id
+		// We'll resolve this in controller by looking up EmployeeAccount → Employee
 		
-		console.log("Authenticated user - ID:", result.id, "Position:", result.position);
+		console.log("✅ Authenticated:", { 
+			accountId: result.id, 
+			position: result.position,
+		});
 
 		next();
-
-		console.log("Return authentication middleware");
 	} catch (e: any) {
-		console.error(e.message);
+		console.error("❌ Authentication failed:", e.message);
 		res.status(401).json({ message: e.message });
 	}
 }
 
-function authenticate(header: string) {
-	const splitted = header.split(" ");
-	if (!header || splitted[0] !== "Bearer")
+function authenticate(header: string | undefined) {
+	if (!header) {
 		throw Error("Authorization token required");
+	}
+
+	const splitted = header.split(" ");
+	if (splitted[0] !== "Bearer") {
+		throw Error("Authorization token required");
+	}
 
 	const decoded = tokenService.verifyJwt(splitted[1]);
 	const result = authenticationTokenSchema.parse(decoded);

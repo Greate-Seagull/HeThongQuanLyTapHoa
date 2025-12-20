@@ -33,16 +33,14 @@ export default function LoginPage() {
       let response: any
       let userData: any
 
-      // Call different API endpoints based on selected role
       if (selectedRole === 'customer') {
         response = await customerSignIn({
           phoneNumber: username,
           password: password,
         })
         
-        // Backend now returns user data with token
         userData = {
-          username: username, // Using phoneNumber as username
+          username: username,
           role: 'customer' as UserRole,
           customerId: response.user?.id,
         }
@@ -56,31 +54,28 @@ export default function LoginPage() {
           password: password,
         })
         
-        // Debug: Log the response to see what backend returns
         console.log('Employee sign-in response:', response)
         
-        // Backend now returns employee data with token
-        userData = {
-          username: username,
-          role: 'staff' as UserRole,
-          employeeData: response.employee, // Employee data now included in response
-        }
-        
-        console.log('userData created:', userData)
-        
+        // ✅ Allow MANAGER to login as staff
         if (response.employee) {
+          userData = {
+            username: username,
+            role: 'staff' as UserRole,
+            employeeData: response.employee,
+          }
+          
+          console.log('userData created:', userData)
           toast.success(`Đăng nhập thành công! Chào mừng ${response.employee.name}`)
         } else {
           toast.warning('Đăng nhập thành công, nhưng thông tin nhân viên chưa đầy đủ')
         }
       } else if (selectedRole === 'owner') {
-        // Owner uses the same endpoint as employee (MANAGER position)
         response = await employeeSignIn({
           username: username,
           password: password,
         })
         
-        // Check if the employee has MANAGER position
+        // ✅ Only MANAGER can access owner dashboard
         if (response.employee?.position !== 'MANAGER') {
           toast.error('Chỉ chủ cửa hàng (MANAGER) mới có thể đăng nhập với vai trò này')
           setIsLoading(false)
@@ -98,8 +93,6 @@ export default function LoginPage() {
         }
       }
 
-      // Store token is already handled in auth.service.ts via apiClient.setToken()
-      // Also store in auth store for persistence
       login(userData, response.token)
       
       toast.success('Đăng nhập thành công!')

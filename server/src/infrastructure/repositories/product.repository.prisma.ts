@@ -125,13 +125,51 @@ export class ProductRepositoryPrisma implements ProductRepository {
 	}
 
 	async create(product: Product): Promise<Product> {
-		const data = toPersistenceObject(product);
-		const raw = await this.prisma.product.create({
-			data: this.tracker.diff(product.id, data),
-			...ProductRepositoryPrisma.baseQuery,
+		console.log('\n📦 ProductRepo.create called');
+		console.log('  Input product:', {
+			name: product.name,
+			barcode: product.barcode,
+			price: product.price,
+			unit: product.unit,
 		});
-		const entity = fromPersistence(Product, raw);
-		this.tracker.track(entity.id, raw);
+
+		// Check if barcode exists
+		const existing = await this.prisma.product.findUnique({
+			where: { barcode: product.barcode },
+		});
+
+		if (existing) {
+			console.error('  ❌ Barcode already exists:', product.barcode);
+			throw new Error(`Product with barcode ${product.barcode} already exists`);
+		}
+
+		// Create product
+		const created = await this.prisma.product.create({
+			data: {
+				name: product.name,
+				price: product.price,
+				amount: product.amount || 0,
+				unit: product.unit as any,
+				barcode: product.barcode,
+				categoryId: product.categoryId || null,
+				supplierId: product.supplierId || null,
+				status: 'GOOD',
+			},
+		});
+
+		console.log('  ✅ Product created:', {
+			id: created.id,
+			name: created.name,
+			barcode: created.barcode,
+		});
+
+		// Convert back to entity
+		const entity = Product.create({
+			...created,
+			authId: 1, // Not used for created products
+		});
+		(entity as any)._id = created.id;
+
 		return entity;
 	}
 

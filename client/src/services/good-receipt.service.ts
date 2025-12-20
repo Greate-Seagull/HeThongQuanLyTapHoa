@@ -2,8 +2,16 @@ import { apiClient } from './api-client'
 import { 
   GoodReceipt,
   GoodReceiptWithDetails,
-  CreateGoodReceiptRequest 
 } from '@/types'
+
+export interface CreateGoodReceiptRequest {
+  authId: number
+  items: {
+    productId: number
+    quantity: number
+    price: number
+  }[]
+}
 
 // ======================
 // GOOD RECEIPT SERVICE API CALLS
@@ -28,33 +36,99 @@ import {
  * ⚠️ QUESTION: Does this automatically update product inventory (amount)?
  * Or is there a separate step to apply the receipt?
  */
-export const createGoodReceipt = async (
-  data: CreateGoodReceiptRequest
-): Promise<GoodReceipt> => {
+export const createGoodReceipt = async (data: CreateGoodReceiptRequest) => {
   try {
-    const response = await apiClient.post<GoodReceipt>('/good-receipts', data)
+    console.log('📤 Creating good receipt with payload:', JSON.stringify(data, null, 2));
+    
+    // ✅ Enhanced validation
+    if (!data.authId || typeof data.authId !== 'number') {
+      throw new Error(`Invalid authId: ${data.authId}`);
+    }
+    
+    if (!data.items || !Array.isArray(data.items) || data.items.length === 0) {
+      throw new Error('Items array is required and must not be empty');
+    }
+    
+    // Validate each item
+    for (let i = 0; i < data.items.length; i++) {
+      const item = data.items[i];
+      console.log(`🔍 Validating item ${i}:`, item);
+      
+      if (!item.productId || typeof item.productId !== 'number') {
+        throw new Error(`Item ${i}: Invalid productId = ${item.productId}`);
+      }
+      if (!item.quantity || item.quantity <= 0) {
+        throw new Error(`Item ${i}: Invalid quantity = ${item.quantity}`);
+      }
+      if (!item.price || item.price <= 0) {
+        throw new Error(`Item ${i}: Invalid price = ${item.price}`);
+      }
+    }
+    
+    console.log('✅ All validations passed, sending request...');
+    const response = await apiClient.post<any>('/good-receipts', data);
+    console.log('✅ Good receipt created successfully:', response);
+    return response;
+  } catch (error: any) {
+    console.error('❌ Create good receipt error:', error);
+    console.error('❌ Error response:', error.response?.data);
+    console.error('❌ Error status:', error.response?.status);
+    
+    const serverError = error.response?.data?.data || error.response?.data?.message || error.message;
+    throw new Error(serverError || 'Không thể tạo phiếu nhập hàng');
+  }
+}
+
+/**
+ * Get All Good Receipts
+ * GET /good-receipts
+ */
+export const getGoodReceipts = async (page: number = 1, pageSize: number = 100) => {
+  try {
+    const response = await apiClient.get<any>(`/good-receipts?page=${page}&pageSize=${pageSize}`)
     return response
   } catch (error: any) {
-    console.error('Create good receipt error:', error)
-    
-    if (error.response?.status === 403) {
-      throw new Error('Bạn không có quyền tạo phiếu nhập kho. Chỉ nhân viên nhập hàng mới được phép.')
-    }
-    
-    if (error.response?.status === 400) {
-      throw new Error(
-        error.response?.data?.message || 
-        'Dữ liệu phiếu nhập kho không hợp lệ.'
-      )
-    }
-    
-    if (error.response?.status === 404) {
-      throw new Error('Sản phẩm không tồn tại trong hệ thống.')
-    }
-    
+    console.error('Get good receipts error:', error)
     throw new Error(
-      error.response?.data?.message || 
-      'Không thể tạo phiếu nhập kho. Vui lòng thử lại.'
+      error.response?.data?.message || 'Không thể tải danh sách phiếu nhập hàng'
+    )
+  }
+}
+
+/**
+ * Update Good Receipt
+ * PUT /good-receipts/:id
+ * 
+ * Useful for editing receipt before finalizing
+ */
+export const updateGoodReceipt = async (
+  id: number,
+  data: CreateGoodReceiptRequest
+) => {
+  try {
+    const response = await apiClient.put<any>(`/good-receipts/${id}`, data)
+    return response
+  } catch (error: any) {
+    console.error('Update good receipt error:', error)
+    throw new Error(
+      error.response?.data?.message || 'Không thể cập nhật phiếu nhập hàng'
+    )
+  }
+}
+
+/**
+ * Delete Good Receipt
+ * DELETE /good-receipts/:id
+ * 
+ * May be needed for error corrections
+ */
+export const deleteGoodReceipt = async (id: number) => {
+  try {
+    await apiClient.delete(`/good-receipts/${id}`)
+  } catch (error: any) {
+    console.error('Delete good receipt error:', error)
+    throw new Error(
+      error.response?.data?.message || 'Không thể xóa phiếu nhập hàng'
     )
   }
 }
@@ -77,20 +151,6 @@ export const createGoodReceipt = async (
  * - View daily receiving reports
  * - Verify and edit receipts before finalizing
  */
-
-/**
- * Get All Good Receipts (NOT IMPLEMENTED)
- * Expected: GET /good-receipts
- */
-export const getGoodReceipts = async (
-  page: number = 1,
-  pageSize: number = 20
-): Promise<GoodReceiptWithDetails[]> => {
-  throw new Error(
-    'Chức năng lấy danh sách phiếu nhập kho chưa được backend hỗ trợ. ' +
-    'Cần endpoint: GET /good-receipts'
-  )
-}
 
 /**
  * Get Good Receipt by ID (NOT IMPLEMENTED)
@@ -145,34 +205,5 @@ export const getGoodReceiptStats = async (): Promise<GoodReceiptStats> => {
   throw new Error(
     'Chức năng xem thống kê nhập hàng chưa được backend hỗ trợ. ' +
     'Cần endpoint: GET /good-receipts/stats'
-  )
-}
-
-/**
- * Update Good Receipt (NOT IMPLEMENTED)
- * Expected: PUT /good-receipts/:id
- * 
- * Useful for editing receipt before finalizing
- */
-export const updateGoodReceipt = async (
-  receiptId: number,
-  updates: Partial<CreateGoodReceiptRequest>
-): Promise<GoodReceipt> => {
-  throw new Error(
-    'Chức năng cập nhật phiếu nhập kho chưa được backend hỗ trợ. ' +
-    'Cần endpoint: PUT /good-receipts/:id'
-  )
-}
-
-/**
- * Delete Good Receipt (NOT IMPLEMENTED)
- * Expected: DELETE /good-receipts/:id
- * 
- * May be needed for error corrections
- */
-export const deleteGoodReceipt = async (receiptId: number): Promise<void> => {
-  throw new Error(
-    'Chức năng xóa phiếu nhập kho chưa được backend hỗ trợ. ' +
-    'Cần endpoint: DELETE /good-receipts/:id'
   )
 }

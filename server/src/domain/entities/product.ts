@@ -19,7 +19,9 @@ export enum ProductUnit {
 }
 
 export class Product extends BaseEntity<ProductId> {
-  protected _id: ProductId = null;
+  // ✅ FIX: Remove duplicate _id declaration
+  // BaseEntity already has: protected _id: IdType = null;
+  
   private _name: string = null;
   private _price: number = 0;
   private _unit: ProductUnit = ProductUnit.PIECE;
@@ -27,7 +29,6 @@ export class Product extends BaseEntity<ProductId> {
   private _amount: number = 0;
   private _categoryId: number = null;
   private _supplierId: number = null;
-
 
   static create(input: any) {
     const entity = create(Product, input);
@@ -69,46 +70,68 @@ export class Product extends BaseEntity<ProductId> {
     this.amount -= quantity;
   }
 
-  receiveStock(quantity: any) {
-    if (quantity <= 0) throw Error(`Invalid received quantity, ${quantity}`);
-    this.amount += quantity;
+  public receiveStock(quantity: number) {
+    if (quantity <= 0) throw Error(`Invalid quantity, ${quantity}`);
+    this._amount += quantity;
+  }
+
+  public reduceStock(quantity: number) {
+    if (quantity <= 0) throw Error(`Invalid quantity, ${quantity}`);
+    if (this._amount < quantity) {
+      throw Error(
+        `Không đủ tồn kho để trừ. Hiện có: ${this._amount}, cần trừ: ${quantity}`
+      );
+    }
+    this._amount -= quantity;
   }
 
   // Setters
+  // ✅ Use BaseEntity's setter via protected property
+  protected set id(value: number) {
+    this._id = value; // This uses BaseEntity's _id
+  }
+  
   private set price(value: number) {
     if (value <= 0) throw Error(`Invalid price, ${value}`);
     this._price = value;
   }
+  
   private set amount(value: number) {
     if (value < 0) throw Error(`Invalid quantity, ${value}`);
     this._amount = value;
   }
+  
   private set name(value: string) {
     this._name = value;
   }
+  
   private set unit(value: ProductUnit) {
     const types = Object.values(ProductUnit);
     if (!types.includes(value)) throw Error(`Invalid unit, ${value}`);
-
     this._unit = value as ProductUnit;
   }
+  
   private set barcode(value: number) {
     if (value <= 0) throw Error(`Invalid barcode, ${value}`);
     this._barcode = value;
   }
+  
   private set categoryId(value: number) {
     this._categoryId = value;
   }
+  
   private set supplierId(value: number) {
     this._supplierId = value;
   }
 
   // Getters
   @Read
+  @Write
   @Type(Number)
   public get id(): ProductId {
-    return this._id;
+    return this._id; // Access BaseEntity's _id
   }
+  
   @Read
   @Write
   @Required
@@ -116,12 +139,14 @@ export class Product extends BaseEntity<ProductId> {
   public get price(): number {
     return this._price;
   }
+  
   @Read
   @Write
   @Type(Number)
   public get amount(): number {
     return this._amount;
   }
+  
   @Read
   @Write
   @Required
@@ -129,6 +154,7 @@ export class Product extends BaseEntity<ProductId> {
   public get name(): string {
     return this._name;
   }
+  
   @Read
   @Write
   @Required
@@ -136,6 +162,7 @@ export class Product extends BaseEntity<ProductId> {
   public get unit(): ProductUnit {
     return this._unit;
   }
+  
   @Read
   @Write
   @Required
@@ -143,6 +170,7 @@ export class Product extends BaseEntity<ProductId> {
   public get barcode(): number {
     return this._barcode;
   }
+  
   @Read
   @Write
   @Optional
@@ -150,6 +178,7 @@ export class Product extends BaseEntity<ProductId> {
   public get categoryId(): number {
     return this._categoryId;
   }
+  
   @Read
   @Write
   @Optional

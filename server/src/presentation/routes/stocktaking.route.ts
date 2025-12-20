@@ -28,7 +28,15 @@ router.get(
 router.post(
 	"/",
 	authorizationMiddleware("INVENTORY"),
-	controller(createStocktakingUsecase)
+	(req, res) => {
+		// ✅ Ensure authId is passed from authenticated middleware
+		console.log('📥 POST /stocktakings received:', {
+			authId: (req as any).authId,
+			body: req.body,
+		});
+		
+		return controller(createStocktakingUsecase)(req, res);
+	}
 );
 
 // Update stocktaking - INVENTORY only

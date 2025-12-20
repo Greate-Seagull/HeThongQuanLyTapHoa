@@ -1,7 +1,8 @@
 import { prisma } from "./../../../composition-root";
 import { logger } from "../../../domain/services/logger.service";
-import { EmployeeAccountRepository } from "../../repositories/employee-account.repository";
-import { EmployeeRepository } from "../../repositories/employee.repository";
+import { EmployeeAccountRepository } from "../../../infrastructure/repositories/employee-account.repository";
+// ✅ FIX: Import interface, not concrete class
+import { EmployeeRepository } from "../../../application/repositories/employee.repository";
 import { EmployeeReadAccess } from "../../../infrastructure/read-accessors/prisma/employee.read-accessor";
 import z from "zod";
 
@@ -10,7 +11,8 @@ const inputSchema = z.object({
 });
 
 const outputSchema = z.object({
-  id: z.number(),           // ✅ EmployeeId (NOT EmployeeAccountId)
+  id: z.number(),           // ✅ EmployeeAccountId (for authentication)
+  employeeId: z.number(),   // ✅ EmployeeId (for reference)
   username: z.string(),
   name: z.string(),
   position: z.string(),
@@ -21,7 +23,7 @@ type EmployeeAccountProfileOutput = z.infer<typeof outputSchema>;
 export class GetEmployeeAccountProfileUsecase {
   constructor(
     private readonly employeeAccountRepo: EmployeeAccountRepository,
-    private readonly employeeRepo: EmployeeRepository,
+    private readonly employeeRepo: EmployeeRepository, // ✅ Use interface
     private readonly employeeRead: EmployeeReadAccess
   ) {}
 
@@ -39,7 +41,6 @@ export class GetEmployeeAccountProfileUsecase {
     // Lấy thông tin employee
     let employee = await this.employeeRepo.getById(account.employeeId);
     if (!employee) {
-      // fallback nếu không có, thử lấy qua read accessor
       employee = await this.employeeRead.getPositionById(account.employeeId);
       if (!employee) throw Error("Employee not found");
     }
@@ -49,9 +50,9 @@ export class GetEmployeeAccountProfileUsecase {
       employeeId: employee.id,
     });
     
-    // ✅ FIX: Return EmployeeId, NOT EmployeeAccountId
     return outputSchema.parse({
-      id: employee.id,         // ✅ EmployeeId (121)
+      id: account.id,
+      employeeId: employee.id,
       username: account.username,
       name: employee.name,
       position: employee.position,

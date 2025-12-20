@@ -279,16 +279,18 @@ export function ProductManagement() {
         }
       }
     } catch (error: any) {
-      if (
-        error?.message?.includes('barcode') ||
-        error?.message?.includes('unique') ||
-        error?.message?.includes('duplicate')
-      ) {
-        toast.error('Mã vạch đã tồn tại trong hệ thống')
-      } else {
-        toast.error('Mã vạch đã tồn tại trong hệ thống')
-      }
       console.error('Error saving product:', error)
+      
+      // ✅ Better error handling
+      const errorMessage = error.response?.data?.data || error.response?.data?.message || error.message;
+      
+      if (errorMessage && errorMessage.includes('already exists')) {
+        toast.error('Mã vạch đã tồn tại trong hệ thống. Vui lòng sử dụng mã vạch khác.', {
+          duration: 5000,
+        });
+      } else {
+        toast.error(errorMessage || 'Có lỗi xảy ra khi lưu sản phẩm');
+      }
     } finally {
       setIsSaving(false)
     }

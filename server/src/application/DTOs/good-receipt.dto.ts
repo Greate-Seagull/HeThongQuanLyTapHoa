@@ -12,6 +12,7 @@ const schema = z.object({
 			productId: z.number(),
 			quantity: z.number(),
 			price: z.number(),
+			product: z.any().optional(), // ✅ Allow product relation
 		})
 	),
 });

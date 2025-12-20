@@ -83,15 +83,16 @@ export function ProfilePage() {
   const fetchProfile = async () => {
     setIsLoading(true)
     try {
-      // Thử lấy profile nhân viên trước
       try {
         const response = await apiClient.get<any>('/employee-accounts/profile', {
           skipAuthRedirect: true,
         } as any)
 
-        // ✅ FIX: Lưu đúng employeeId thay vì accountId
+        console.log('📋 Profile API response:', response)
+        
+        // ✅ FIX: Show EmployeeAccount ID in profile (for authentication reference)
         setUser({ 
-          id: response.id,  // EmployeeId (đúng)
+          id: response.id,  // ✅ EmployeeAccountId (155) - shown in profile
           name: response.name,
           username: response.username,
           position: response.position,
@@ -99,16 +100,15 @@ export function ProfilePage() {
         })
         
         setFormData({
-          id: response.id,  // EmployeeId
+          id: response.id,  // ✅ EmployeeAccountId (155)
           name: response.name,
           username: response.username,
           phoneNumber: '',
         })
       } catch (error: any) {
-        // Nếu lỗi 401, thử lấy profile khách hàng
+        // Customer profile fallback
         if (error.response?.status === 401) {
           const response = await apiClient.get<any>('/accounts/profile')
-          // Mapping dữ liệu khách hàng (Account structure)
           setUser({
             id: response.id,
             name: response.user.name,
@@ -357,8 +357,8 @@ export function ProfilePage() {
 
                 <div className="w-full space-y-3 border-t border-gray-200 pt-4">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Mã ID:</span>
-                    {/* ✅ Show Employee ID correctly */}
+                    <span className="text-gray-600">Mã tài khoản:</span>
+                    {/* ✅ Show EmployeeAccount ID (155) */}
                     <span className="font-medium text-gray-900">#{user.id}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">

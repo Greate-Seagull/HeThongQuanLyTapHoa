@@ -1,8 +1,3 @@
-import { ListSlotWithProductUsecase } from "./application/services/slot/list-slot-with-product.usecase";
-import { SlotDetailRepository } from "./infrastructure/repositories/slot-detail.repository";
-import { SlotDetailUsecase } from "./application/services/slot/slot-detail.usecase";
-import { ChangeManagerPasswordUsecase } from "./application/services/employee-account/change-manager-password.usecase";
-import { ChangeCustomerPasswordUsecase } from "./application/services/customer-account/change-customer-password.usecase";
 import { config } from "./config/config";
 import { PrismaClient } from "./generated/client";
 import { PrismaTransactionManager } from "./infrastructure/transaction";
@@ -36,7 +31,7 @@ import { ProductPrismaReadAccessor } from "./infrastructure/read-accessors/prism
 import { ReportReadAccessor } from "./infrastructure/read-accessors/prisma/report.read-accessor";
 import { ShelfReadAccessor } from "./infrastructure/read-accessors/prisma/shelf.read-accessor";
 import { StocktakingReadAccessor } from "./infrastructure/read-accessors/prisma/stocktaking.read-accessor";
-
+import { GoodReceiptPrismaReadAccessor } from "./infrastructure/read-accessors/prisma/good-receipt.read-accessor";
 import { SupplierReadAccessor } from "./infrastructure/read-accessors/prisma/supplier.read-accessor";
 
 import {
@@ -44,41 +39,28 @@ import {
   PasswordService,
   TokenService,
 } from "./domain/services/encrypt.service";
-import { GetMyInvoicesUsecase } from "./application/services/invoice/get-my-invoices.usecase";
-
-import { GetPromotionsUsecase } from "./application/services/promotion/get-promotions.usecase";
-import { UpdatePromotionUsecase } from "./application/services/promotion/update-promotion.usecase";
-import { DeletePromotionUsecase } from "./application/services/promotion/delete-promotion.usecase";
-import { CreateSlotUsecase } from "./application/services/slot/create-slot.usecase";
-import { UpdateSlotUsecase } from "./application/services/slot/update-slot.usecase";
-import { DeleteSlotUsecase } from "./application/services/slot/delete-slot.usecase";
-import { CreateRackUsecase } from "./application/services/rack/create-rack.usecase";
-import { UpdateRackUsecase } from "./application/services/rack/update-rack.usecase";
-import { DeleteRackUsecase } from "./application/services/rack/delete-rack.usecase";
-import { CreateShelfUsecase } from "./application/services/shelf/create-shelf.usecase";
-import { UpdateShelfUsecase } from "./application/services/shelf/update-shelf.usecase";
-import { DeleteShelfUsecase } from "./application/services/shelf/delete-shelf.usecase";
-import { GetShelvesUsecase } from "./application/services/shelf/get-shelves.usecase";
 import { SalesTransactionService } from "./domain/services/sales-transaction.service";
 import { PromotionPricingService } from "./domain/services/promotion-pricing.service";
+
+import { SignUpUsecase } from "./application/services/customer-account/sign-up.usecase";
+import { GetProductsUsecase } from "./application/services/product/get-products.usecase";
+import { UpdateProdutsUsecase } from "./application/services/product/update-products.usecase";
+import { SignInUsecase } from "./application/services/customer-account/sign-in.usecase";
 import { CreateAccountUsecase } from "./application/services/employee-account/create-account.usecase";
 import { UseAccountUsecase } from "./application/services/employee-account/use-account.usecase";
 import { UpdateEmployeeAccountUsecase } from "./application/services/employee-account/update-employee-account.usecase";
 import { DeleteEmployeeAccountUsecase } from "./application/services/employee-account/delete-employee-account.usecase";
 import { GetEmployeeAccountsUsecase } from "./application/services/employee-account/get-employee-accounts.usecase";
-import { SignUpUsecase } from "./application/services/customer-account/sign-up.usecase";
-import { GetProductsUsecase } from "./application/services/product/get-products.usecase";
-import { UpdateProdutsUsecase } from "./application/services/product/update-products.usecase";
-import { SignInUsecase } from "./application/services/customer-account/sign-in.usecase";
-import { GetMyAccountUsecase } from "./application/services/customer-account/get-my-account.usecase";
-import { GetAccountsUsecase } from "./application/services/customer-account/get-accounts.usecase";
-import { CreateCustomerAccountUsecase } from "./application/services/customer-account/create-customer-account.usecase";
-import { UpdateCustomerAccountUsecase } from "./application/services/customer-account/update-customer-account.usecase";
-import { DeleteCustomerAccountUsecase } from "./application/services/customer-account/delete-customer-account.usecase";
+import { GetEmployeeAccountProfileUsecase } from "./application/services/employee-account/get-employee-account-profile.usecase";
 import { CreateInvoiceUsecase } from "./application/services/invoice/create-invoice.usecase";
 import { CreateGoodReceiptUsecase } from "./application/services/good-receipt/create-good-receipt.usecase";
+import { GetGoodReceiptsUsecase } from "./application/services/good-receipt/get-good-receipts.usecase";
+import { UpdateGoodReceiptUsecase } from "./application/services/good-receipt/update-good-receipt.usecase";
+import { DeleteGoodReceiptUsecase } from "./application/services/good-receipt/delete-good-receipt.usecase";
 import { CreateStocktakingUsecase } from "./application/services/stocktaking/create-stocktaking.usecase";
 import { GetStocktakingsUsecase } from "./application/services/stocktaking/get-stocktakings.usecase";
+import { UpdateStocktakingUsecase } from "./application/services/stocktaking/update-stocktaking.usecase";
+import { DeleteStocktakingUsecase } from "./application/services/stocktaking/delete-stocktaking.usecase";
 import { GetSuppliersUsecase } from "./application/services/supplier/get-suppliers.usecase";
 import { CreateSupplierUsecase } from "./application/services/supplier/create-supplier.usecase";
 import { UpdateSupplierUsecase } from "./application/services/supplier/update-supplier.usecase";
@@ -95,21 +77,41 @@ import { GetStocktakingReportUsecase } from "./application/services/report/get-s
 import { GetRevenueProfitReportUsecase } from "./application/services/report/get-revenue-profit-report.usecase";
 import { SearchProductsUsecase } from "./application/services/product/search-products.usecase";
 import { CreatePromotionUsecase } from "./application/services/promotion/create-promotion.usecase";
+import { GetPromotionsUsecase } from "./application/services/promotion/get-promotions.usecase";
+import { UpdatePromotionUsecase } from "./application/services/promotion/update-promotion.usecase";
+import { DeletePromotionUsecase } from "./application/services/promotion/delete-promotion.usecase";
 import { CreateProductUsecase } from "./application/services/product/create-product.usecase";
 import { UpdateProductUsecase } from "./application/services/product/update-product.usecase";
 import { DeleteProductUsecase } from "./application/services/product/delete-product.usecase";
 import { ProductRepositoryPrisma } from "./infrastructure/repositories/product.repository.prisma";
-import { GetEmployeeAccountProfileUsecase } from "./application/services/employee-account/get-employee-account-profile.usecase";
 import { EmployeeAccountRepository } from "./infrastructure/repositories/employee-account.repository";
-import { EmployeeRepository } from "./infrastructure/repositories/employee.repository";
 import { ShelfRepository } from "./infrastructure/repositories/shelf.repository";
 import { RackRepository } from "./infrastructure/repositories/rack.repository";
 import { SlotRepository } from "./infrastructure/repositories/slot.repository";
 import { PromotionReadAccessor } from "./infrastructure/read-accessors/prisma/promotion.read-accessor";
 import { InvoiceReadAccessor } from "./infrastructure/read-accessors/prisma/invoice.read-accessor";
-import { UpdateStocktakingUsecase } from "./application/services/stocktaking/update-stocktaking.usecase";
-import { DeleteStocktakingUsecase } from "./application/services/stocktaking/delete-stocktaking.usecase";
-config;
+import { CreateRackUsecase } from "./application/services/rack/create-rack.usecase";
+import { UpdateRackUsecase } from "./application/services/rack/update-rack.usecase";
+import { DeleteRackUsecase } from "./application/services/rack/delete-rack.usecase";
+import { CreateShelfUsecase } from "./application/services/shelf/create-shelf.usecase";
+import { UpdateShelfUsecase } from "./application/services/shelf/update-shelf.usecase";
+import { DeleteShelfUsecase } from "./application/services/shelf/delete-shelf.usecase";
+import { GetShelvesUsecase } from "./application/services/shelf/get-shelves.usecase";
+import { CreateSlotUsecase } from "./application/services/slot/create-slot.usecase";
+import { UpdateSlotUsecase } from "./application/services/slot/update-slot.usecase";
+import { DeleteSlotUsecase } from "./application/services/slot/delete-slot.usecase";
+import { SlotDetailRepository } from "./infrastructure/repositories/slot-detail.repository";
+import { SlotDetailUsecase } from "./application/services/slot/slot-detail.usecase";
+import { ListSlotWithProductUsecase } from "./application/services/slot/list-slot-with-product.usecase";
+import { GetMyInvoicesUsecase } from "./application/services/invoice/get-my-invoices.usecase";
+import { ChangeManagerPasswordUsecase } from "./application/services/employee-account/change-manager-password.usecase";
+import { ChangeCustomerPasswordUsecase } from "./application/services/customer-account/change-customer-password.usecase";
+import { GetMyAccountUsecase } from "./application/services/customer-account/get-my-account.usecase";
+import { GetAccountsUsecase } from "./application/services/customer-account/get-accounts.usecase";
+import { CreateCustomerAccountUsecase } from "./application/services/customer-account/create-customer-account.usecase";
+import { UpdateCustomerAccountUsecase } from "./application/services/customer-account/update-customer-account.usecase";
+import { DeleteCustomerAccountUsecase } from "./application/services/customer-account/delete-customer-account.usecase";
+
 export const prisma = new PrismaClient({
   log: [
     { level: "query", emit: "event" },
@@ -119,7 +121,7 @@ export const prisma = new PrismaClient({
 
 const transactionManager = new PrismaTransactionManager(prisma);
 
-//Repositories
+// Repositories
 export const employeeRepo = new EmployeePrismaRepository(
   prisma,
   employeeDtoSchema
@@ -156,7 +158,7 @@ const supplierRepo = new SupplierRepository(prisma);
 const productCategoryRepo = new ProductCategoryRepository(prisma);
 const promotionReadAccessor = new PromotionReadAccessor(prisma);
 
-//Read accessors
+// Read accessors
 export const employeeReadAccessor = new EmployeeReadAccess(prisma);
 export const employeeAccountRead = new EmployeeAccountReadAccessor(prisma);
 
@@ -171,8 +173,9 @@ const rackRepo = new RackRepository(prisma);
 const slotRepo = new SlotRepository(prisma);
 export const stocktakingReadAccessor = new StocktakingReadAccessor(prisma);
 const invoiceReadAccessor = new InvoiceReadAccessor(prisma);
+const goodReceiptReadAccessor = new GoodReceiptPrismaReadAccessor(prisma);
 
-//Domain services
+// Domain services
 export const passwordService = new PasswordService(config.bcrypt.saltRound);
 export const tokenService = new TokenService(
   config.jwt.secret,
@@ -181,7 +184,7 @@ export const tokenService = new TokenService(
 const promoPricing = new PromotionPricingService();
 const processSales = new SalesTransactionService();
 
-//Usecases
+// Usecases
 export const useAccountUsecase = new UseAccountUsecase(
   employeeAccountRepo,
   employeeReadAccessor,
@@ -210,7 +213,6 @@ export const deleteEmployeeAccountUsecase = new DeleteEmployeeAccountUsecase(
   transactionManager
 );
 
-
 export const getEmployeeAccountProfileUsecase =
   new GetEmployeeAccountProfileUsecase(
     employeeAccountRepo,
@@ -224,7 +226,6 @@ export const getEmployeeAccountsUsecase = new GetEmployeeAccountsUsecase(
 export const signInUsecase = new SignInUsecase(
   userRepo,
   accountRepo,
-
   passwordService,
   tokenService
 );
@@ -276,6 +277,20 @@ export const createGoodReceiptUsecase = new CreateGoodReceiptUsecase(
   productRepo,
   goodReceiptRepo,
   transactionManager
+);
+export const getGoodReceiptsUsecase = new GetGoodReceiptsUsecase(
+  goodReceiptReadAccessor
+);
+export const updateGoodReceiptUsecase = new UpdateGoodReceiptUsecase(
+  employeeReadAccessor,
+  productReadAccessor,
+  goodReceiptRepo
+);
+export const deleteGoodReceiptUsecase = new DeleteGoodReceiptUsecase(
+  goodReceiptRepo,
+  productRepo,
+  transactionManager,
+  employeeReadAccessor
 );
 export const createStocktakingUsecase = new CreateStocktakingUsecase(
   productReadAccessor,
@@ -363,9 +378,18 @@ export const deleteRackUsecase = new DeleteRackUsecase(rackRepo);
 
 const slotDetailRepo = new SlotDetailRepository(prisma);
 const slotDetailUsecase = new SlotDetailUsecase(slotDetailRepo);
-export const createSlotUsecase = new CreateSlotUsecase(slotRepo, rackRepo, slotDetailUsecase);
-export const updateSlotUsecase = new UpdateSlotUsecase(slotRepo, slotDetailUsecase);
-export const listSlotWithProductUsecase = new ListSlotWithProductUsecase(slotDetailUsecase);
+export const createSlotUsecase = new CreateSlotUsecase(
+  slotRepo,
+  rackRepo,
+  slotDetailUsecase
+);
+export const updateSlotUsecase = new UpdateSlotUsecase(
+  slotRepo,
+  slotDetailUsecase
+);
+export const listSlotWithProductUsecase = new ListSlotWithProductUsecase(
+  slotDetailUsecase
+);
 export const deleteSlotUsecase = new DeleteSlotUsecase(slotRepo);
 export const updatePromotionUsecase = new UpdatePromotionUsecase(
   productReadAccessor,
@@ -386,4 +410,3 @@ export const changeManagerPasswordUsecase = new ChangeManagerPasswordUsecase(
   transactionManager,
   passwordService
 );
-

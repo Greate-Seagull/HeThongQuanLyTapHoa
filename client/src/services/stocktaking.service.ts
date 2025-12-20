@@ -1,9 +1,18 @@
 import { apiClient } from './api-client'
 import { 
   Stocktaking,
-  StocktakingWithDetails,
-  CreateStocktakingRequest 
+  StocktakingWithDetails
 } from '@/types'
+
+export interface CreateStocktakingRequest {
+  authId: number
+  products: {
+    barcode: number
+    slotId: number
+    status: string
+    quantity: number
+  }[]
+}
 
 // ======================
 // STOCKTAKING SERVICE API CALLS
@@ -34,13 +43,39 @@ import {
  */
 export const createStocktaking = async (data: CreateStocktakingRequest) => {
   try {
-    const response = await apiClient.post<any>('/stocktakings', data)
-    return response
+    console.log('📤 Creating stocktaking with payload:', JSON.stringify(data, null, 2));
+    
+    // Validate before sending
+    if (!data.authId) {
+      throw new Error('authId is required');
+    }
+    
+    if (!data.products || data.products.length === 0) {
+      throw new Error('products array is required and must not be empty');
+    }
+    
+    // Validate each product
+    for (const product of data.products) {
+      if (!product.barcode) throw new Error('product.barcode is required');
+      if (!product.slotId) throw new Error('product.slotId is required');
+      if (!product.status) throw new Error('product.status is required');
+      if (!product.quantity || product.quantity <= 0) throw new Error('product.quantity must be > 0');
+    }
+    
+    const response = await apiClient.post<any>('/stocktakings', data);
+    console.log('✅ Stocktaking created successfully:', response);
+    return response;
   } catch (error: any) {
-    console.error('Create stocktaking error:', error)
+    console.error('❌ Create stocktaking error details:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      requestData: data,
+    });
+    
     throw new Error(
-      error.response?.data?.message || 'Không thể tạo phiếu kiểm kê'
-    )
+      error.response?.data?.message || error.message || 'Không thể tạo phiếu kiểm kê'
+    );
   }
 }
 

@@ -7,15 +7,15 @@ import { ProductReadAccessor } from "../read-accessors/product.read-accessor";
 import { ShelfReadAccessor } from "../read-accessors/shelf.read-accessor";
 
 const inputSchema = z.object({
-	authId: z.number(), // EmployeeId from authenticated user
+	authId: z.number().positive(), // ✅ Must be positive number
 	products: z.array(
 		z.object({
-			barcode: z.number(),
-			slotId: z.number(),
-			status: z.string(),
-			quantity: z.number(),
+			barcode: z.number().positive(), // ✅ Must be positive number
+			slotId: z.number().positive(),  // ✅ Must be positive number
+			status: z.enum(["GOOD", "EXPIRED"]),  // ✅ Must be exact string
+			quantity: z.number().positive(), // ✅ Must be positive number
 		})
-	),
+	).min(1), // ✅ Must have at least 1 product
 });
 
 const outputSchema = z.object({});
@@ -28,7 +28,28 @@ export class CreateStocktakingUsecase {
 	) {}
 
 	async execute(input: any) {
-		const parsedInput = inputSchema.parse(input);
+		// ✅ Enhanced error logging for validation
+		console.log('📥 CreateStocktakingUsecase received:', JSON.stringify(input, null, 2));
+		
+		try {
+			var parsedInput = inputSchema.parse(input);
+			console.log('✅ Input validation passed');
+		} catch (error: any) {
+			console.error('❌ Validation error:', {
+				message: error.message,
+				issues: error.issues,
+				receivedInput: input,
+			});
+			
+			// Better error message
+			if (error.issues && error.issues.length > 0) {
+				const firstIssue = error.issues[0];
+				throw new Error(`Validation failed at ${firstIssue.path.join('.')}: ${firstIssue.message}`);
+			}
+			
+			throw new Error(`Validation error: ${error.message}`);
+		}
+		
 		const log = logger.child({
 			task: "Creating stock-taking",
 			employeeId: parsedInput.authId,
@@ -40,9 +61,15 @@ export class CreateStocktakingUsecase {
 		const idAndBarcodes = await this.productReadAccess.getIdsByBarcodes(
 			barcodes
 		);
+		
+		console.log('🔍 Found products:', { 
+			requested: barcodes, 
+			found: idAndBarcodes.map(i => i.barcode) 
+		});
+		
 		if (idAndBarcodes.length != barcodes.length) {
 			log.warn("Task failed: invalid product id");
-			throw Error(`Expect all products to be valid`);
+			throw Error(`Expect all products to be valid. Found ${idAndBarcodes.length} out of ${barcodes.length}`);
 		}
 
 		// Validate slots
@@ -50,6 +77,9 @@ export class CreateStocktakingUsecase {
 		const areSlotsValid = await this.shelfReadAccess.existSlotByIds(
 			slotIds
 		);
+		
+		console.log('🔍 Validating slots:', { slotIds, valid: areSlotsValid });
+		
 		if (!areSlotsValid) {
 			log.warn("Task failed: invalid slot id");
 			throw Error(`Expect all slots to be valid`);
@@ -69,18 +99,23 @@ export class CreateStocktakingUsecase {
 		const details = parsedInput.products.map((p) => ({
 			status: p.status,
 			quantity: p.quantity,
-			productId: barcodeMap.get(p.barcode),
+			productId: barcodeMap.get(p.barcode)!,
 			slotId: p.slotId,
 		}));
 		
-		// ✅ FIX: Use authId (employeeId from authenticated user)
+		console.log('📦 Creating stocktaking entity:', {
+			employeeId: parsedInput.authId,
+			detailsCount: details.length,
+		});
+		
+		// Create entity
 		const stocktaking = Stocktaking.create(parsedInput.authId, details);
 
 		const save = await this.stocktakingRepo.add(stocktaking);
 		
 		log.debug("Task saved", {
 			stocktakingId: save.id,
-			employeeId: save.employeeId, // Log the saved employeeId
+			employeeId: save.employeeId,
 		});
 
 		log.info("Task completed");
