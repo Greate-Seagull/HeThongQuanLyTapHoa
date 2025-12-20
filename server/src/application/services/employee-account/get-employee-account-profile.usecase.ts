@@ -10,7 +10,7 @@ const inputSchema = z.object({
 });
 
 const outputSchema = z.object({
-  id: z.number(),           // ✅ EmployeeId (NOT EmployeeAccountId)
+  id: z.number(),
   username: z.string(),
   name: z.string(),
   position: z.string(),
@@ -29,7 +29,7 @@ export class GetEmployeeAccountProfileUsecase {
     const parsedInput = inputSchema.parse(input);
     const log = logger.child({
       task: "Get employee account profile",
-      accountId: parsedInput.id,
+      id: parsedInput.id,
     });
     log.info("Task started");
 
@@ -44,14 +44,9 @@ export class GetEmployeeAccountProfileUsecase {
       if (!employee) throw Error("Employee not found");
     }
 
-    log.info("Task completed", {
-      accountId: parsedInput.id,
-      employeeId: employee.id,
-    });
-    
-    // ✅ FIX: Return EmployeeId, NOT EmployeeAccountId
+    log.info("Task completed");
     return outputSchema.parse({
-      id: employee.id,         // ✅ EmployeeId (121)
+      id: account.id,
       username: account.username,
       name: employee.name,
       position: employee.position,

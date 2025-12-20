@@ -38,14 +38,23 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { apiClient } from '@/services/api-client'
-import { getProducts } from '@/services/product.service'
 import { toast } from 'sonner'
-import { Product, ProductUnit } from '@/types' // Import from types
+
+enum ProductUnit {
+  CAN = 'CAN',
+  BOTTLE = 'BOTTLE',
+  PACKAGE = 'PACKAGE',
+  BOX = 'BOX',
+  PIECE = 'PIECE',
+}
 
 interface Category {
   id: number
   name: string
   description: string
+  _count?: {
+    products: number
+  }
 }
 
 interface Supplier {
@@ -53,20 +62,39 @@ interface Supplier {
   name: string
   address: string
   phoneNumber: string
+  _count?: {
+    products: number
+  }
+}
+
+interface Product {
+  id: number
+  name: string
+  price: number
+  amount: number
+  unit: ProductUnit
+  barcode: number
+  categoryId: number
+  supplierId: number
+  category: {
+    id: number
+    name: string
+  }
+  supplier: {
+    id: number
+    name: string
+  }
 }
 
 const unitLabels: Record<ProductUnit, string> = {
-  [ProductUnit.PIECE]: 'Cái',
-  [ProductUnit.BOX]: 'Hộp',
-  [ProductUnit.BOTTLE]: 'Chai',
   [ProductUnit.CAN]: 'Lon',
+  [ProductUnit.BOTTLE]: 'Chai',
   [ProductUnit.PACKAGE]: 'Gói',
-  [ProductUnit.BAG]: 'Túi',
-  [ProductUnit.KG]: 'Kg',
-  [ProductUnit.GRAM]: 'Gram',
-  [ProductUnit.LITER]: 'Lít',
-  [ProductUnit.ML]: 'ML',
+  [ProductUnit.BOX]: 'Hộp',
+  [ProductUnit.PIECE]: 'Cái',
 }
+
+const API_BASE_URL = 'https://your-api-url.com/api'
 
 export function ProductManagement() {
   const [products, setProducts] = useState<Product[]>([])
@@ -101,14 +129,10 @@ export function ProductManagement() {
   const fetchProducts = async () => {
     setIsLoading(true)
     try {
-      console.log('Fetching products for ProductManagement...')
-      const productsArray = await getProducts() // Now this works!
-      console.log(`✅ Got ${productsArray.length} products`)
-      setProducts(productsArray)
-    } catch (error: any) {
-      console.error('❌ Error fetching products:', error)
-      setProducts([])
-      toast.error(error.message || 'Không thể tải danh sách sản phẩm')
+      const response = await apiClient.get<{ products: Product[] }>('/products')
+      setProducts(response.products)
+    } catch (error) {
+      console.error('Error fetching products:', error)
     } finally {
       setIsLoading(false)
     }
@@ -117,46 +141,27 @@ export function ProductManagement() {
   const fetchCategories = async () => {
     try {
       const response = await apiClient.get<{ categories: Category[] }>('/product-categories')
-      
-      if (response && response.categories && Array.isArray(response.categories)) {
-        setCategories(response.categories)
-      } else if (Array.isArray(response)) {
-        console.warn('⚠️ Old categories format detected')
-        setCategories(response)
-      } else {
-        console.error('Invalid categories response:', response)
-        setCategories([])
-      }
-    } catch (error: any) {
+      setCategories(response.categories)
+    } catch (error) {
       console.error('Error fetching categories:', error)
-      setCategories([])
     }
   }
 
   const fetchSuppliers = async () => {
     try {
       const response = await apiClient.get<{ suppliers: Supplier[] }>('/suppliers')
-      console.log('Suppliers response:', response)
+      console.log(response.suppliers)
 
-      if (response && response.suppliers && Array.isArray(response.suppliers)) {
-        setSuppliers(response.suppliers)
-      } else if (Array.isArray(response)) {
-        console.warn('⚠️ Old suppliers format detected')
-        setSuppliers(response)
-      } else {
-        console.error('Invalid suppliers response:', response)
-        setSuppliers([])
-      }
-    } catch (error: any) {
+      setSuppliers(response.suppliers)
+    } catch (error) {
       console.error('Error fetching suppliers:', error)
-      setSuppliers([])
     }
   }
 
   const filteredProducts = products
     .filter(
       (product) =>
-        (product.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.barcode.toString().includes(searchTerm)
     )
     .sort((a, b) => b.id - a.id)
@@ -178,13 +183,13 @@ export function ProductManagement() {
   const handleEdit = (product: Product) => {
     setEditingProduct(product)
     setFormData({
-      name: product.name || '',
+      name: product.name,
       price: product.price,
       amount: product.amount,
       unit: product.unit,
       barcode: product.barcode,
-      categoryId: product.categoryId || 0,
-      supplierId: product.supplierId || 0,
+      categoryId: product.categoryId,
+      supplierId: product.supplierId,
     })
     setIsDialogOpen(true)
   }
@@ -351,7 +356,7 @@ export function ProductManagement() {
                       <TableRow key={product.id} className="hover:bg-blue-50">
                         <TableCell className="font-medium">{product.id}</TableCell>
                         <TableCell className="font-mono text-blue-600">{product.barcode}</TableCell>
-                        <TableCell className="font-medium">{product.name || 'N/A'}</TableCell>
+                        <TableCell className="font-medium">{product.name}</TableCell>
                         <TableCell className="text-sm text-gray-600">
                           {product.category?.name ?? 'Chưa phân loại'}
                         </TableCell>
@@ -360,7 +365,7 @@ export function ProductManagement() {
                         </TableCell>
                         <TableCell>
                           <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700">
-                            {unitLabels[product.unit] || product.unit}
+                            {unitLabels[product.unit]}
                           </span>
                         </TableCell>
                         <TableCell className="font-semibold text-blue-700">
@@ -379,7 +384,7 @@ export function ProductManagement() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDelete(product.id, product.name || 'N/A')}
+                            onClick={() => handleDelete(product.id, product.name)}
                             className="text-red-600 hover:bg-red-50 hover:text-red-700"
                           >
                             <Trash2 className="h-4 w-4" />
