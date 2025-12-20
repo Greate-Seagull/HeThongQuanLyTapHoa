@@ -13,6 +13,7 @@ import productCategoryRouter from "./presentation/routes/product-category.route"
 import shelfRouter from "./presentation/routes/shelf.route";
 import slotRouter from "./presentation/routes/slot.route";
 import rackRouter from "./presentation/routes/rack.route";
+import employeeRouter from "./presentation/routes/employee.route";
 
 import { reportRouter } from "./presentation/routes/report.route";
 import * as compositionRoot from "./composition-root";
@@ -48,6 +49,7 @@ app.use("/product-categories", productCategoryRouter);
 app.use("/shelves", shelfRouter);
 app.use("/slots", slotRouter);
 app.use("/racks", rackRouter);
+app.use("/employees", employeeRouter);
 app.use(
   "/reports",
   reportRouter({

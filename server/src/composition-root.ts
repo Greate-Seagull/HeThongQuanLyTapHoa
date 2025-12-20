@@ -1,3 +1,11 @@
+import { UpdateEmployeeUsecase } from "./application/services/employee/update-employee.usecase";
+
+export const updateEmployeeUsecase = new UpdateEmployeeUsecase();
+import { buildCreateEmployeeWithAccountUsecase } from "./application/services/employee/build-create-employee-with-account.usecase";
+
+// Export sau khi đã khai báo các biến phụ thuộc
+
+// Đặt export này xuống cuối file để tránh lỗi hoisting
 import { ListSlotWithProductUsecase } from "./application/services/slot/list-slot-with-product.usecase";
 import { SlotDetailRepository } from "./infrastructure/repositories/slot-detail.repository";
 import { SlotDetailUsecase } from "./application/services/slot/slot-detail.usecase";
@@ -369,6 +377,13 @@ export const changeCustomerPasswordUsecase = new ChangeCustomerPasswordUsecase(
 
 export const changeManagerPasswordUsecase = new ChangeManagerPasswordUsecase(
   transactionManager,
+  passwordService
+);
+
+// Export usecase tạo nhân viên kèm account (sau khi đã khai báo các biến phụ thuộc)
+export const createEmployeeWithAccountUsecase = buildCreateEmployeeWithAccountUsecase(
+  employeeRepo,
+  employeeAccountRepo,
   passwordService
 );
 

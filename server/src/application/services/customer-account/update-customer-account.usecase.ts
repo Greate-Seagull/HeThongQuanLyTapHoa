@@ -32,9 +32,9 @@ export class UpdateCustomerAccountUsecase {
 
     let updatedAccountWithUser;
     await this.transactionManager.transaction(async (tx) => {
-      // Lấy account theo id
-      const account = await tx.account.findUnique({
-        where: { id: parsed.id },
+      // Lấy account theo userId
+      const account = await tx.account.findFirst({
+        where: { userId: parsed.id },
         select: { id: true, userId: true },
       });
       if (!account) {

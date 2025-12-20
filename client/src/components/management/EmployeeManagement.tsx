@@ -52,6 +52,7 @@ interface Employee {
   id: number
   name: string
   position: EmployeePosition
+  hasActivity?: boolean // true nếu đã có hoạt động ở vai trò này
 }
 
 interface Account {
@@ -90,6 +91,7 @@ export function EmployeeManagement() {
     name: '',
     position: EmployeePosition.SALES,
     username: '',
+    password: '',
   })
 
   // Fetch accounts from API
@@ -101,9 +103,16 @@ export function EmployeeManagement() {
     setIsLoading(true)
     try {
       const response = await apiClient.get<Account[]>('/employee-accounts')
-      console.log(response)
-
-      setAccounts(response)
+      // Nếu backend chưa trả về hasActivity, có thể cần map lại ở đây
+      setAccounts(
+        response.map(acc => ({
+          ...acc,
+          employee: {
+            ...acc.employee,
+            hasActivity: acc.employee.hasActivity ?? false // fallback nếu chưa có
+          }
+        }))
+      )
     } catch (error) {
       console.error('Error fetching accounts:', error)
     } finally {
@@ -121,7 +130,8 @@ export function EmployeeManagement() {
 
   const handleAdd = () => {
     setEditingAccount(null)
-    setFormData({ name: '', position: EmployeePosition.SALES, username: '' })
+    setFormData({ name: '', position: EmployeePosition.SALES, username: '', password: '' })
+    setSearchTerm('') // Reset search input when opening add dialog
     setIsDialogOpen(true)
   }
 
@@ -130,7 +140,8 @@ export function EmployeeManagement() {
     setFormData({
       name: account.employee.name,
       position: account.employee.position,
-      username: account.username,
+      username: account.username, // keep for display, but disable editing
+      password: '', // not editable
     })
     setIsDialogOpen(true)
   }
@@ -142,58 +153,83 @@ export function EmployeeManagement() {
   const confirmDelete = async () => {
     try {
       const response = await apiClient.delete(`/employee-accounts/${deleteConfirm.id}`)
-      
-      // Kiểm tra kỹ response, tuỳ vào cách setup axios/fetch của bạn mà data trả về khác nhau
       if (response) {
         fetchAccounts()
         toast.success('Tài khoản nhân viên đã được xóa thành công!')
       }
     } catch (error: any) {
-      console.error('Error deleting account:', error)
-      // Hiển thị thông báo nghiệp vụ thay vì lỗi chung chung
-      toast.error(
-        `Không thể xóa nhân viên "${deleteConfirm.name}". Nhân viên này đã có dữ liệu hoạt động (Hóa đơn, Nhập hàng hoặc Kiểm kê).`
-      )
+      // Check for foreign key constraint error from backend
+      const backendMsg = error?.response?.data?.message || ''
+      if (
+        backendMsg.includes('foreign key') ||
+        backendMsg.includes('constraint') ||
+        backendMsg.includes('FK_') ||
+        backendMsg.includes('đã có dữ liệu hoạt động') ||
+        error?.response?.status === 400
+      ) {
+        // Show specific backend reason if available, else generic business message
+        const detail = backendMsg && backendMsg !== '' && backendMsg !== 'đã có dữ liệu hoạt động'
+          ? backendMsg
+          : `Nhân viên này đã có dữ liệu hoạt động (Hóa đơn, Nhập hàng hoặc Kiểm kê).`
+        toast.error(`Không thể xóa nhân viên "${deleteConfirm.name}": ${detail}`)
+      }
     } finally {
-        // Luôn đóng dialog dù thành công hay thất bại
-        setDeleteConfirm({ open: false, id: 0, name: '' })
+      setDeleteConfirm({ open: false, id: 0, name: '' })
     }
   }
 
   const handleSave = async () => {
+    // Validate không cho phép tên rỗng khi thêm hoặc sửa
+    if (!formData.name.trim()) {
+      toast.error('Tên nhân viên không được để trống!');
+      return;
+    }
+    // Validate không cho phép username rỗng khi thêm mới
+    if (!editingAccount && !formData.username.trim()) {
+      toast.error('Username không được để trống!');
+      return;
+    }
     setIsSaving(true)
     try {
+      let response
       if (editingAccount) {
-        // Update existing account
-        const response = await apiClient.put<Account>(`/employee-accounts`, {
-          id: editingAccount.id,
-          username: formData.username,
+        // Edit: only allow name and position
+        response = await apiClient.patch(`/employees/${editingAccount.employee.id}`, {
           name: formData.name,
           position: formData.position,
         })
         if (response) {
           fetchAccounts()
-          toast.success('Tài khoản nhân viên đã được cập nhật thành công!')
+          toast.success('Cập nhật nhân viên thành công!')
         } else {
-          toast.error('Cập nhật tài khoản thất bại. Vui lòng thử lại.')
+          toast.error('Cập nhật nhân viên thất bại. Vui lòng thử lại.')
         }
       } else {
-        // Create new account
-        const response = await apiClient.post<Account>(`/employee-accounts`, {
+        // Create new
+        response = await apiClient.post(`/employees`, {
           username: formData.username,
           name: formData.name,
+          password: formData.password,
           position: formData.position,
         })
         if (response) {
           fetchAccounts()
-          toast.success('Tài khoản nhân viên đã được tạo thành công!')
+          toast.success('Nhân viên đã được tạo thành công!')
         } else {
-          toast.error('Tạo tài khoản thất bại. Vui lòng thử lại.')
+          toast.error('Tạo nhân viên thất bại. Vui lòng thử lại.')
         }
       }
       setIsDialogOpen(false)
-    } catch (error) {
-      toast.error('Đã xảy ra lỗi. Vui lòng thử lại.')
+    } catch (error: any) {
+      const backendMsg = error?.response?.data?.message || '';
+      if (
+        error?.response?.status === 409 ||
+        backendMsg.toLowerCase().includes('username') && (backendMsg.toLowerCase().includes('tồn tại') || backendMsg.toLowerCase().includes('exists') || backendMsg.toLowerCase().includes('duplicate'))
+      ) {
+        toast.error('Tên đăng nhập (username) đã tồn tại, vui lòng chọn tên khác!');
+      } else {
+        toast.error(backendMsg || 'Đã xảy ra lỗi. Vui lòng thử lại.');
+      }
     } finally {
       setIsSaving(false)
     }
@@ -321,6 +357,7 @@ export function EmployeeManagement() {
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                 className="border-blue-200"
                 placeholder="Nhập username"
+                disabled={!!editingAccount} // disable editing username when editing
               />
             </div>
             <div className="space-y-2">
@@ -344,8 +381,9 @@ export function EmployeeManagement() {
                 onValueChange={(value) =>
                   setFormData({ ...formData, position: value as EmployeePosition })
                 }
+                disabled={!!editingAccount && editingAccount.employee.hasActivity}
               >
-                <SelectTrigger className="border-blue-200">
+                <SelectTrigger className="border-blue-200" disabled={!!editingAccount && editingAccount.employee.hasActivity}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -355,7 +393,28 @@ export function EmployeeManagement() {
                   <SelectItem value={EmployeePosition.MANAGER}>Quản lý</SelectItem>
                 </SelectContent>
               </Select>
+              {/* Nếu không cho đổi chức vụ, hiển thị cảnh báo */}
+              {editingAccount && editingAccount.employee.hasActivity && (
+                <div className="text-xs text-red-500 mt-1">Không thể đổi chức vụ vì nhân viên đã có hoạt động ở vai trò này.</div>
+              )}
             </div>
+            {/* Only show password input when adding a new employee */}
+            {!editingAccount && (
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm font-medium">
+                  Mật khẩu
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="border-blue-200"
+                  placeholder="Nhập mật khẩu"
+                  required
+                />
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button

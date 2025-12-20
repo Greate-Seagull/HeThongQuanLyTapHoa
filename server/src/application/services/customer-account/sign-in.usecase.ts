@@ -65,7 +65,7 @@ export class SignInUsecase {
     });
 
     const token = this.tokenService.generateJwt({
-      id: account.id,
+      id: account.userId, // Đảm bảo id trong token là userId
       position: "CUSTOMER",
     });
 
