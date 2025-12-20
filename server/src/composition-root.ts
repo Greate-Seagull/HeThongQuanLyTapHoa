@@ -1,3 +1,6 @@
+import { UpdateEmployeeUsecase } from "./application/services/employee/update-employee.usecase";
+
+export const updateEmployeeUsecase = new UpdateEmployeeUsecase();
 import { buildCreateEmployeeWithAccountUsecase } from "./application/services/employee/build-create-employee-with-account.usecase";
 
 // Export sau khi đã khai báo các biến phụ thuộc

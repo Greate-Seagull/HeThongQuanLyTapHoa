@@ -14,7 +14,8 @@ export class EmployeeAccountReadAccessor {
   }
 
   async getAll() {
-    return this.prisma.employeeAccount.findMany({
+    // Lấy tất cả account cùng employee
+    const accounts = await this.prisma.employeeAccount.findMany({
       select: {
         id: true,
         username: true,
@@ -27,5 +28,40 @@ export class EmployeeAccountReadAccessor {
         },
       },
     });
+
+    // Lấy danh sách employeeId
+    const employeeIds = accounts.map(acc => acc.employee.id);
+    // Lấy map employeeId -> có hoạt động không
+    const [invoiceCounts, goodReceiptCounts, stocktakingCounts] = await Promise.all([
+      this.prisma.invoice.groupBy({
+        by: ['employeeId'],
+        where: { employeeId: { in: employeeIds } },
+        _count: { employeeId: true },
+      }),
+      this.prisma.goodReceipt.groupBy({
+        by: ['employeeId'],
+        where: { employeeId: { in: employeeIds } },
+        _count: { employeeId: true },
+      }),
+      this.prisma.stocktaking.groupBy({
+        by: ['employeeId'],
+        where: { employeeId: { in: employeeIds } },
+        _count: { employeeId: true },
+      }),
+    ]);
+
+    const hasActivityMap = new Map();
+    invoiceCounts.forEach(row => { hasActivityMap.set(row.employeeId, true); });
+    goodReceiptCounts.forEach(row => { hasActivityMap.set(row.employeeId, true); });
+    stocktakingCounts.forEach(row => { hasActivityMap.set(row.employeeId, true); });
+
+    // Gắn hasActivity vào từng employee
+    return accounts.map(acc => ({
+      ...acc,
+      employee: {
+        ...acc.employee,
+        hasActivity: !!hasActivityMap.get(acc.employee.id)
+      }
+    }));
   }
 }

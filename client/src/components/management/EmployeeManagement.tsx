@@ -52,6 +52,7 @@ interface Employee {
   id: number
   name: string
   position: EmployeePosition
+  hasActivity?: boolean // true nếu đã có hoạt động ở vai trò này
 }
 
 interface Account {
@@ -102,9 +103,16 @@ export function EmployeeManagement() {
     setIsLoading(true)
     try {
       const response = await apiClient.get<Account[]>('/employee-accounts')
-      console.log(response)
-
-      setAccounts(response)
+      // Nếu backend chưa trả về hasActivity, có thể cần map lại ở đây
+      setAccounts(
+        response.map(acc => ({
+          ...acc,
+          employee: {
+            ...acc.employee,
+            hasActivity: acc.employee.hasActivity ?? false // fallback nếu chưa có
+          }
+        }))
+      )
     } catch (error) {
       console.error('Error fetching accounts:', error)
     } finally {
@@ -171,6 +179,16 @@ export function EmployeeManagement() {
   }
 
   const handleSave = async () => {
+    // Validate không cho phép tên rỗng khi thêm hoặc sửa
+    if (!formData.name.trim()) {
+      toast.error('Tên nhân viên không được để trống!');
+      return;
+    }
+    // Validate không cho phép username rỗng khi thêm mới
+    if (!editingAccount && !formData.username.trim()) {
+      toast.error('Username không được để trống!');
+      return;
+    }
     setIsSaving(true)
     try {
       let response
@@ -203,7 +221,15 @@ export function EmployeeManagement() {
       }
       setIsDialogOpen(false)
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || 'Đã xảy ra lỗi. Vui lòng thử lại.')
+      const backendMsg = error?.response?.data?.message || '';
+      if (
+        error?.response?.status === 409 ||
+        backendMsg.toLowerCase().includes('username') && (backendMsg.toLowerCase().includes('tồn tại') || backendMsg.toLowerCase().includes('exists') || backendMsg.toLowerCase().includes('duplicate'))
+      ) {
+        toast.error('Tên đăng nhập (username) đã tồn tại, vui lòng chọn tên khác!');
+      } else {
+        toast.error(backendMsg || 'Đã xảy ra lỗi. Vui lòng thử lại.');
+      }
     } finally {
       setIsSaving(false)
     }
@@ -355,8 +381,9 @@ export function EmployeeManagement() {
                 onValueChange={(value) =>
                   setFormData({ ...formData, position: value as EmployeePosition })
                 }
+                disabled={!!editingAccount && editingAccount.employee.hasActivity}
               >
-                <SelectTrigger className="border-blue-200">
+                <SelectTrigger className="border-blue-200" disabled={!!editingAccount && editingAccount.employee.hasActivity}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -366,6 +393,10 @@ export function EmployeeManagement() {
                   <SelectItem value={EmployeePosition.MANAGER}>Quản lý</SelectItem>
                 </SelectContent>
               </Select>
+              {/* Nếu không cho đổi chức vụ, hiển thị cảnh báo */}
+              {editingAccount && editingAccount.employee.hasActivity && (
+                <div className="text-xs text-red-500 mt-1">Không thể đổi chức vụ vì nhân viên đã có hoạt động ở vai trò này.</div>
+              )}
             </div>
             {/* Only show password input when adding a new employee */}
             {!editingAccount && (
