@@ -1,5 +1,10 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { Stocktaking } from "../../../domain/entities/stocktaking";
+import { ChangeTracker } from "../../cache/change-tracker";
+import {
+	fromPersistence,
+	toPersistenceObject,
+} from "../../../domain/services/mapper.service";
 import { buildSafePrismaSelect } from "../../../domain/services/query-builder.service";
 import { PrismaRepository } from "./prisma.prisma.repository";
 import { StocktakingDto } from "../../../application/DTOs/stocktaking.dto";
@@ -12,28 +17,19 @@ export class StocktakingPrismaRepository
 	private static baseSelect = buildSafePrismaSelect(Stocktaking);
 
 	protected buildUpdateData(entity: Stocktaking): Partial<StocktakingDto> {
-		const persistence = this.toPersistence(entity) as any;
-		
-		// Handle stocktakingDetails for update
-		if (Array.isArray(persistence.stocktakingDetails)) {
-			persistence.stocktakingDetails = {
-				deleteMany: {},
-				create: persistence.stocktakingDetails,
-			};
-		}
-		
-		return persistence;
+		let persitence = this.toPersistence(entity) as any;
+		persitence.stocktakingDetails = {
+			connect: persitence.stocktakingDetails,
+		};
+		return persitence;
 	}
 
 	protected buildCreateData(entity: Stocktaking): Partial<StocktakingDto> {
-		const persistence = this.toPersistence(entity) as any;
-		
-		// Handle stocktakingDetails for create
-		persistence.stocktakingDetails = {
-			create: persistence.stocktakingDetails,
+		let persitence = this.toPersistence(entity) as any;
+		persitence.stocktakingDetails = {
+			create: persitence.stocktakingDetails,
 		};
-		
-		return persistence;
+		return persitence;
 	}
 
 	protected getBaseQuery(): { select: object } {
@@ -43,42 +39,5 @@ export class StocktakingPrismaRepository
 	protected getRepository(transaction?: Prisma.TransactionClient): any {
 		if (transaction) return transaction.stocktaking;
 		return this.client.stocktaking;
-	}
-
-	// Custom methods for StocktakingRepository interface
-	async update(
-		id: number,
-		employeeId: number,
-		details: any[]
-	): Promise<Stocktaking> {
-		// Delete old details
-		await this.client.stocktakingDetail.deleteMany({
-			where: { stocktakingId: id },
-		});
-
-		// Update with new details
-		const updated = await this.getRepository().update({
-			where: { id },
-			data: {
-				employeeId,
-				stocktakingDetails: {
-					create: details.map((detail) => ({
-						productId: detail.productId!,
-						slotId: detail.slotId,
-						status: detail.status,
-						quantity: detail.quantity,
-					})),
-				},
-			},
-			...this.getBaseQuery(),
-		});
-
-		return this.fromPersistence(updated);
-	}
-
-	async delete(id: number): Promise<void> {
-		await this.getRepository().delete({
-			where: { id },
-		});
 	}
 }

@@ -54,38 +54,34 @@ export default function StaffDashboardPage() {
   
   useEffect(() => {
     const checkAuth = async () => {
+      // Nếu đã có user và đúng role -> OK
       if (user?.role === 'staff') {
         setIsLoading(false)
         return
       }
 
+      // Nếu có user nhưng sai role -> Login
       if (user && user.role !== 'staff') {
         router.push('/auth/login')
         return
       }
 
+      // Nếu chưa có user (F5), kiểm tra token
       const token = localStorage.getItem('accessToken')
       if (!token) {
         router.push('/auth/login')
         return
       }
 
+      // Có token, thử lấy lại thông tin nhân viên
       try {
         const response = await apiClient.get<any>('/employee-accounts/profile')
-        console.log('🔍 Profile response:', response) // Debug log
-        
-        // ✅ FIX: Store correct employeeId
+        // Khôi phục state user
         const userData = {
           username: response.username,
           role: 'staff',
-          employeeData: {
-            id: response.id,         // ✅ EmployeeId (121)
-            name: response.name,
-            position: response.position,
-          },
+          employeeData: response,
         }
-        
-        console.log('✅ User data created:', userData) // Debug log
         login(userData, token)
         setIsLoading(false)
       } catch (error) {
@@ -115,7 +111,6 @@ export default function StaffDashboardPage() {
     }
     
     const employeeData = user.employeeData
-    console.log('🔍 Current employee data for form:', employeeData) // Debug log
     
     switch (activeMenu) {
       case 'inventory':
@@ -125,8 +120,18 @@ export default function StaffDashboardPage() {
       case 'invoice':
         return <InvoiceManagement currentUser={employeeData} />
       case 'profile':
-        // ✅ FIX: ProfilePage doesn't accept props - it fetches data itself
-        return <ProfilePage />
+        return (
+          <ProfilePage
+            user={{
+              id: employeeData.id,
+              name: employeeData.name,
+              username: user.username,
+              position: employeeData.position,
+              loggedAt: new Date(),
+            }}
+            role="staff"
+          />
+        )
       default:
         // Default to first available feature based on position
         if (employeeData.position === 'INVENTORY') {

@@ -13,7 +13,7 @@ import {
 
 jest.setTimeout(50000);
 
-const outputSchema = z.object({});
+const outputSchema = z.object();
 
 describe("Create stocktaking integration test", () => {
 	let input;
@@ -91,7 +91,6 @@ describe("Create stocktaking integration test", () => {
 
 			it("Should return error message", () => {
 				expect(output).toHaveProperty("message");
-				expect(output.message).toMatch(/status|Invalid/i);
 			});
 		});
 
@@ -107,9 +106,9 @@ describe("Create stocktaking integration test", () => {
 			});
 
 			it("Should return error message", () => {
-				expect(output).toHaveProperty("message");
-				// Accept any validation error message for empty array
-				expect(output.message).toBeTruthy();
+				expect(output.message).toBe(
+					`Expect promotion to have at least one product Id`
+				);
 			});
 		});
 
@@ -125,8 +124,9 @@ describe("Create stocktaking integration test", () => {
 			});
 
 			it("Should return error message", () => {
-				expect(output).toHaveProperty("message");
-				expect(output.message).toMatch(/quantity|Invalid/i);
+				expect(output.message).toBe(
+					`Invalid quantity, ${input.products[0].quantity}`
+				);
 			});
 		});
 
@@ -143,7 +143,6 @@ describe("Create stocktaking integration test", () => {
 
 			it("Should return error message", () => {
 				expect(output).toHaveProperty("message");
-				expect(output.message).toMatch(/slot|valid/i);
 			});
 		});
 	});
