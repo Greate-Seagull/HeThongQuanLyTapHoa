@@ -354,7 +354,7 @@ export function ProductManagement() {
                   ) : (
                     filteredProducts.map((product) => (
                       <TableRow key={product.id} className="hover:bg-blue-50">
-                        <TableCell className="font-medium">{product.id}</TableCell>
+                        <TableCell className="font-medium">{`SP${product.id.toString().padStart(3, '0')}`}</TableCell>
                         <TableCell className="font-mono text-blue-600">{product.barcode}</TableCell>
                         <TableCell className="font-medium">{product.name}</TableCell>
                         <TableCell className="text-sm text-gray-600">

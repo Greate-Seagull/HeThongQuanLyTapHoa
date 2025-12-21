@@ -33,11 +33,8 @@ interface InvoiceDetail {
   productId: number;
   product: Product;
   quantity: number;
-  price: number;
   promotionId: number | null;
   promotion: Promotion | null;
-  discountAmount: number;
-  finalPrice: number;
 }
 
 interface Invoice {
@@ -100,13 +97,14 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
 
 
 
+  // Tính giảm giá dựa trên promotion và giá sản phẩm
   const calculateDiscountAmount = (promotion: Promotion, price: number): number => {
     if (promotion.promotionType === PromotionType.PERCENTAGE) {
       return (price * promotion.value) / 100;
     } else {
       return promotion.value;
     }
-  };
+  }
 
   const handleSearchProduct = async () => {
     if (!productBarcode) {
@@ -185,20 +183,13 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
         return currDiscount > prevDiscount ? curr : prev;
       }, validPromotions[0]);
     } catch {}
-    const discountAmount = promotion 
-      ? calculateDiscountAmount(promotion, searchedProduct.price)
-      : 0;
-    const finalPrice = (searchedProduct.price - discountAmount) * quantity;
     const newDetail: InvoiceDetail = {
       id: cart.length + 1,
       productId: searchedProduct.id,
       product: searchedProduct,
       quantity,
-      price: searchedProduct.price,
       promotionId: promotion?.id || null,
       promotion: promotion || null,
-      discountAmount,
-      finalPrice,
     };
     setCart([...cart, newDetail]);
     // Reset form
@@ -214,25 +205,30 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
     toast.info('Đã xóa khỏi giỏ hàng');
   };
 
+  // Tính toán lại chỉ dựa vào product.price và promotion
   const calculateSubtotal = (): number => {
-    return cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  };
+    return cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  }
 
   const calculateTotalDiscount = (): number => {
-    return cart.reduce((sum, item) => sum + (item.discountAmount * item.quantity), 0);
-  };
+    return cart.reduce((sum, item) => {
+      if (item.promotion) {
+        return sum + calculateDiscountAmount(item.promotion, item.product.price) * item.quantity;
+      }
+      return sum;
+    }, 0);
+  }
 
   const calculatePointsDiscount = (): number => {
-    // 1 điểm = 1 VNĐ
     return pointsToUse;
-  };
+  }
 
   const calculateTotal = (): number => {
     const subtotal = calculateSubtotal();
     const promotionDiscount = calculateTotalDiscount();
     const pointsDiscount = calculatePointsDiscount();
     return subtotal - promotionDiscount - pointsDiscount;
-  };
+  }
 
   // Fetch data từ API khi mount
   useEffect(() => {
@@ -327,10 +323,7 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
         details: cart.map(item => ({
           productId: item.productId,
           quantity: item.quantity,
-          price: item.price,
           promotionId: item.promotionId,
-          discountAmount: item.discountAmount,
-          finalPrice: item.finalPrice
         }))
       };
       await createInvoice(invoiceData);
@@ -381,12 +374,11 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
     }
   };
 
-  // Xem chi tiết hóa đơn từ API
+  // Xem chi tiết hóa đơn từ API (không dùng price, discountAmount, finalPrice từ backend)
   const handleViewInvoice = async (invoiceId: number) => {
     setLoading(true);
     try {
       const detail = await getInvoiceById(invoiceId);
-      // Map InvoiceWithDetails to Invoice (backend fields: user, usedPoint, total, totalDiscount, etc.)
       setCurrentInvoice({
         id: detail.id,
         employeeId: detail.employeeId,
@@ -404,18 +396,19 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
         pointsDiscount: 0,
         subtotal: Array.isArray(detail.invoiceDetails)
           ? detail.invoiceDetails.reduce((sum, d) => {
-              const item = d as any;
-              const price = typeof item.price === 'number' ? item.price : (typeof item.unitPrice === 'number' ? item.unitPrice : 0);
-              const qty = typeof item.quantity === 'number' ? item.quantity : 0;
+              const price = d.product?.price || 0;
+              const qty = typeof d.quantity === 'number' ? d.quantity : 0;
               return sum + price * qty;
             }, 0)
           : 0,
         totalDiscount: Array.isArray(detail.invoiceDetails)
           ? detail.invoiceDetails.reduce((sum, d) => {
-              const item = d as any;
-              const discount = typeof item.discountAmount === 'number' ? item.discountAmount : (typeof item.discount === 'number' ? item.discount : 0);
-              const qty = typeof item.quantity === 'number' ? item.quantity : 0;
-              return sum + discount * qty;
+              if (d.promotion) {
+                const discount = calculateDiscountAmount(d.promotion, d.product?.price || 0);
+                const qty = typeof d.quantity === 'number' ? d.quantity : 0;
+                return sum + discount * qty;
+              }
+              return sum;
             }, 0)
           : 0,
         total: typeof detail.total === 'number' ? detail.total : 0,
@@ -426,11 +419,8 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
               productId: d.productId,
               product: d.product,
               quantity: d.quantity,
-              price: typeof d.price === 'number' ? d.price : 0,
               promotionId: d.promotionId ?? null,
               promotion: d.promotion ?? null,
-              discountAmount: typeof d.discountAmount === 'number' ? d.discountAmount : 0,
-              finalPrice: typeof d.finalPrice === 'number' ? d.finalPrice : 0,
             }))
           : [],
       });
@@ -723,11 +713,11 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
                               </div>
                             </TableCell>
                             <TableCell>{item.quantity}</TableCell>
-                            <TableCell>{item.price.toLocaleString('vi-VN')}đ</TableCell>
+                            <TableCell>{item.product.price.toLocaleString('vi-VN')}đ</TableCell>
                             <TableCell className="text-green-600">
-                              {item.discountAmount > 0 ? `-${item.discountAmount.toLocaleString('vi-VN')}đ` : '-'}
+                              {item.promotion ? `-${calculateDiscountAmount(item.promotion, item.product.price).toLocaleString('vi-VN')}đ` : '-'}
                             </TableCell>
-                            <TableCell className="font-semibold">{item.finalPrice.toLocaleString('vi-VN')}đ</TableCell>
+                            <TableCell className="font-semibold">{((item.product.price - (item.promotion ? calculateDiscountAmount(item.promotion, item.product.price) : 0)) * item.quantity).toLocaleString('vi-VN')}đ</TableCell>
                             <TableCell className="text-right">
                               <Button
                                 variant="ghost"
@@ -1024,28 +1014,15 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
                     <TableRow className="bg-gray-50">
                       <TableHead>Sản phẩm</TableHead>
                       <TableHead className="text-center">SL</TableHead>
-                      <TableHead className="text-right">Đơn giá</TableHead>
-                      <TableHead className="text-right">Giảm</TableHead>
-                      <TableHead className="text-right">Thành tiền</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {currentInvoice.details.map((detail, index) => (
                       <TableRow key={index}>
                         <TableCell>
-                          <div>
-                            <p>{detail.product.name}</p>
-                            {detail.promotion && (
-                              <p className="text-xs text-green-600">{detail.promotion.name}</p>
-                            )}
-                          </div>
+                          {detail.product?.name || ''}
                         </TableCell>
                         <TableCell className="text-center">{detail.quantity}</TableCell>
-                        <TableCell className="text-right">{typeof detail.price === 'number' ? detail.price.toLocaleString('vi-VN') : 0}đ</TableCell>
-                        <TableCell className="text-right text-green-600">
-                          {detail.discountAmount > 0 ? `-${typeof detail.discountAmount === 'number' ? detail.discountAmount.toLocaleString('vi-VN') : 0}đ` : '-'}
-                        </TableCell>
-                        <TableCell className="text-right font-semibold">{typeof detail.finalPrice === 'number' ? detail.finalPrice.toLocaleString('vi-VN') : 0}đ</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -1054,14 +1031,6 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
 
               {/* Invoice Summary */}
               <div className="space-y-2 border-t pt-4">
-                <div className="flex justify-between">
-                  <span>Tạm tính:</span>
-                  <span>{currentInvoice.subtotal.toLocaleString('vi-VN')}đ</span>
-                </div>
-                <div className="flex justify-between text-green-600">
-                  <span>Tổng giảm giá:</span>
-                  <span>-{currentInvoice.totalDiscount.toLocaleString('vi-VN')}đ</span>
-                </div>
                 <div className="flex justify-between text-xl font-bold border-t pt-2">
                   <span>Tổng cộng:</span>
                   <span className="text-blue-600">{currentInvoice.total.toLocaleString('vi-VN')}đ</span>

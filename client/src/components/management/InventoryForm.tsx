@@ -179,8 +179,8 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
       toast.error('Lỗi: Không tìm thấy thông tin nhân viên');
       return;
     }
-    if (currentUser.position !== 'INVENTORY') {
-      toast.error('Bạn không có quyền lập phiếu kiểm kê.');
+    if (currentUser.position !== 'INVENTORY' && currentUser.position !== 'MANAGER') {
+      toast.error('Bạn không có quyền lập phiếu kiểm kê. Chỉ nhân viên "Kiểm kê" hoặc "Quản lý" mới có quyền tạo phiếu kiểm kê.');
       return;
     }
     if (stocktakingDetails.length === 0) {

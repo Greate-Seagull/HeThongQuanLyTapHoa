@@ -216,7 +216,7 @@ export function ProductCategoryManagement() {
                 ) : (
                   filteredCategories.map((category) => (
                     <TableRow key={category.id}>
-                      <TableCell>{category.id}</TableCell>
+                      <TableCell>{`LSP${category.id.toString().padStart(3, '0')}`}</TableCell>
                       <TableCell className="font-medium">{category.name}</TableCell>
                       <TableCell className="max-w-md truncate">
                         {category.description || '-'}

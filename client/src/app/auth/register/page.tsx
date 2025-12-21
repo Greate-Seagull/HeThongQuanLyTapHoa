@@ -56,29 +56,29 @@ export default function RegisterPage() {
     setIsLoading(true)
     try {
       // Customer registration: POST /accounts
-      const response = await customerSignUp({
+      await customerSignUp({
         name: fullName,
         phoneNumber: phone,
         password: password,
       })
-      // ⚠️ Backend only returns token, missing user data
-      const userData = {
-        username: phone, // Using phoneNumber as username
-        role: 'customer' as const,
-        customerId: undefined,
-      }
-      login(userData, response.token)
-      toast.success('Đăng ký tài khoản khách hàng thành công!', {
-        description: 'Bạn đã có thể đăng nhập vào hệ thống',
-      })
+      toast.success('Đăng ký thành công! Vui lòng đăng nhập lại.')
       setTimeout(() => {
-        router.push('/dashboard/customer')
+        router.push('/auth/login')
       }, 1500)
     } catch (error: any) {
       console.error('Registration error:', error)
-      toast.error('Đăng ký thất bại', {
-        description: error.message || 'Vui lòng thử lại sau',
-      })
+      // Kiểm tra lỗi số điện thoại trùng
+      const message = error?.response?.data?.message || error?.message || '';
+      if (
+        message.toLowerCase().includes('phone') &&
+        (message.toLowerCase().includes('exists') || message.toLowerCase().includes('trùng'))
+      ) {
+        toast.error('Số điện thoại đã tồn tại, vui lòng dùng số khác!');
+      } else {
+        toast.error('Đăng ký thất bại', {
+          description: message || 'Vui lòng thử lại sau',
+        });
+      }
     } finally {
       setIsLoading(false)
     }

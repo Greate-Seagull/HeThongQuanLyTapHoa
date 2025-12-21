@@ -213,8 +213,8 @@ export function ImportForm({ currentUser }: ImportFormProps) {
     }
 
     // Kiểm tra nhân viên có quyền nhập hàng không (position = RECEIVING)
-    if (currentUser.position !== 'RECEIVING') {
-      toast.error('Nhân viên không có quyền nhập hàng. Chỉ nhân viên "Nhập kho" mới có quyền tạo phiếu nhập.');
+    if (currentUser.position !== 'RECEIVING' && currentUser.position !== 'MANAGER') {
+      toast.error('Bạn không có quyền nhập hàng. Chỉ nhân viên "Nhập kho" hoặc "Quản lý" mới có quyền tạo phiếu nhập.');
       return;
     }
 
