@@ -1,3 +1,4 @@
+import { updateManagerProfileUsecase } from '../../composition-root';
 import { changeManagerPasswordUsecase } from '../../composition-root';
 // Đổi mật khẩu cho manager (employee account)
 
@@ -20,6 +21,17 @@ import {
 } from "../../composition-root";
 
 const router = Router();
+
+// Cập nhật profile manager
+router.put(
+  '/manager',
+  authenticationMiddleware,
+  authorizationMiddleware('MANAGER'),
+  (req, res) => {
+    // Không ghi đè id, giữ nguyên id FE truyền lên (employeeId)
+    controller(updateManagerProfileUsecase)(req, res);
+  }
+);
 
 // Đăng nhập
 router.post("/sign-in", controller(signInUsecase));

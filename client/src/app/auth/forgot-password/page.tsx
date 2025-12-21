@@ -10,49 +10,59 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { KeyRound, ArrowLeft, Store, CheckCircle } from 'lucide-react'
 import { toast } from 'sonner'
 
-// Mock database của users (bao gồm owner có sẵn trong DB + staff + customer đã đăng ký)
-const existingUsers = [
-  { username: 'admin', role: 'owner', name: 'Chủ cửa hàng' }, // Owner có sẵn trong DB, không cho đăng ký nhưng vẫn có thể quên mật khẩu
-  { username: 'nvkiem', role: 'staff', name: 'Nguyễn Văn Kiểm' },
-  { username: 'ttnhap', role: 'staff', name: 'Trần Thị Nhập' },
-  { username: 'lvban', role: 'staff', name: 'Lê Văn Bán' },
-]
+
+import { apiClient } from '@/services/api-client'
 
 export default function ForgotPasswordPage() {
   const [accountInfo, setAccountInfo] = useState('')
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   
   const router = useRouter()
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!accountInfo.trim()) {
       toast.error('Vui lòng nhập tên đăng nhập')
       return
     }
-
-    // Kiểm tra username có tồn tại không
-    const user = existingUsers.find(u => 
-      u.username.toLowerCase() === accountInfo.toLowerCase()
-    )
-
-    if (!user) {
-      toast.error('Tài khoản không tồn tại trong hệ thống', {
-        description: 'Vui lòng kiểm tra lại tên đăng nhập',
+    setIsLoading(true)
+    try {
+      // Gọi API kiểm tra username tồn tại (cho cả nhân viên và khách hàng)
+      // Ưu tiên kiểm tra employee-account, nếu không có thì kiểm tra account (khách hàng)
+      let found = false;
+      try {
+        await apiClient.get(`/employee-accounts?username=${encodeURIComponent(accountInfo)}`)
+        found = true;
+      } catch (e) {
+        // Không tìm thấy ở employee-accounts, thử tiếp ở accounts (khách hàng)
+        try {
+          await apiClient.get(`/accounts?username=${encodeURIComponent(accountInfo)}`)
+          found = true;
+        } catch (e2) {
+          found = false;
+        }
+      }
+      if (!found) {
+        toast.error('Tài khoản không tồn tại trong hệ thống', {
+          description: 'Vui lòng kiểm tra lại tên đăng nhập',
+        })
+        setIsLoading(false)
+        return;
+      }
+      // Tìm thấy tài khoản
+      setIsSubmitted(true)
+      toast.success('Đã tìm thấy tài khoản!', {
+        description: `Vui lòng liên hệ quản trị viên để đặt lại mật khẩu cho tài khoản "${accountInfo}"`,
+        duration: 5000,
       })
-      return
+      setTimeout(() => {
+        router.push('/auth/login')
+      }, 2000)
+    } catch (err) {
+      toast.error('Đã xảy ra lỗi, vui lòng thử lại.')
+    } finally {
+      setIsLoading(false)
     }
-
-    // Tìm thấy tài khoản
-    setIsSubmitted(true)
-    toast.success('Đã tìm thấy tài khoản!', {
-      description: `Vui lòng liên hệ quản trị viên để đặt lại mật khẩu cho tài khoản "${user.username}"`,
-      duration: 5000,
-    })
-
-    // Mock: Sau 2 giây chuyển về trang login
-    setTimeout(() => {
-      router.push('/auth/login')
-    }, 2000)
   }
 
   return (
@@ -98,9 +108,19 @@ export default function ForgotPasswordPage() {
               <Button 
                 onClick={handleSubmit} 
                 className="w-full bg-blue-600 hover:bg-blue-700"
+                disabled={isLoading}
               >
-                <KeyRound className="mr-2 h-4 w-4" />
-                Xác nhận
+                {isLoading ? (
+                  <>
+                    <KeyRound className="mr-2 h-4 w-4 animate-spin" />
+                    Đang kiểm tra tài khoản...
+                  </>
+                ) : (
+                  <>
+                    <KeyRound className="mr-2 h-4 w-4" />
+                    Xác nhận
+                  </>
+                )}
               </Button>
 
               <Link href="/auth/login" className="block">

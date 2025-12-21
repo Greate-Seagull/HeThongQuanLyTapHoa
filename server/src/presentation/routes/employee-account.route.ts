@@ -1,3 +1,6 @@
+import { ChangeEmployeePasswordUsecase } from '../../application/services/employee-account/change-employee-password.usecase';
+const changeEmployeePasswordUsecase = new ChangeEmployeePasswordUsecase();
+
 import { Router } from "express";
 import { authenticationMiddleware } from "../middlewares/authentication.middleware";
 import { authorizationMiddleware } from "../middlewares/authorization.middleware";
@@ -57,6 +60,21 @@ router.delete(
   // authorizationMiddleware("MANAGER"),
   (req, res) =>
     controller(deleteEmployeeAccountUsecase)({ ...req, id: req.params.id }, res)
+);
+
+// Đổi mật khẩu cho nhân viên
+router.post(
+  '/change-password',
+  authenticationMiddleware,
+  async (req, res) => {
+    req.body = { ...req.body, id: (req as any).authId };
+    try {
+      const result = await changeEmployeePasswordUsecase.execute(req.body);
+      res.json({ status: 'success', data: result });
+    } catch (err: any) {
+      res.status(400).json({ status: 'fail', message: err.message });
+    }
+  }
 );
 
 export default router;

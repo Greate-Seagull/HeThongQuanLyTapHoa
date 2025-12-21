@@ -10,7 +10,8 @@ const inputSchema = z.object({
 });
 
 const outputSchema = z.object({
-  id: z.number(),
+  id: z.number(), // EmployeeAccount id
+  employeeId: z.number(), // Employee id
   username: z.string(),
   name: z.string(),
   position: z.string(),
@@ -47,6 +48,7 @@ export class GetEmployeeAccountProfileUsecase {
     log.info("Task completed");
     return outputSchema.parse({
       id: account.id,
+      employeeId: account.employeeId, // Add employeeId to response
       username: account.username,
       name: employee.name,
       position: employee.position,
