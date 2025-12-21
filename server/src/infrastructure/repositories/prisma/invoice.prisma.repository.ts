@@ -1,3 +1,4 @@
+
 import { Prisma } from "@prisma/client";
 import { Invoice } from "../../../domain/entities/invoice";
 import { buildSafePrismaSelect } from "../../../domain/services/query-builder.service";
@@ -34,5 +35,38 @@ export class InvoicePrismaRepository
 	protected getRepository(transaction?: Prisma.TransactionClient): any {
 		if (transaction) return transaction.invoice;
 		return this.client.invoice;
+	}
+
+	// Lấy tất cả hóa đơn kèm chi tiết, nhân viên, khách hàng, khuyến mãi
+	async findAllWithDetails() {
+			return this.client.invoice.findMany({
+				include: {
+					employee: true,
+					user: true,
+					invoiceDetails: {
+						include: {
+							product: true,
+							promotion: true
+						}
+					}
+				},
+				orderBy: { createdAt: 'desc' }
+			});
+	}
+	// Lấy chi tiết hóa đơn theo id, bao gồm chi tiết, nhân viên, user, khuyến mãi
+	async findByIdWithDetails(id: number) {
+		return this.client.invoice.findUnique({
+			where: { id },
+			include: {
+				employee: true,
+				user: true,
+				invoiceDetails: {
+					include: {
+						product: true,
+						promotion: true
+					}
+				}
+			}
+		});
 	}
 }

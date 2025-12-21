@@ -1,33 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { Plus, Trash2, Search, Package, ShoppingCart, Check, ChevronsUpDown, Eye } from 'lucide-react';
+import { Plus, Trash2, Search, Package, ShoppingCart, Check, ChevronsUpDown, Eye, Loader2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { toast } from 'sonner';
 import { ProductUnit, ProductStatus, EmployeePosition } from '@/types';
 import type { Employee, Product } from '@/types';
+import { createGoodReceipt } from '@/services/good-receipt.service';
+import { apiClient } from '@/services/api-client';
 
-// Mock data - synced with ProductManagement
-const mockProducts: Product[] = [
-  { id: 1, name: 'Coca Cola 330ml', barcode: 8934673123456, price: 10000, amount: 150, unit: ProductUnit.UNKNOWN, status: ProductStatus.GOOD },
-  { id: 2, name: 'Pepsi 330ml', barcode: 8934673123457, price: 9500, amount: 200, unit: ProductUnit.UNKNOWN, status: ProductStatus.GOOD },
-  { id: 3, name: 'Bánh Oreo', barcode: 8934673123458, price: 15000, amount: 80, unit: ProductUnit.UNKNOWN, status: ProductStatus.GOOD },
-  { id: 4, name: 'Mì Hảo Hảo', barcode: 8934673123459, price: 4000, amount: 300, unit: ProductUnit.UNKNOWN, status: ProductStatus.GOOD },
-  { id: 5, name: 'Sữa TH True Milk', barcode: 8934673123460, price: 28000, amount: 50, unit: ProductUnit.UNKNOWN, status: ProductStatus.GOOD },
-];
+// ...existing code...
 
-const receivingStaff: Employee[] = [
-  { id: 1, name: 'Nguyễn Văn Kiệm', position: EmployeePosition.INVENTORY },
-  { id: 2, name: 'Trần Thị Nhập', position: EmployeePosition.RECEIVING },
-  { id: 3, name: 'Lê Văn Bán', position: EmployeePosition.SALES },
-];
+// ...existing code...
 
 // Local interfaces cho component này
 interface GoodReceiptDetail {
@@ -50,8 +41,56 @@ interface ImportFormProps {
 }
 
 export function ImportForm({ currentUser }: ImportFormProps) {
-  const [products, setProducts] = useState<Product[]>(mockProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [goodReceipts, setGoodReceipts] = useState<GoodReceipt[]>([]);
+  const [loading, setLoading] = useState(false);
+  // Fetch products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await apiClient.get<Product[]>('/products');
+        setProducts(Array.isArray(res) ? res : []);
+      } catch (err) {
+        setProducts([]);
+        toast.error('Không thể tải danh sách sản phẩm');
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  // Fetch goodReceipts history from API (if backend đã có)
+  // Load lịch sử phiếu nhập kho từ API
+  const fetchReceipts = async () => {
+    setLoading(true);
+    try {
+      const res = await apiClient.get<any[]>('/good-receipts');
+      setGoodReceipts(Array.isArray(res) ? res.map((r, idx) => {
+        // Chuẩn hóa dữ liệu phiếu nhập
+        const details = Array.isArray(r.goodReceiptDetails) ? r.goodReceiptDetails : (Array.isArray(r.details) ? r.details : []);
+        return {
+          id: typeof r.id === 'number' ? r.id : idx + 1, // fallback nếu id null
+          employeeId: r.employeeId,
+          employee: r.employee && r.employee.name ? r.employee : { name: 'Chưa rõ', id: r.employeeId },
+          createdAt: r.createdAt ? new Date(r.createdAt) : new Date(),
+          details: details.map((d: any, i: number) => ({
+            ...d,
+            product: d.product || { name: '---', barcode: '', id: d.productId },
+            productId: d.productId
+          }))
+        }
+      }) : []);
+    } catch (err) {
+      setGoodReceipts([]);
+      // toast.error('Không thể tải lịch sử phiếu nhập');
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    fetchReceipts();
+  }, []);
+
+  // TODO: Fetch goodReceipts history from API if needed
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreatingReceipt, setIsCreatingReceipt] = useState(false);
   const [viewingReceipt, setViewingReceipt] = useState<GoodReceipt | null>(null);
@@ -72,10 +111,16 @@ export function ImportForm({ currentUser }: ImportFormProps) {
 
   const selectedProduct = products.find(p => p.id === selectedProductId);
 
-  const filteredReceipts = goodReceipts.filter(receipt =>
-    receipt.id.toString().includes(searchTerm) ||
-    receipt.employee.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredReceipts = goodReceipts.filter(receipt => {
+    const idStr = receipt.id?.toString() || '';
+    const pnhStr = typeof receipt.id === 'number' ? `PNH${receipt.id.toString().padStart(3, '0')}` : '';
+    const search = searchTerm.trim().toLowerCase();
+    return (
+      idStr.includes(search) ||
+      pnhStr.toLowerCase().includes(search) ||
+      (receipt.employee?.name || '').toLowerCase().includes(search)
+    );
+  });
 
   const handleStartCreateReceipt = () => {
     setIsCreatingReceipt(true);
@@ -160,7 +205,7 @@ export function ImportForm({ currentUser }: ImportFormProps) {
     toast.info('Đã xóa sản phẩm khỏi phiếu nhập');
   };
 
-  const handleConfirmReceipt = () => {
+  const handleConfirmReceipt = async () => {
     // Kiểm tra có nhân viên đang đăng nhập không
     if (!currentUser) {
       toast.error('Không tìm thấy thông tin nhân viên');
@@ -168,8 +213,8 @@ export function ImportForm({ currentUser }: ImportFormProps) {
     }
 
     // Kiểm tra nhân viên có quyền nhập hàng không (position = RECEIVING)
-    if (currentUser.position !== 'RECEIVING') {
-      toast.error('Nhân viên không có quyền nhập hàng. Chỉ nhân viên "Nhập kho" mới có quyền tạo phiếu nhập.');
+    if (currentUser.position !== 'RECEIVING' && currentUser.position !== 'MANAGER') {
+      toast.error('Bạn không có quyền nhập hàng. Chỉ nhân viên "Nhập kho" hoặc "Quản lý" mới có quyền tạo phiếu nhập.');
       return;
     }
 
@@ -196,55 +241,42 @@ export function ImportForm({ currentUser }: ImportFormProps) {
       }
     }
 
-    // Tạo phiếu nhập hàng
-    const employee = receivingStaff.find(e => e.id === currentUser.id) || {
-      id: currentUser.id,
-      name: 'Nhân viên',
-      position: EmployeePosition.RECEIVING
-    };
-    
-    const newId = Math.max(...goodReceipts.map(r => r.id), 0) + 1;
-    const newReceipt: GoodReceipt = {
-      id: newId,
-      employeeId: employee.id,
-      employee,
-      createdAt: new Date(),
-      details: receiptDetails,
-    };
-
-    // Cập nhật số lượng hàng hóa trong kho
-    const updatedProducts = products.map(product => {
-      const detail = receiptDetails.find(d => d.productId === product.id);
-      if (detail) {
-        return {
-          ...product,
-          amount: product.amount + detail.quantity,
-        };
-      }
-      return product;
-    });
-
-    setProducts(updatedProducts);
-    setGoodReceipts([newReceipt, ...goodReceipts]);
-    
-    // Reset form
-    setIsCreatingReceipt(false);
-    setReceiptDetails([]);
-    setSelectedProductId(0);
-    setQuantity(0);
-    setImportPrice(0);
-
-    // Hiển thị thông báo thành công
-    toast.success('Nhập hàng thành công!', {
-      description: `Phiếu nhập PNH${newId.toString().padStart(3, '0')} đã được tạo với ${receiptDetails.length} sản phẩm`,
-    });
+    setLoading(true);
+    try {
+      const payload = {
+        employeeId: currentUser.id,
+        details: receiptDetails.map(d => ({
+          productId: d.productId,
+          quantity: d.quantity,
+          price: d.price,
+        })),
+      };
+  await createGoodReceipt(payload);
+  toast.success('Nhập hàng thành công!');
+  setIsCreatingReceipt(false);
+  setReceiptDetails([]);
+  setSelectedProductId(0);
+  setQuantity(0);
+  setImportPrice(0);
+  // Reload products
+  const res = await apiClient.get<Product[]>('/products');
+  setProducts(res);
+  // Reload goodReceipts history
+  await fetchReceipts();
+    } catch (err: any) {
+      toast.error(err.message || 'Nhập hàng thất bại');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const calculateTotal = () => {
     return receiptDetails.reduce((sum, detail) => sum + (detail.quantity * detail.price), 0);
   };
 
-  const handleViewReceipt = (receipt: GoodReceipt) => {
+  const handleViewReceipt = async (receipt: GoodReceipt) => {
+    // Nếu backend có API get chi tiết phiếu nhập thì gọi ở đây
+    // const detail = await apiClient.get<any>(`/good-receipts/${receipt.id}`)
     setViewingReceipt(receipt);
     setShowReceiptDialog(true);
   };
@@ -486,14 +518,20 @@ export function ImportForm({ currentUser }: ImportFormProps) {
               </Button>
             </div>
 
-            {goodReceipts.length === 0 ? (
+            <div className="min-h-[48px]">
+              {loading ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                  <span>Đang tải dữ liệu phiếu nhập hàng...</span>
+                </div>
+              ) : goodReceipts.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
                 <Package className="h-12 w-12 mx-auto mb-3 opacity-20" />
                 <p>Chưa có phiếu nhập hàng nào</p>
                 <p className="text-sm">Nhấn "Tạo phiếu nhập hàng" để bắt đầu</p>
               </div>
-            ) : (
-              <div className="border border-blue-200 rounded-lg overflow-hidden">
+              ) : (
+                <div className="border border-blue-200 rounded-lg overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-blue-50">
@@ -506,14 +544,24 @@ export function ImportForm({ currentUser }: ImportFormProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredReceipts.map((receipt) => (
-                      <TableRow key={receipt.id} className="hover:bg-blue-50">
-                        <TableCell>PNH{receipt.id.toString().padStart(3, '0')}</TableCell>
-                        <TableCell>{receipt.createdAt.toLocaleDateString('vi-VN')}</TableCell>
-                        <TableCell>{receipt.employee.name}</TableCell>
-                        <TableCell>{receipt.details.length}</TableCell>
+                    {filteredReceipts.map((receipt, idx) => (
+                      <TableRow key={typeof receipt.id === 'number' ? receipt.id : `row-${idx}`} className="hover:bg-blue-50">
                         <TableCell>
-                          {receipt.details.reduce((sum, d) => sum + (d.quantity * d.price), 0).toLocaleString('vi-VN')}đ
+                          {typeof receipt.id === 'number' && !isNaN(receipt.id)
+                            ? `PNH${receipt.id.toString().padStart(3, '0')}`
+                            : '---'}
+                        </TableCell>
+                        <TableCell>
+                          {receipt.createdAt && typeof receipt.createdAt.toLocaleDateString === 'function'
+                            ? receipt.createdAt.toLocaleDateString('vi-VN')
+                            : '---'}
+                        </TableCell>
+                        <TableCell>{receipt.employee?.name || '---'}</TableCell>
+                        <TableCell>{Array.isArray(receipt.details) ? receipt.details.length : 0}</TableCell>
+                        <TableCell>
+                          {Array.isArray(receipt.details)
+                            ? receipt.details.reduce((sum, d) => sum + (d.quantity * d.price), 0).toLocaleString('vi-VN')
+                            : '0đ'}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button
@@ -529,8 +577,9 @@ export function ImportForm({ currentUser }: ImportFormProps) {
                     ))}
                   </TableBody>
                 </Table>
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       )}

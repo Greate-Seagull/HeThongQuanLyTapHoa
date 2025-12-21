@@ -222,7 +222,7 @@ export function SupplierManagement() {
                 ) : (
                   filteredSuppliers.map((supplier) => (
                     <TableRow key={supplier.id}>
-                      <TableCell>{supplier.id}</TableCell>
+                      <TableCell>{`NCC${supplier.id.toString().padStart(3, '0')}`}</TableCell>
                       <TableCell className="font-medium">{supplier.name}</TableCell>
                       <TableCell>{supplier.address || '-'}</TableCell>
                       <TableCell>{supplier.phoneNumber || '-'}</TableCell>

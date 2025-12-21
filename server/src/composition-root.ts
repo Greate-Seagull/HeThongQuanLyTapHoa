@@ -1,3 +1,5 @@
+import { UpdateManagerProfileUsecase } from './application/services/employee-account/update-manager-profile.usecase';
+export const updateManagerProfileUsecase = new UpdateManagerProfileUsecase();
 import { UpdateEmployeeUsecase } from "./application/services/employee/update-employee.usecase";
 
 export const updateEmployeeUsecase = new UpdateEmployeeUsecase();
@@ -150,6 +152,12 @@ export const goodReceiptRepo = new GoodReceiptPrismaRepository(
   prisma,
   goodReceiptDtoSchema
 );
+
+// Container export for route usage
+export const container = {
+  goodReceiptRepo,
+  // ...add other repos if needed
+};
 export const employeeAccountRepo = new EmployeeAccountRepository(prisma);
 
 const stocktakingRepo = new StocktakingPrismaRepository(
@@ -172,7 +180,7 @@ const supplierReadAccessor = new SupplierReadAccessor(prisma);
 const reportReadAccessor = new ReportReadAccessor(prisma);
 const shelfRepo = new ShelfRepository(prisma);
 const rackRepo = new RackRepository(prisma);
-const slotRepo = new SlotRepository(prisma);
+export const slotRepo = new SlotRepository(prisma);
 // Removed duplicate slotDetailRepo and slotDetailUsecase declarations (already declared above)
 const invoiceReadAccessor = new InvoiceReadAccessor(prisma);
 
@@ -386,4 +394,14 @@ export const createEmployeeWithAccountUsecase = buildCreateEmployeeWithAccountUs
   employeeAccountRepo,
   passwordService
 );
+import { ListStocktakingsUsecase } from "./application/services/stocktaking/list-stocktakings.usecase";
+import { GetStocktakingByIdUsecase } from "./application/services/stocktaking/get-stocktaking-by-id.usecase";
+
+export const listStocktakingsUsecase = new ListStocktakingsUsecase(stocktakingRepo);
+export const getStocktakingByIdUsecase = new GetStocktakingByIdUsecase(stocktakingRepo);
+import { GetInvoicesUsecase } from "./application/services/invoice/get-invoices.usecase";
+import { GetInvoiceByIdUsecase } from "./application/services/invoice/get-invoice-by-id.usecase";
+
+export const getInvoicesUsecase = new GetInvoicesUsecase(invoiceRepo);
+export const getInvoiceByIdUsecase = new GetInvoiceByIdUsecase(invoiceRepo);
 

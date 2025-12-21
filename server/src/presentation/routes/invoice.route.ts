@@ -2,7 +2,12 @@ import { Router } from "express";
 import { authenticationMiddleware } from "../middlewares/authentication.middleware";
 import { authorizationMiddleware } from "../middlewares/authorization.middleware";
 import { controller } from "../controllers/controller";
-import { createInvoiceUsecase,getMyInvoicesUsecase } from "../../composition-root";
+import { 
+    createInvoiceUsecase,
+    getMyInvoicesUsecase,
+    getInvoicesUsecase,
+    getInvoiceByIdUsecase 
+} from "../../composition-root";
 
 const router = Router();
 router.use(authenticationMiddleware);
@@ -13,4 +18,7 @@ router.get("/mine", (req, res) => {
 	if (!authId) return res.status(401).jsend.fail("Missing user id");
 	return controller(getMyInvoicesUsecase)({ ...req, authId }, res);
 });
+router.get("/", controller(getInvoicesUsecase));
+router.get("/:id", controller(getInvoiceByIdUsecase));
+
 export default router;

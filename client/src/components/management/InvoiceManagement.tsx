@@ -1,34 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { Plus, Trash2, Search, ShoppingCart, Receipt, Check, ChevronsUpDown, Printer, Tag, User } from 'lucide-react';
+import { Plus, Trash2, Search, ShoppingCart, Receipt, Check, ChevronsUpDown, Printer, Tag, User, Loader2, Loader } from 'lucide-react';
+import html2canvas from 'html2canvas';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { toast } from 'sonner';
 import { ProductUnit, ProductStatus, EmployeePosition } from '@/types';
 import type { Employee, Product } from '@/types';
+import { getInvoices, getInvoiceById, createInvoice } from '@/services/invoice.service';
+import { apiClient } from '@/services/api-client';
+import { getPromotionsForProduct } from '@/services/promotion.service';
 
 // Enums và Types cho Invoice Management
-enum PromotionType {
-  PERCENTAGE = 'PERCENTAGE',
-  FIXED = 'FIXED',
-}
-
-interface Promotion {
-  id: number;
-  name: string;
-  type: PromotionType;
-  value: number;
-  startDate: Date;
-  endDate: Date;
-  productId: number;
-}
+import { PromotionType, Promotion } from '@/types';
 
 interface Customer {
   id: number;
@@ -42,11 +33,8 @@ interface InvoiceDetail {
   productId: number;
   product: Product;
   quantity: number;
-  price: number;
   promotionId: number | null;
   promotion: Promotion | null;
-  discountAmount: number;
-  finalPrice: number;
 }
 
 interface Invoice {
@@ -64,46 +52,21 @@ interface Invoice {
   details: InvoiceDetail[];
 }
 
-// Mock data - synced với ProductManagement
-const mockProducts: Product[] = [
-  { id: 1, name: 'Coca Cola 330ml', barcode: 8934673123456, price: 10000, amount: 150, unit: ProductUnit.UNKNOWN, status: ProductStatus.GOOD },
-  { id: 2, name: 'Pepsi 330ml', barcode: 8934673123457, price: 9500, amount: 200, unit: ProductUnit.UNKNOWN, status: ProductStatus.GOOD },
-  { id: 3, name: 'Bánh Oreo', barcode: 8934673123458, price: 15000, amount: 80, unit: ProductUnit.UNKNOWN, status: ProductStatus.GOOD },
-  { id: 4, name: 'Mì Hảo Hảo', barcode: 8934673123459, price: 4000, amount: 300, unit: ProductUnit.UNKNOWN, status: ProductStatus.GOOD },
-  { id: 5, name: 'Sữa TH True Milk', barcode: 8934673123460, price: 28000, amount: 50, unit: ProductUnit.UNKNOWN, status: ProductStatus.GOOD },
-];
-
-const mockPromotions: Promotion[] = [
-  { id: 1, name: 'Giảm 10% Coca', type: PromotionType.PERCENTAGE, value: 10, startDate: new Date('2025-11-01'), endDate: new Date('2025-12-31'), productId: 1 },
-  { id: 2, name: 'Giảm 5000đ Oreo', type: PromotionType.FIXED, value: 5000, startDate: new Date('2025-11-01'), endDate: new Date('2025-12-31'), productId: 3 },
-  { id: 3, name: 'Giảm 15% Sữa TH', type: PromotionType.PERCENTAGE, value: 15, startDate: new Date('2025-11-01'), endDate: new Date('2025-12-31'), productId: 5 },
-];
-
-const mockCustomers: Customer[] = [
-  { id: 1, name: 'Nguyễn Văn A', phone: '0901234567', loyaltyPoints: 5000 },
-  { id: 2, name: 'Trần Thị B', phone: '0912345678', loyaltyPoints: 3000 },
-  { id: 3, name: 'Lê Văn C', phone: '0923456789', loyaltyPoints: 10000 },
-  { id: 4, name: 'Phạm Thị D', phone: '0934567890', loyaltyPoints: 2500 },
-];
-
-const salesStaff: Employee[] = [
-  { id: 1, name: 'Nguyễn Văn Kiệm', position: EmployeePosition.INVENTORY },
-  { id: 2, name: 'Trần Thị Nhập', position: EmployeePosition.RECEIVING },
-  { id: 3, name: 'Lê Văn Bán', position: EmployeePosition.SALES },
-];
 
 interface InvoiceManagementProps {
   currentUser?: { id: number; position: string };
 }
 
 export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
-  const [products, setProducts] = useState<Product[]>(mockProducts);
-  const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreatingInvoice, setIsCreatingInvoice] = useState(false);
   const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
   const [currentInvoice, setCurrentInvoice] = useState<Invoice | null>(null);
+  const invoiceContentRef = useRef<HTMLDivElement>(null);
 
   // Form state
   const [productBarcode, setProductBarcode] = useState('');
@@ -118,47 +81,32 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
 
   const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
 
-  const filteredInvoices = invoices.filter(invoice =>
-    invoice.id.toString().includes(searchTerm) ||
-    invoice.employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    invoice.customer?.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredInvoices = invoices.filter(invoice => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return true;
+    // Tìm theo mã hóa đơn (id hoặc mã HDxxx), tên nhân viên, tên khách hàng, số điện thoại khách hàng
+    const idMatch = invoice.id.toString().includes(term);
+    // Hỗ trợ tìm theo mã hóa đơn dạng HD001, HD002...
+    const code = `hd${invoice.id.toString().padStart(3, '0')}`;
+    const codeMatch = code.includes(term);
+    const employeeMatch = invoice.employee?.name?.toLowerCase().includes(term);
+    const customerNameMatch = invoice.customer?.name?.toLowerCase().includes(term);
+    const customerPhoneMatch = invoice.customer?.phone?.toLowerCase().includes(term);
+    return idMatch || codeMatch || employeeMatch || customerNameMatch || customerPhoneMatch;
+  });
 
-  // Tìm khuyến mãi tốt nhất cho sản phẩm
-  const findBestPromotion = (productId: number): Promotion | null => {
-    const today = new Date();
-    const applicablePromotions = mockPromotions.filter(p => 
-      p.productId === productId &&
-      p.startDate <= today &&
-      p.endDate >= today
-    );
 
-    if (applicablePromotions.length === 0) return null;
 
-    // So sánh và tìm khuyến mãi tốt nhất
-    let bestPromo = applicablePromotions[0];
-    let maxDiscount = calculateDiscountAmount(applicablePromotions[0], products.find(p => p.id === productId)?.price || 0);
-
-    applicablePromotions.forEach(promo => {
-      const discount = calculateDiscountAmount(promo, products.find(p => p.id === productId)?.price || 0);
-      if (discount > maxDiscount) {
-        maxDiscount = discount;
-        bestPromo = promo;
-      }
-    });
-
-    return bestPromo;
-  };
-
+  // Tính giảm giá dựa trên promotion và giá sản phẩm
   const calculateDiscountAmount = (promotion: Promotion, price: number): number => {
-    if (promotion.type === PromotionType.PERCENTAGE) {
+    if (promotion.promotionType === PromotionType.PERCENTAGE) {
       return (price * promotion.value) / 100;
     } else {
       return promotion.value;
     }
-  };
+  }
 
-  const handleSearchProduct = () => {
+  const handleSearchProduct = async () => {
     if (!productBarcode) {
       toast.error('Vui lòng nhập mã hàng hóa hoặc tên sản phẩm');
       return;
@@ -177,67 +125,78 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
       return;
     }
 
-    // Tìm khuyến mãi tốt nhất
-    const promotion = findBestPromotion(product.id);
-    
+    // Tìm khuyến mãi tốt nhất qua API
+    setBestPromotion(null);
     setSearchedProduct(product);
-    setBestPromotion(promotion);
     setQuantity(1);
-
-    if (promotion) {
+    try {
+      const promotions = await getPromotionsForProduct(product.id);
+      const now = new Date();
+      const validPromotions = promotions.filter(p => new Date(p.startedAt) <= now && new Date(p.endedAt) >= now);
+      // Chọn khuyến mãi có giá trị giảm cao nhất
+      const best = validPromotions.reduce((prev, curr) => {
+        const prevDiscount = prev.promotionType === PromotionType.PERCENTAGE ? prev.value : prev.value;
+        const currDiscount = curr.promotionType === PromotionType.PERCENTAGE ? curr.value : curr.value;
+        return currDiscount > prevDiscount ? curr : prev;
+      }, validPromotions[0]);
+      setBestPromotion(best || null);
+      if (best) {
+        toast.success(`Tìm thấy: ${product.name}`, {
+          description: `Khuyến mãi: ${best.name} - Giảm ${best.promotionType === PromotionType.PERCENTAGE ? best.value + '%' : best.value.toLocaleString('vi-VN') + 'đ'}`,
+        });
+      } else {
+        toast.success(`Tìm thấy: ${product.name}`, {
+          description: 'Không có khuyến mãi',
+        });
+      }
+    } catch (err) {
       toast.success(`Tìm thấy: ${product.name}`, {
-        description: `Khuyến mãi: ${promotion.name} - Giảm ${promotion.type === PromotionType.PERCENTAGE ? promotion.value + '%' : promotion.value.toLocaleString('vi-VN') + 'đ'}`,
-      });
-    } else {
-      toast.success(`Tìm thấy: ${product.name}`, {
-        description: 'Không có khuyến mãi',
+        description: 'Không thể kiểm tra khuyến mãi',
       });
     }
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!searchedProduct) {
       toast.error('Vui lòng tìm kiếm sản phẩm trước');
       return;
     }
-
     if (quantity <= 0) {
       toast.error('Số lượng phải lớn hơn 0');
       return;
     }
-
     // Kiểm tra đã có trong giỏ chưa
     const existingItem = cart.find(item => item.productId === searchedProduct.id);
     if (existingItem) {
       toast.error('Sản phẩm đã có trong giỏ hàng');
       return;
     }
-
-    const discountAmount = bestPromotion 
-      ? calculateDiscountAmount(bestPromotion, searchedProduct.price)
-      : 0;
-    const finalPrice = (searchedProduct.price - discountAmount) * quantity;
-
+    // Tự động tìm khuyến mãi tốt nhất mỗi lần thêm qua API
+    let promotion: Promotion | null = null;
+    try {
+      const promotions = await getPromotionsForProduct(searchedProduct.id);
+      const now = new Date();
+      const validPromotions = promotions.filter(p => new Date(p.startedAt) <= now && new Date(p.endedAt) >= now);
+      promotion = validPromotions.reduce((prev, curr) => {
+        const prevDiscount = prev.promotionType === PromotionType.PERCENTAGE ? prev.value : prev.value;
+        const currDiscount = curr.promotionType === PromotionType.PERCENTAGE ? curr.value : curr.value;
+        return currDiscount > prevDiscount ? curr : prev;
+      }, validPromotions[0]);
+    } catch {}
     const newDetail: InvoiceDetail = {
       id: cart.length + 1,
       productId: searchedProduct.id,
       product: searchedProduct,
       quantity,
-      price: searchedProduct.price,
-      promotionId: bestPromotion?.id || null,
-      promotion: bestPromotion,
-      discountAmount,
-      finalPrice,
+      promotionId: promotion?.id || null,
+      promotion: promotion || null,
     };
-
     setCart([...cart, newDetail]);
-    
     // Reset form
     setSearchedProduct(null);
     setBestPromotion(null);
     setProductBarcode('');
     setQuantity(1);
-
     toast.success(`Đã thêm ${searchedProduct.name} vào giỏ hàng`);
   };
 
@@ -246,36 +205,85 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
     toast.info('Đã xóa khỏi giỏ hàng');
   };
 
+  // Tính toán lại chỉ dựa vào product.price và promotion
   const calculateSubtotal = (): number => {
-    return cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  };
+    return cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  }
 
   const calculateTotalDiscount = (): number => {
-    return cart.reduce((sum, item) => sum + (item.discountAmount * item.quantity), 0);
-  };
+    return cart.reduce((sum, item) => {
+      if (item.promotion) {
+        return sum + calculateDiscountAmount(item.promotion, item.product.price) * item.quantity;
+      }
+      return sum;
+    }, 0);
+  }
 
   const calculatePointsDiscount = (): number => {
-    // 1 điểm = 1 VNĐ
     return pointsToUse;
-  };
+  }
 
   const calculateTotal = (): number => {
     const subtotal = calculateSubtotal();
     const promotionDiscount = calculateTotalDiscount();
     const pointsDiscount = calculatePointsDiscount();
     return subtotal - promotionDiscount - pointsDiscount;
-  };
+  }
 
-  const handleStartCheckout = () => {
-    setIsCreatingInvoice(true);
-    setCart([]);
-    setSelectedCustomerId(0);
-    setPointsToUse(0);
-    setProductBarcode('');
-    setSearchedProduct(null);
-    setBestPromotion(null);
-    setQuantity(1);
-  };
+  // Fetch data từ API khi mount
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [productsData, customersData, invoicesData] = await Promise.all([
+          apiClient.get('/products'),
+          apiClient.get('/employee-accounts'),
+          getInvoices()
+        ]);
+  setProducts(Array.isArray(productsData) ? productsData : []);
+        setCustomers(customersData as Customer[]);
+        // Map InvoiceWithDetails[] to Invoice[]
+        setInvoices((invoicesData as any[]).map((inv) => ({
+          id: inv.id,
+          employeeId: inv.employeeId,
+          employee: inv.employee,
+          customerId: inv.userId ?? null,
+          customer: inv.user
+            ? {
+                id: inv.user.id,
+                name: inv.user.name,
+                phone: inv.user.phone ?? '',
+                loyaltyPoints: inv.user.loyaltyPoints ?? 0,
+              }
+            : null,
+          pointsUsed: inv.pointsUsed ?? inv.usedPoint ?? 0,
+          pointsDiscount: inv.pointsDiscount ?? 0,
+          subtotal: inv.subtotal ?? 0,
+          totalDiscount: inv.totalDiscount ?? 0,
+          total: inv.total ?? 0,
+          createdAt: new Date(inv.createdAt),
+          details: Array.isArray(inv.invoiceDetails)
+            ? inv.invoiceDetails.map((d: any) => ({
+                id: d.id ?? 0,
+                productId: d.productId,
+                product: d.product,
+                quantity: d.quantity,
+                price: d.price ?? 0,
+                promotionId: d.promotionId ?? null,
+                promotion: d.promotion ?? null,
+                discountAmount: d.discountAmount ?? 0,
+                finalPrice: d.finalPrice ?? 0,
+              }))
+            : [],
+        })));
+      } catch (err: any) {
+        toast.error('Lỗi tải dữ liệu hóa đơn');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const handleCancelCheckout = () => {
     setIsCreatingInvoice(false);
@@ -288,167 +296,163 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
     setQuantity(1);
   };
 
-  const handleConfirmPayment = () => {
-    // Kiểm tra mã nhân viên
+  const handleConfirmPayment = async () => {
     if (!currentUser) {
       toast.error('Không tìm thấy thông tin nhân viên');
       return;
     }
-
-    // Kiểm tra position của currentUser
     if (currentUser.position !== 'SALES') {
       toast.error('Chỉ nhân viên "Bán hàng" mới có quyền thanh toán');
       return;
     }
-
-    const employee = salesStaff.find(e => e.id === currentUser.id) || {
-      id: currentUser.id,
-      name: 'Nhân viên',
-      position: EmployeePosition.SALES
-    };
-
-    // Kiểm tra mã khách hàng (nếu có)
-    let customer: Customer | null = null;
-    if (selectedCustomerId > 0) {
-      customer = customers.find(c => c.id === selectedCustomerId) || null;
-      if (!customer) {
-        toast.error('Mã khách hàng không tồn tại');
-        return;
-      }
-
-      // Kiểm tra điểm tích lũy
-      if (pointsToUse > customer.loyaltyPoints) {
-        toast.error(`Khách hàng chỉ có ${customer.loyaltyPoints} điểm`);
-        return;
-      }
-    } else {
-      if (pointsToUse > 0) {
-        toast.error('Vui lòng chọn khách hàng để sử dụng điểm tích lũy');
-        return;
-      }
-    }
-
-    // Kiểm tra giỏ hàng
     if (cart.length === 0) {
       toast.error('Giỏ hàng trống');
       return;
     }
-
-    // Kiểm tra từng hàng hóa
-    for (const item of cart) {
-      const product = products.find(p => p.id === item.productId);
-      if (!product) {
-        toast.error(`Mã hàng hóa không tồn tại`);
-        return;
-      }
-
-      // Kiểm tra số lượng <= tồn kho
-      if (item.quantity > product.amount) {
-        toast.error(`${product.name} chỉ còn ${product.amount} sản phẩm trong kho`);
-        return;
-      }
-
-      // Kiểm tra mã khuyến mãi (nếu có)
-      if (item.promotionId) {
-        const promotion = mockPromotions.find(p => p.id === item.promotionId);
-        if (!promotion) {
-          toast.error(`Mã khuyến mãi không hợp lệ cho ${product.name}`);
-          return;
-        }
-
-        // Kiểm tra khuyến mãi có khớp với sản phẩm không
-        if (promotion.productId !== product.id) {
-          toast.error(`Khuyến mãi không áp dụng cho ${product.name}`);
-          return;
-        }
-
-        // Kiểm tra thời hạn khuyến mãi
-        const today = new Date();
-        if (today < promotion.startDate || today > promotion.endDate) {
-          toast.error(`Khuyến mãi cho ${product.name} đã hết hạn`);
-          return;
-        }
-      }
+    // Validate điểm sử dụng
+    if (selectedCustomer && pointsToUse > selectedCustomer.loyaltyPoints) {
+      toast.error('Số điểm sử dụng vượt quá điểm tích lũy của khách hàng');
+      return;
     }
-
-    // Tính toán hóa đơn
-    const subtotal = calculateSubtotal();
-    const totalDiscount = calculateTotalDiscount();
-    const pointsDiscount = calculatePointsDiscount();
-    const total = calculateTotal();
-
-    // Tạo hóa đơn
-    const newId = Math.max(...invoices.map(i => i.id), 0) + 1;
-    const newInvoice: Invoice = {
-      id: newId,
-      employeeId: employee.id,
-      employee,
-      customerId: customer?.id || null,
-      customer,
-      pointsUsed: pointsToUse,
-      pointsDiscount,
-      subtotal,
-      totalDiscount: totalDiscount + pointsDiscount,
-      total,
-      createdAt: new Date(),
-      details: cart,
-    };
-
-    // Cập nhật số lượng hàng hóa
-    const updatedProducts = products.map(product => {
-      const cartItem = cart.find(item => item.productId === product.id);
-      if (cartItem) {
-        return {
-          ...product,
-          amount: product.amount - cartItem.quantity,
-        };
-      }
-      return product;
-    });
-    setProducts(updatedProducts);
-
-    // Cập nhật điểm tích lũy khách hàng
-    if (customer) {
-      const updatedCustomers = customers.map(c => {
-        if (c.id === customer.id) {
-          // Trừ điểm đã sử dụng, thêm điểm mới (1% tổng tiền)
-          const newPoints = Math.floor(total * 0.01);
-          return {
-            ...c,
-            loyaltyPoints: c.loyaltyPoints - pointsToUse + newPoints,
-          };
-        }
-        return c;
-      });
-      setCustomers(updatedCustomers);
+    setLoading(true);
+    try {
+      const invoiceData = {
+        employeeId: currentUser.id,
+        userId: selectedCustomerId || null,
+        usedPoint: pointsToUse,
+        details: cart.map(item => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          promotionId: item.promotionId,
+        }))
+      };
+      await createInvoice(invoiceData);
+      toast.success('Thanh toán thành công!');
+      // Reload danh sách hóa đơn
+      const invoicesData = await getInvoices();
+      setInvoices((invoicesData as any[]).map((inv) => ({
+        id: inv.id,
+        employeeId: inv.employeeId,
+        employee: inv.employee,
+        customerId: inv.userId ?? null,
+        customer: inv.user
+          ? {
+              id: inv.user.id,
+              name: inv.user.name,
+              phone: inv.user.phone ?? '',
+              loyaltyPoints: inv.user.loyaltyPoints ?? 0,
+            }
+          : null,
+        pointsUsed: inv.pointsUsed ?? inv.usedPoint ?? 0,
+        pointsDiscount: inv.pointsDiscount ?? 0,
+        subtotal: inv.subtotal ?? 0,
+        totalDiscount: inv.totalDiscount ?? 0,
+        total: inv.total ?? 0,
+        createdAt: new Date(inv.createdAt),
+        details: Array.isArray(inv.invoiceDetails)
+          ? inv.invoiceDetails.map((d: any) => ({
+              id: d.id ?? 0,
+              productId: d.productId,
+              product: d.product,
+              quantity: d.quantity,
+              price: d.price ?? 0,
+              promotionId: d.promotionId ?? null,
+              promotion: d.promotion ?? null,
+              discountAmount: d.discountAmount ?? 0,
+              finalPrice: d.finalPrice ?? 0,
+            }))
+          : [],
+      })));
+      setIsCreatingInvoice(false);
+      setCart([]);
+      setSelectedCustomerId(0);
+      setPointsToUse(0);
+    } catch (err: any) {
+      toast.error(err.message || 'Lỗi tạo hóa đơn');
+    } finally {
+      setLoading(false);
     }
-
-    // Lưu hóa đơn
-    setInvoices([newInvoice, ...invoices]);
-
-    // Reset form
-    setIsCreatingInvoice(false);
-    setCart([]);
-    setSelectedCustomerId(0);
-    setPointsToUse(0);
-
-    // Hiển thị/in hóa đơn
-    setCurrentInvoice(newInvoice);
-    setShowInvoiceDialog(true);
-
-    toast.success('Thanh toán thành công!', {
-      description: `Hóa đơn HD${newId.toString().padStart(3, '0')} - Tổng tiền: ${total.toLocaleString('vi-VN')}đ`,
-    });
   };
 
-  const handlePrintInvoice = () => {
+  // Xem chi tiết hóa đơn từ API (không dùng price, discountAmount, finalPrice từ backend)
+  const handleViewInvoice = async (invoiceId: number) => {
+    setLoading(true);
+    try {
+      const detail = await getInvoiceById(invoiceId);
+      setCurrentInvoice({
+        id: detail.id,
+        employeeId: detail.employeeId,
+        employee: detail.employee ?? { id: 0, name: 'N/A', position: EmployeePosition.SALES },
+        customerId: detail.userId ?? null,
+        customer: detail.user
+          ? {
+              id: detail.user.id,
+              name: detail.user.name,
+              phone: '',
+              loyaltyPoints: 0,
+            }
+          : null,
+        pointsUsed: detail.usedPoint ?? 0,
+        pointsDiscount: 0,
+        subtotal: Array.isArray(detail.invoiceDetails)
+          ? detail.invoiceDetails.reduce((sum, d) => {
+              const price = d.product?.price || 0;
+              const qty = typeof d.quantity === 'number' ? d.quantity : 0;
+              return sum + price * qty;
+            }, 0)
+          : 0,
+        totalDiscount: Array.isArray(detail.invoiceDetails)
+          ? detail.invoiceDetails.reduce((sum, d) => {
+              if (d.promotion) {
+                const discount = calculateDiscountAmount(d.promotion, d.product?.price || 0);
+                const qty = typeof d.quantity === 'number' ? d.quantity : 0;
+                return sum + discount * qty;
+              }
+              return sum;
+            }, 0)
+          : 0,
+        total: typeof detail.total === 'number' ? detail.total : 0,
+        createdAt: new Date(detail.createdAt),
+        details: Array.isArray(detail.invoiceDetails)
+          ? detail.invoiceDetails.map((d: any) => ({
+              id: d.id,
+              productId: d.productId,
+              product: d.product,
+              quantity: d.quantity,
+              promotionId: d.promotionId ?? null,
+              promotion: d.promotion ?? null,
+            }))
+          : [],
+      });
+      setShowInvoiceDialog(true);
+    } catch (err: any) {
+      toast.error('Không thể tải chi tiết hóa đơn');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePrintInvoice = async () => {
     if (!currentInvoice) return;
-    
-    // Mock print functionality
-    console.log('Printing invoice:', currentInvoice);
-    toast.success('Đang in hóa đơn...', {
-      description: `HD${currentInvoice.id.toString().padStart(3, '0')}`,
-    });
+    if (!invoiceContentRef.current) {
+      toast.error('Không tìm thấy nội dung hóa đơn để in');
+      return;
+    }
+    try {
+      const canvas = await html2canvas(invoiceContentRef.current, { backgroundColor: '#fff', scale: 2 });
+      const dataUrl = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `HoaDon_HD${currentInvoice.id.toString().padStart(3, '0')}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('Đã tải hình ảnh hóa đơn!', {
+        description: `HD${currentInvoice.id.toString().padStart(3, '0')}`,
+      });
+    } catch (err) {
+      toast.error('Lỗi khi tải hình ảnh hóa đơn');
+    }
   };
 
   return (
@@ -459,7 +463,7 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
           <div className="flex justify-between items-center">
             <CardTitle className="text-blue-900">Quản Lý Hóa Đơn</CardTitle>
             {!isCreatingInvoice && (
-              <Button onClick={handleStartCheckout} className="bg-blue-600 hover:bg-blue-700">
+              <Button onClick={() => setIsCreatingInvoice(true)} className="bg-blue-600 hover:bg-blue-700">
                 <Plus className="mr-2 h-4 w-4" />
                 Thanh toán mới
               </Button>
@@ -468,8 +472,10 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
         </CardHeader>
       </Card>
 
+
+
       {/* Checkout Screen */}
-      {isCreatingInvoice && (
+      {!loading && isCreatingInvoice && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left: Product Search & Cart */}
           <div className="lg:col-span-2 space-y-6">
@@ -514,7 +520,9 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
                           <CommandGroup>
                             {products.map((product) => {
                               const isInCart = cart.some(item => item.productId === product.id);
-                              const promotion = findBestPromotion(product.id);
+                              // Lấy khuyến mãi tốt nhất qua API (đồng bộ hóa với bestPromotion nếu đã chọn)
+                              // Để tránh gọi API nhiều lần, chỉ hiển thị icon nếu bestPromotion trùng product
+                              const promotion = (searchedProduct && searchedProduct.id === product.id) ? bestPromotion : null;
                               return (
                                 <CommandItem
                                   key={product.id}
@@ -627,7 +635,7 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
                           <span className="font-semibold">{bestPromotion.name}</span>
                         </div>
                         <p className="text-sm text-green-600">
-                          Giảm: {bestPromotion.type === PromotionType.PERCENTAGE 
+                          Giảm: {bestPromotion.promotionType === PromotionType.PERCENTAGE 
                             ? `${bestPromotion.value}%` 
                             : `${bestPromotion.value.toLocaleString('vi-VN')}đ`}
                         </p>
@@ -705,11 +713,11 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
                               </div>
                             </TableCell>
                             <TableCell>{item.quantity}</TableCell>
-                            <TableCell>{item.price.toLocaleString('vi-VN')}đ</TableCell>
+                            <TableCell>{item.product.price.toLocaleString('vi-VN')}đ</TableCell>
                             <TableCell className="text-green-600">
-                              {item.discountAmount > 0 ? `-${item.discountAmount.toLocaleString('vi-VN')}đ` : '-'}
+                              {item.promotion ? `-${calculateDiscountAmount(item.promotion, item.product.price).toLocaleString('vi-VN')}đ` : '-'}
                             </TableCell>
-                            <TableCell className="font-semibold">{item.finalPrice.toLocaleString('vi-VN')}đ</TableCell>
+                            <TableCell className="font-semibold">{((item.product.price - (item.promotion ? calculateDiscountAmount(item.promotion, item.product.price) : 0)) * item.quantity).toLocaleString('vi-VN')}đ</TableCell>
                             <TableCell className="text-right">
                               <Button
                                 variant="ghost"
@@ -821,6 +829,7 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
                         value={pointsToUse}
                         onChange={(e) => setPointsToUse(Math.min(parseInt(e.target.value) || 0, selectedCustomer.loyaltyPoints))}
                         className="border-purple-200"
+                        disabled={loading}
                       />
                       <p className="text-xs text-gray-500">1 điểm = 1 VNĐ</p>
                     </div>
@@ -839,6 +848,10 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
               </CardHeader>
               <CardContent className="p-4 space-y-3">
                 <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Số sản phẩm:</span>
+                    <span>{cart.reduce((sum, item) => sum + item.quantity, 0)}</span>
+                  </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Tạm tính:</span>
                     <span>{calculateSubtotal().toLocaleString('vi-VN')}đ</span>
@@ -862,11 +875,14 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
                 <div className="space-y-2 pt-3">
                   <Button 
                     onClick={handleConfirmPayment}
-                    className="w-full bg-green-600 hover:bg-green-700"
-                    disabled={cart.length === 0}
+                    className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-60"
+                    disabled={cart.length === 0 || loading}
                   >
-                    <Check className="mr-2 h-4 w-4" />
-                    Xác nhận thanh toán
+                    {loading ? (
+                      <span className="flex items-center"><Loader className="animate-spin h-4 w-4 mr-2" /> Đang xử lý...</span>
+                    ) : (
+                      <><Check className="mr-2 h-4 w-4" />Xác nhận thanh toán</>
+                    )}
                   </Button>
                   <Button 
                     variant="outline"
@@ -901,7 +917,12 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
               </Button>
             </div>
 
-            {invoices.length === 0 ? (
+            {loading ? (
+              <div className="text-center py-12 text-gray-500">
+                <Loader2 className="h-8 w-8 animate-spin inline-block mr-2" />
+                Đang tải dữ liệu...
+              </div>
+            ) : invoices.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
                 <Receipt className="h-12 w-12 mx-auto mb-3 opacity-20" />
                 <p>Chưa có hóa đơn nào</p>
@@ -928,16 +949,13 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
                         <TableCell>{invoice.createdAt.toLocaleDateString('vi-VN')}</TableCell>
                         <TableCell>{invoice.employee.name}</TableCell>
                         <TableCell>{invoice.customer?.name || 'Khách lẻ'}</TableCell>
-                        <TableCell>{invoice.details.length}</TableCell>
+                        <TableCell>{Array.isArray(invoice.details) && invoice.details.length > 0 ? invoice.details.length : (Array.isArray((invoice as any).invoiceDetails) ? (invoice as any).invoiceDetails.length : 0)}</TableCell>
                         <TableCell className="font-semibold">{invoice.total.toLocaleString('vi-VN')}đ</TableCell>
                         <TableCell className="text-right">
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => {
-                              setCurrentInvoice(invoice);
-                              setShowInvoiceDialog(true);
-                            }}
+                            onClick={() => handleViewInvoice(invoice.id)}
                             className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                           >
                             <Receipt className="h-4 w-4" />
@@ -955,7 +973,7 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
 
       {/* Invoice Display Dialog */}
       <Dialog open={showInvoiceDialog} onOpenChange={setShowInvoiceDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent id="invoice-dialog-content" className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white">
           <DialogHeader>
             <DialogTitle>Hóa Đơn Bán Hàng</DialogTitle>
             <DialogDescription className="text-sm text-gray-500">
@@ -963,7 +981,7 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
             </DialogDescription>
           </DialogHeader>
           {currentInvoice && (
-            <div className="space-y-4">
+            <div ref={invoiceContentRef} className="space-y-4 bg-white p-6 rounded-lg shadow max-w-xl mx-auto">
               {/* Invoice Header */}
               <div className="text-center border-b pb-4">
                 <h2 className="text-2xl font-bold">CỬA HÀNG ABC</h2>
@@ -996,28 +1014,15 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
                     <TableRow className="bg-gray-50">
                       <TableHead>Sản phẩm</TableHead>
                       <TableHead className="text-center">SL</TableHead>
-                      <TableHead className="text-right">Đơn giá</TableHead>
-                      <TableHead className="text-right">Giảm</TableHead>
-                      <TableHead className="text-right">Thành tiền</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {currentInvoice.details.map((detail, index) => (
                       <TableRow key={index}>
                         <TableCell>
-                          <div>
-                            <p>{detail.product.name}</p>
-                            {detail.promotion && (
-                              <p className="text-xs text-green-600">{detail.promotion.name}</p>
-                            )}
-                          </div>
+                          {detail.product?.name || ''}
                         </TableCell>
                         <TableCell className="text-center">{detail.quantity}</TableCell>
-                        <TableCell className="text-right">{detail.price.toLocaleString('vi-VN')}đ</TableCell>
-                        <TableCell className="text-right text-green-600">
-                          {detail.discountAmount > 0 ? `-${detail.discountAmount.toLocaleString('vi-VN')}đ` : '-'}
-                        </TableCell>
-                        <TableCell className="text-right font-semibold">{detail.finalPrice.toLocaleString('vi-VN')}đ</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -1026,14 +1031,6 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
 
               {/* Invoice Summary */}
               <div className="space-y-2 border-t pt-4">
-                <div className="flex justify-between">
-                  <span>Tạm tính:</span>
-                  <span>{currentInvoice.subtotal.toLocaleString('vi-VN')}đ</span>
-                </div>
-                <div className="flex justify-between text-green-600">
-                  <span>Tổng giảm giá:</span>
-                  <span>-{currentInvoice.totalDiscount.toLocaleString('vi-VN')}đ</span>
-                </div>
                 <div className="flex justify-between text-xl font-bold border-t pt-2">
                   <span>Tổng cộng:</span>
                   <span className="text-blue-600">{currentInvoice.total.toLocaleString('vi-VN')}đ</span>

@@ -86,14 +86,13 @@ export const createStocktaking = async (
  * Get All Stocktakings (NOT IMPLEMENTED)
  * Expected: GET /stocktakings
  */
-export const getStocktakings = async (
-  page: number = 1,
-  pageSize: number = 20
-): Promise<StocktakingWithDetails[]> => {
-  throw new Error(
-    'Chức năng lấy danh sách phiếu kiểm kê chưa được backend hỗ trợ. ' +
-    'Cần endpoint: GET /stocktakings'
-  )
+export const getStocktakings = async (): Promise<StocktakingWithDetails[]> => {
+  try {
+    const response = await apiClient.get<StocktakingWithDetails[]>('/stocktakings');
+    return response;
+  } catch (error: any) {
+    throw new Error(error?.response?.data?.message || 'Không thể lấy danh sách phiếu kiểm kê.');
+  }
 }
 
 /**
@@ -103,10 +102,12 @@ export const getStocktakings = async (
 export const getStocktakingById = async (
   stocktakingId: number
 ): Promise<StocktakingWithDetails> => {
-  throw new Error(
-    'Chức năng xem chi tiết phiếu kiểm kê chưa được backend hỗ trợ. ' +
-    'Cần endpoint: GET /stocktakings/:id'
-  )
+  try {
+    const response = await apiClient.get<StocktakingWithDetails>(`/stocktakings/${stocktakingId}`);
+    return response;
+  } catch (error: any) {
+    throw new Error(error?.response?.data?.message || 'Không thể lấy chi tiết phiếu kiểm kê.');
+  }
 }
 
 /**

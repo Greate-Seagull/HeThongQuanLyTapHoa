@@ -186,34 +186,27 @@ export function PromotionManagement() {
   }
 
   const handleDelete = (id: number, name: string) => {
-    setDeleteConfirm({ open: true, id, name })
+  setDeleteConfirm({ open: true, id, name })
   }
 
 const confirmDelete = async () => {
-    // 1. Tìm khuyến mãi đang chọn
-    const promotion = promotions.find((p) => p.id === deleteConfirm.id)
-
-    // 2. Kiểm tra ràng buộc: Nếu mảng details có phần tử
-    if (promotion && promotion.promotionDetails && promotion.promotionDetails.length > 0) {
-      toast.error(
-        `Không thể xóa khuyến mãi "${promotion.name}" vì đang được áp dụng cho ${promotion.promotionDetails.length} sản phẩm.`
-      )
-      setDeleteConfirm({ open: false, id: 0, name: '' })
-      return
-    }
-
     try {
       const data = await apiClient.delete(`/promotions/${deleteConfirm.id}`)
       if (data) {
         toast.success('Khuyến mãi đã được xóa thành công')
         fetchPromotions()
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error deleting promotion:', err)
-      // Thông báo lỗi cụ thể hơn
-      toast.error('Không thể xóa khuyến mãi. Có thể khuyến mãi này đã tồn tại trong các hóa đơn cũ.')
+      // Nếu backend trả về lỗi do đã có dữ liệu trong hóa đơn thì báo lỗi rõ ràng
+      const msg = err?.response?.data?.message || ''
+      if (typeof msg === 'string' && (msg.includes('hóa đơn') || msg.includes('invoice'))) {
+        toast.error('Không thể xóa khuyến mãi vì đã được sử dụng trong hóa đơn.')
+      } else {
+        toast.error('Không thể xóa khuyến mãi.')
+      }
     } finally {
-        setDeleteConfirm({ open: false, id: 0, name: '' })
+      setDeleteConfirm({ open: false, id: 0, name: '' })
     }
   }
 
@@ -222,53 +215,44 @@ const confirmDelete = async () => {
       toast.error('Vui lòng nhập tên khuyến mãi')
       return
     }
-
+    if (!formData.selectedProducts || formData.selectedProducts.length === 0) {
+      toast.error('Vui lòng chọn ít nhất 1 sản phẩm áp dụng khuyến mãi')
+      return
+    }
     if (!formData.startedAt || !formData.endedAt) {
       toast.error('Vui lòng chọn ngày bắt đầu và ngày kết thúc')
       return
     }
-
     const startDate = new Date(formData.startedAt)
     const endDate = new Date(formData.endedAt)
-
     if (startDate >= endDate) {
       toast.error('Ngày bắt đầu phải nhỏ hơn ngày kết thúc')
       return
     }
-
     if (formData.promotionType === PromotionType.PERCENTAGE && formData.value > 100) {
       toast.error('Phần trăm khuyến mãi không được vượt quá 100%')
       return
     }
-
     if (formData.value <= 0) {
       toast.error('Giá trị khuyến mãi phải lớn hơn 0')
       return
     }
 
-    if (formData.selectedProducts.length === 0) {
-      toast.error('Vui lòng chọn ít nhất một sản phẩm áp dụng')
-      return
-    }
     setIsSaving(true)
-
+    const promotionData: any = {
+      name: formData.name,
+      description: formData.description || null,
+      startedAt: new Date(formData.startedAt).toISOString(),
+      endedAt: new Date(formData.endedAt).toISOString(),
+      value: formData.value,
+      promotionType: formData.promotionType,
+      promotionDetails: formData.selectedProducts.map((id) => ({ productId: id })),
+    }
     try {
-      const promotionData = {
-        name: formData.name,
-        description: formData.description || null,
-        startedAt: new Date(formData.startedAt).toISOString(),
-        endedAt: new Date(formData.endedAt).toISOString(),
-        value: formData.value,
-        promotionType: formData.promotionType,
-        promotionDetails: formData.selectedProducts.map((id) => ({ productId: id })),
-      }
-
       console.log('=== SAVING PROMOTION ===')
       console.log('Is editing:', !!editingPromotion)
       console.log('Promotion data:', promotionData)
-
       if (editingPromotion) {
-        // TODO: Call PUT/PATCH API here
         const response = await apiClient.put<Promotion>(
           `/promotions/${editingPromotion.id}`,
           promotionData
@@ -278,14 +262,12 @@ const confirmDelete = async () => {
           fetchPromotions()
         }
       } else {
-        // TODO: Call POST API here
         const response = await apiClient.post<Promotion>('/promotions', promotionData)
         if (response) {
           toast.success('Khuyến mãi đã được tạo thành công')
           fetchPromotions()
         }
       }
-
       setIsDialogOpen(false)
     } catch (err) {
       console.error('Error saving promotion:', err)

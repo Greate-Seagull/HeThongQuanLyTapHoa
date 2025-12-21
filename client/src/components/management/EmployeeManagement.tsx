@@ -189,6 +189,17 @@ export function EmployeeManagement() {
       toast.error('Username không được để trống!');
       return;
     }
+    // Validate password khi thêm mới nhân viên
+    if (!editingAccount) {
+      if (!formData.password.trim()) {
+        toast.error('Mật khẩu không được để trống!');
+        return;
+      }
+      if (formData.password.length < 6) {
+        toast.error('Mật khẩu phải có ít nhất 6 ký tự!');
+        return;
+      }
+    }
     setIsSaving(true)
     try {
       let response
