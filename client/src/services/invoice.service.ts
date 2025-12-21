@@ -82,27 +82,22 @@ export const createInvoice = async (
  * 
  * Should support pagination: GET /invoices?page=1&pageSize=20
  */
-export const getInvoices = async (
-  page: number = 1,
-  pageSize: number = 20
-): Promise<InvoiceWithDetails[]> => {
-  throw new Error(
-    'Chức năng lấy danh sách hóa đơn chưa được backend hỗ trợ. ' +
-    'Cần endpoint: GET /invoices'
-  )
+
+
+export const getInvoices = async (): Promise<InvoiceWithDetails[]> => {
+  const res = await apiClient.get<InvoiceWithDetails[]>('/invoices');
+  return res;
 }
 
 /**
  * Get Invoice by ID (NOT IMPLEMENTED)
  * Expected: GET /invoices/:id
  */
-export const getInvoiceById = async (
-  invoiceId: number
-): Promise<InvoiceWithDetails> => {
-  throw new Error(
-    'Chức năng xem chi tiết hóa đơn chưa được backend hỗ trợ. ' +
-    'Cần endpoint: GET /invoices/:id'
-  )
+
+
+export const getInvoiceById = async (invoiceId: number): Promise<InvoiceWithDetails> => {
+  const res = await apiClient.get<InvoiceWithDetails>(`/invoices/${invoiceId}`);
+  return res;
 }
 
 /**

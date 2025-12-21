@@ -35,4 +35,36 @@ export class GoodReceiptPrismaRepository
 		if (transaction) return transaction.goodReceipt;
 		return this.client.goodReceipt;
 	}
+
+	// Lấy tất cả phiếu nhập kho
+	public async findAll(): Promise<any[]> {
+		const raws = await this.client.goodReceipt.findMany({
+			orderBy: { createdAt: 'desc' },
+			include: {
+				employee: true,
+				goodReceiptDetails: {
+					include: {
+						product: true
+					}
+				}
+			}
+		});
+		return raws;
+	}
+
+	// Lấy phiếu nhập kho theo id
+	public async findById(id: number): Promise<any | null> {
+		const raw = await this.client.goodReceipt.findUnique({
+			where: { id },
+			include: {
+				employee: true,
+				goodReceiptDetails: {
+					include: {
+						product: true
+					}
+				}
+			}
+		});
+		return raw;
+	}
 }

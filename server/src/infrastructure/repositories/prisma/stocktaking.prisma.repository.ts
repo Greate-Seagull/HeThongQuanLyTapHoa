@@ -40,4 +40,50 @@ export class StocktakingPrismaRepository
 		if (transaction) return transaction.stocktaking;
 		return this.client.stocktaking;
 	}
+
+	// Lấy tất cả phiếu kiểm kê kèm chi tiết, employee, product, slot, rack, shelf
+	async findAllWithDetails() {
+		return this.client.stocktaking.findMany({
+			include: {
+				employee: true,
+				stocktakingDetails: {
+					include: {
+						product: true,
+						slot: {
+							include: {
+								rack: {
+									include: {
+										shelf: true
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		});
+	}
+	// Lấy chi tiết phiếu kiểm kê theo id, bao gồm employee, stocktakingDetails, product, slot, rack, shelf
+	async findByIdWithDetails(id: number) {
+		return this.client.stocktaking.findUnique({
+			where: { id },
+			include: {
+				employee: true,
+				stocktakingDetails: {
+					include: {
+						product: true,
+						slot: {
+							include: {
+								rack: {
+									include: {
+										shelf: true
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		});
+	}
 }
