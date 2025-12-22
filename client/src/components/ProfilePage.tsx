@@ -45,7 +45,6 @@ interface UserProfile {
   phoneNumber?: string
   point?: number
   type: 'EMPLOYEE' | 'CUSTOMER'
-  employeeId?: number // Thêm trường này để lưu id của bảng Employee
 }
 
 interface ApiResponse {
@@ -53,18 +52,9 @@ interface ApiResponse {
   data: UserProfile
 }
 
-const API_BASE_URL = 'http://localhost:3000' // Thay URL này
+const API_BASE_URL = 'https://your-api-url.com/api' // Thay URL này
 
 export function ProfilePage() {
-  // Đóng dialog đổi mật khẩu
-  const handleClosePasswordDialog = () => {
-    setPasswordData({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: '',
-    });
-    setIsChangePasswordOpen(false);
-  }
   const [user, setUser] = useState<UserProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
@@ -98,12 +88,10 @@ export function ProfilePage() {
         const response = await apiClient.get<any>('/employee-accounts/profile', {
           skipAuthRedirect: true,
         } as any)
-        console.log('API /employee-accounts/profile response:', response);
-        // Luôn lấy employeeId từ response (không fallback sang id)
-        setUser({ ...response, type: 'EMPLOYEE', employeeId: response.employeeId });
-        console.log('user.employeeId set:', response.employeeId);
+
+        setUser({ ...response, type: 'EMPLOYEE' })
         setFormData({
-          id: response.employeeId,
+          id: response.id,
           name: response.name,
           username: response.username,
           phoneNumber: '',
@@ -143,86 +131,32 @@ export function ProfilePage() {
     setIsSaving(true)
     // Validation
     if (!formData.name.trim()) {
-      toast.error('Họ và tên không được để trống!');
-      setIsSaving(false);
-      return;
+      toast.error('Vui lòng nhập họ và tên')
+      setIsSaving(false)
+      return
     }
-    // Chỉ kiểm tra username nếu là EMPLOYEE hoặc MANAGER
-    if ((user?.type === 'EMPLOYEE' || user?.position === EmployeePosition.MANAGER)) {
-      if (!formData.username.trim()) {
-        toast.error('Tên đăng nhập không được để trống!');
-        setIsSaving(false);
-        return;
-      }
-      // Có thể bổ sung validate ký tự đặc biệt, độ dài nếu muốn
+
+    if (!formData.username.trim()) {
+      toast.error('Vui lòng nhập tên đăng nhập')
+      setIsSaving(false)
+      return
     }
 
     try {
-      let response;
-      if (user?.type === 'CUSTOMER') {
-        // Cập nhật thông tin khách hàng
-        response = await apiClient.put<UserProfile>('/accounts/profile', {
-          id: formData.id,
-          name: formData.name,
-          phoneNumber: formData.phoneNumber,
-        });
-      } else if (user?.position === EmployeePosition.MANAGER) {
-        // Chỉ MANAGER mới gửi employeeId lên /accounts/manager
-        const managerPayload = {
-          id: user.employeeId,
-          name: formData.name,
-          username: formData.username,
-        };
-        console.log('USER object:', user);
-        console.log('PUT /accounts/manager payload:', managerPayload);
-        response = await apiClient.put<UserProfile>('/accounts/manager', managerPayload);
-      } else if (user?.type === 'EMPLOYEE') {
-        // Nhân viên thường gửi id là EmployeeAccount id lên /employee-accounts
-        const employeePayload = {
-          id: user.id,
-          name: formData.name,
-          username: formData.username,
-        };
-        console.log('USER object:', user);
-        console.log('PUT /employee-accounts payload:', employeePayload);
-        response = await apiClient.put<UserProfile>('/employee-accounts', employeePayload);
-      } else {
-        toast.error('Không xác định được loại tài khoản để cập nhật!');
-        setIsSaving(false);
-        return;
-      }
-      const result = response;
-      // Đảm bảo giữ lại type và position đúng cho từng loại user
-      if (user?.position === EmployeePosition.MANAGER) {
-        setUser({
-          ...result,
-          type: 'EMPLOYEE',
-          position: EmployeePosition.MANAGER,
-          // Giữ lại employeeId cũ để lần sau vẫn gửi đúng
-          employeeId: user.employeeId,
-        });
-      } else if (user?.type === 'EMPLOYEE') {
-        setUser({
-          ...result,
-          type: 'EMPLOYEE',
-          position: user.position,
-          employeeId: user.employeeId,
-        });
-      } else if (user?.type === 'CUSTOMER') {
-        setUser({
-          ...result,
-          type: 'CUSTOMER',
-        });
-      } else {
-        setUser(result);
-      }
-      setIsEditing(false);
-      toast.success('Cập nhật thông tin thành công!');
+      const response = await apiClient.put<UserProfile>('/employee-accounts', {
+        id: formData.id,
+        name: formData.name,
+        username: formData.username,
+      })
+      const result = response
+      setUser(result)
+      setIsEditing(false)
+      toast.success('Cập nhật thông tin thành công!')
     } catch (error) {
-      console.error('Error updating profile:', error);
-      toast.error('Có lỗi xảy ra, vui lòng thử lại');
+      console.error('Error updating profile:', error)
+      toast.error('Có lỗi xảy ra, vui lòng thử lại')
     } finally {
-      setIsSaving(false);
+      setIsSaving(false)
     }
   }
 
@@ -272,17 +206,14 @@ export function ProfilePage() {
 
     try {
       let response;
-      if (user?.position === EmployeePosition.MANAGER) {
+      if (user?.type === 'EMPLOYEE' && user.position === EmployeePosition.MANAGER) {
+        // Gọi API đổi mật khẩu manager
         response = await apiClient.post('/accounts/manager/change-password', {
           currentPassword: passwordData.currentPassword,
           newPassword: passwordData.newPassword,
         });
-      } else if (user?.type === 'EMPLOYEE') {
-        response = await apiClient.post('/employee-accounts/change-password', {
-          currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword,
-        });
       } else {
+        // Gọi API đổi mật khẩu customer
         response = await apiClient.post('/accounts/change-password', {
           currentPassword: passwordData.currentPassword,
           newPassword: passwordData.newPassword,
@@ -297,17 +228,23 @@ export function ProfilePage() {
       setIsChangePasswordOpen(false);
     } catch (error: any) {
       console.error('Error changing password:', error);
-      const msg = error.response?.data?.message?.toLowerCase?.() || '';
-      if (msg.includes('mật khẩu') && msg.includes('sai')) {
-        toast.error('Mật khẩu hiện tại không đúng!');
-      } else if (error.response?.data?.message) {
+      if (error.response?.data?.message) {
         toast.error(error.response.data.message);
       } else {
-        toast.error('Mật khẩu hiện tại không đúng!');
+        toast.error('Có lỗi xảy ra, vui lòng thử lại');
       }
     } finally {
       setIsChangingPassword(false);
     }
+  }
+
+  const handleClosePasswordDialog = () => {
+    setPasswordData({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    })
+    setIsChangePasswordOpen(false)
   }
 
   const getPositionLabel = (position?: string) => {

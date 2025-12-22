@@ -41,7 +41,9 @@ export class ProductPrismaReadAccessor
   }
 
   async getProducts() {
-    return await this.client.product.findMany({
+    console.log('📦 ProductReadAccessor.getProducts() - fetching with slotDetails');
+    
+    const products = await this.client.product.findMany({
       select: {
         id: true,
         name: true,
@@ -49,24 +51,65 @@ export class ProductPrismaReadAccessor
         amount: true,
         unit: true,
         barcode: true,
+        status: true,
         categoryId: true,
         supplierId: true,
-        // Lấy thêm thông tin Category
         category: {
           select: {
             id: true,
             name: true,
           },
         },
-        // Lấy thêm thông tin Supplier
         supplier: {
           select: {
             id: true,
             name: true,
           },
         },
+        // ✅ CRITICAL: Include slotDetails with full relation tree
+        slotDetails: {
+          select: {
+            slotId: true,
+            productId: true,
+            slot: {
+              select: {
+                id: true,
+                name: true,
+                rackId: true,
+                rack: {
+                  select: {
+                    id: true,
+                    name: true,
+                    shelfId: true,
+                    shelf: {
+                      select: {
+                        id: true,
+                        name: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
+    
+    console.log(`📦 Fetched ${products.length} products`);
+    
+    // Log sample with slotDetails
+    if (products.length > 0) {
+      const sample = products[0];
+      console.log('📦 Sample product with slotDetails:', {
+        id: sample.id,
+        name: sample.name,
+        barcode: sample.barcode,
+        slotDetailsCount: (sample.slotDetails as any)?.length || 0,
+      });
+    }
+    
+    return products;
   }
 
   async getIdsByBarcodes(

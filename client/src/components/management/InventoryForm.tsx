@@ -1,21 +1,38 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { Plus, Trash2, Search, ClipboardCheck, Check, ChevronsUpDown, ChevronRight, Eye, Package, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Search, ClipboardCheck, Check, ChevronsUpDown, ChevronRight, Eye, Package, Pencil, Loader2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { EmployeePosition, ProductStatus, ProductUnit } from '@/types';
-import type { Employee, Product, Slot, StocktakingDetail, StocktakingWithDetails } from '@/types';
-import { apiClient } from '@/services/api-client'; // Import API Client
-import { getStocktakings, getStocktakingById, createStocktaking } from '@/services/stocktaking.service';
+import { EmployeePosition, ProductStatus } from '@/types';
+import type { Employee, Product, Slot, StocktakingDetail } from '@/types';
+import { 
+  createStocktaking, 
+  getStocktakings, 
+  updateStocktaking, 
+  deleteStocktaking,
+  type CreateStocktakingRequest 
+} from '@/services/stocktaking.service';
+import { getProducts } from '@/services/product.service';
+import { getShelves } from '@/services/warehouse.service';
 
 interface Stocktaking {
   id: number;
@@ -30,18 +47,16 @@ interface InventoryFormProps {
 }
 
 export function InventoryForm({ currentUser }: InventoryFormProps) {
-  // 1. STATE DỮ LIỆU (Thay thế cho Mock Data)
+  const [stocktakings, setStocktakings] = useState<Stocktaking[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [slots, setSlots] = useState<Slot[]>([]);
-  const [stocktakings, setStocktakings] = useState<StocktakingWithDetails[]>([]);
-  
-  // State UI
-  const [loading, setLoading] = useState(false);
-  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreatingStocktaking, setIsCreatingStocktaking] = useState(false);
   const [viewingStocktaking, setViewingStocktaking] = useState<Stocktaking | null>(null);
   const [showStocktakingDialog, setShowStocktakingDialog] = useState(false);
+  const [editingStocktaking, setEditingStocktaking] = useState<Stocktaking | null>(null);
+  const [deletingStocktakingId, setDeletingStocktakingId] = useState<number | null>(null);
 
   // Form state
   const [barcodeInput, setBarcodeInput] = useState('');
@@ -53,42 +68,177 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
   const [openProductCombobox, setOpenProductCombobox] = useState(false);
   const [openSlotCombobox, setOpenSlotCombobox] = useState(false);
 
-  // Helper tìm kiếm (Dùng state products/slots thay vì mock)
-  const selectedProduct = products.find(p => p.id === selectedProductId);
-  const selectedSlot = slots.find(s => s.id === selectedSlotId);
+  const selectedProduct = Array.isArray(products) ? products.find(p => p.id === selectedProductId) : undefined;
+  const selectedSlot = Array.isArray(slots) ? slots.find(s => s.id === selectedSlotId) : undefined;
 
-  const filteredStocktakings = stocktakings.filter(stocktaking =>
-    stocktaking.id.toString().includes(searchTerm) ||
-    (stocktaking.employee?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // ✅ FIX: Proper filtering based on slotDetails
+  const availableSlots = (() => {
+    if (!selectedProductId || !selectedProduct) {
+      console.log('⚠️ No product selected');
+      return [];
+    }
+    
+    console.log('🔍 Filtering slots for product:', {
+      productId: selectedProduct.id,
+      productName: selectedProduct.name,
+      slotDetails: selectedProduct.slotDetails,
+      slotDetailsCount: selectedProduct.slotDetails?.length || 0,
+    });
+    
+    if (!selectedProduct.slotDetails || selectedProduct.slotDetails.length === 0) {
+      console.log('⚠️ Product has no slotDetails - not allocated');
+      return [];
+    }
+    
+    // Extract slotIds from product's slotDetails
+    const assignedSlotIds = new Set(
+      selectedProduct.slotDetails.map((sd: any) => sd.slotId)
+    );
+    
+    console.log('📍 Assigned slot IDs:', Array.from(assignedSlotIds));
+    
+    // Filter slots that are assigned to this product
+    const filtered = slots.filter(slot => assignedSlotIds.has(slot.id));
+    
+    console.log(`✅ Found ${filtered.length} available slots for product`);
+    
+    return filtered;
+  })();
 
-  // 2. FETCH DATA TỪ API
+  const filteredStocktakings = stocktakings.filter(stocktaking => {
+    if (!stocktaking || !stocktaking.id) return false;
+    
+    const searchLower = searchTerm.toLowerCase();
+    const idMatch = stocktaking.id.toString().includes(searchTerm);
+    const nameMatch = stocktaking.employee?.name?.toLowerCase().includes(searchLower) || false;
+    return idMatch || nameMatch;
+  });
+
+  const hasLoadedRef = useRef(false);
+
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        // Gọi song song các API cần thiết
-        const [productsData, slotsData, stocktakingsData] = await Promise.all([
-          apiClient.get<any>('/products'),     // API lấy danh sách sản phẩm
-          apiClient.get<any>('/slots'),        // API lấy danh sách vị trí
-          getStocktakings()                    // API lấy lịch sử kiểm kê
-        ]);
-
-        // Xử lý dữ liệu trả về (tùy format backend trả về mảng trực tiếp hay bọc trong object)
-        setProducts(Array.isArray(productsData) ? productsData : (productsData?.data || []));
-        setSlots(Array.isArray(slotsData) ? slotsData : (slotsData?.data || []));
-  setStocktakings(Array.isArray(stocktakingsData) ? stocktakingsData : []);
-
-      } catch (err: any) {
-        toast.error(err.message || 'Lỗi tải dữ liệu hệ thống');
-      } finally {
-        setLoading(false);
-      }
+    if (hasLoadedRef.current) return;
+    hasLoadedRef.current = true;
+    
+    const loadData = async () => {
+      await Promise.all([
+        loadProducts(),
+        loadSlots(),
+        loadStocktakings()
+      ]);
     };
-    fetchData();
+    
+    loadData();
   }, []);
 
-  // 3. HANDLERS
+  const loadProducts = async () => {
+    try {
+      console.log('Loading products...');
+      const productsArray = await getProducts(); // ✅ Now returns Product[] directly
+      console.log('Products loaded from API:', productsArray);
+      
+      // ✅ FIX: productsArray is now guaranteed to be Product[]
+      if (Array.isArray(productsArray)) {
+        console.log(`✅ Loaded ${productsArray.length} products`);
+        
+        // Log products with slotDetails
+        const productsWithSlots = productsArray.filter(p => p.slotDetails && p.slotDetails.length > 0);
+        console.log(`📦 Products with assigned slots: ${productsWithSlots.length}/${productsArray.length}`);
+        
+        setProducts(productsArray);
+      } else {
+        console.error('❌ Products result is not an array:', productsArray);
+        setProducts([]);
+        toast.error('Dữ liệu sản phẩm không đúng định dạng');
+      }
+    } catch (error: any) {
+      console.error('❌ Load products error:', error);
+      setProducts([]);
+      toast.error(error.message || 'Không thể tải danh sách sản phẩm');
+    }
+  };
+
+  const loadSlots = async () => {
+    try {
+      console.log('Loading slots from shelves...');
+      const shelves = await getShelves();
+      console.log('Shelves loaded:', shelves);
+      
+      const allSlots: Slot[] = [];
+      for (const shelf of shelves) {
+        if (shelf.racks && Array.isArray(shelf.racks)) {
+          for (const rack of shelf.racks) {
+            if (rack.slots && Array.isArray(rack.slots)) {
+              for (const slot of rack.slots) {
+                allSlots.push({
+                  ...slot,
+                  rack: {
+                    ...rack,
+                    shelf: shelf,
+                  },
+                });
+              }
+            }
+          }
+        }
+      }
+      
+      console.log(`✅ Total slots loaded: ${allSlots.length}`);
+      setSlots(allSlots);
+      setSelectedSlotId(0);
+    } catch (error: any) {
+      console.error('❌ Load slots error:', error);
+      toast.error(error.message || 'Không thể tải danh sách vị trí kho');
+    }
+  };
+
+  const loadStocktakings = async () => {
+    try {
+      setIsLoading(true);
+      console.log('Loading stocktakings...');
+      // ✅ FIX: Response has .data property
+      const result = await getStocktakings(1, 100);
+      console.log('Stocktakings loaded:', result);
+      
+      // ✅ FIX: Access result.data (not result directly)
+      if (!result || !result.data) {
+        console.error('❌ Invalid stocktakings response:', result);
+        setStocktakings([]);
+        return;
+      }
+
+      const mappedStocktakings = result.data.map((st: any) => ({
+        id: st.id,
+        employeeId: st.employeeId,
+        employee: st.employee || { 
+          id: st.employeeId, 
+          name: 'Unknown', 
+          position: EmployeePosition.INVENTORY 
+        },
+        createdAt: new Date(st.createdAt),
+        details: Array.isArray(st.stocktakingDetails) ? st.stocktakingDetails.map((detail: any) => ({
+          id: detail.id,
+          stocktakingId: detail.stocktakingId,
+          productId: detail.productId,
+          product: detail.product,
+          slotId: detail.slotId,
+          slot: detail.slot,
+          status: detail.status,
+          quantity: detail.quantity,
+        })) : []
+      }));
+      
+      console.log(`✅ Mapped stocktakings: ${mappedStocktakings.length} items`);
+      setStocktakings(mappedStocktakings);
+    } catch (error: any) {
+      console.error('❌ Load stocktakings error:', error);
+      setStocktakings([]);
+      toast.error(error.message || 'Không thể tải danh sách kiểm kê');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleStartCreateStocktaking = () => {
     setIsCreatingStocktaking(true);
     setStocktakingDetails([]);
@@ -101,6 +251,7 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
 
   const handleCancelCreate = () => {
     setIsCreatingStocktaking(false);
+    setEditingStocktaking(null);
     setStocktakingDetails([]);
     setSelectedProductId(0);
     setSelectedSlotId(0);
@@ -111,11 +262,27 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
 
   const handleBarcodeSearch = () => {
     if (!barcodeInput) return;
-    // Tìm trong state products thay vì mockProducts
-    const product = products.find(p => p.barcode?.toString() === barcodeInput);
+    
+    const product = products.find(p => p.barcode.toString() === barcodeInput);
     if (product) {
+      console.log('🔍 Found product by barcode:', {
+        id: product.id,
+        name: product.name,
+        barcode: product.barcode,
+        slotDetailsCount: product.slotDetails?.length || 0,
+        slotDetails: product.slotDetails,
+      });
+      
       setSelectedProductId(product.id);
+      setQuantity(product.amount || 0);
+      setSelectedSlotId(0);
+      
       toast.success(`Tìm thấy: ${product.name}`);
+      
+      // Show warning if no slots assigned
+      if (!product.slotDetails || product.slotDetails.length === 0) {
+        toast.warning('Sản phẩm chưa được phân bổ vị trí. Vui lòng liên hệ quản lý.');
+      }
     } else {
       toast.error('Không tìm thấy sản phẩm với mã vạch này');
     }
@@ -124,22 +291,34 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
 
   const handleAddDetail = () => {
     if (!selectedProductId) {
-      toast.error('Vui lòng chọn sản phẩm');
+      toast.error('Vui lòng chọn sản phẩm (barcode)');
       return;
     }
+
     const product = products.find(p => p.id === selectedProductId);
     if (!product) {
-      toast.error('Sản phẩm không tồn tại');
+      toast.error('Mã barcode không tồn tại');
       return;
     }
 
     if (!selectedSlotId) {
-      toast.error('Vui lòng chọn vị trí');
+      toast.error('Vui lòng chọn vị trí (kệ/ngăn/ô)');
       return;
     }
+
     const slot = slots.find(s => s.id === selectedSlotId);
     if (!slot) {
-      toast.error('Vị trí không tồn tại');
+      toast.error('Mã vị trí không tồn tại');
+      return;
+    }
+
+    if (!selectedStatus) {
+      toast.error('Vui lòng chọn tình trạng');
+      return;
+    }
+
+    if (!Object.values(ProductStatus).includes(selectedStatus)) {
+      toast.error('Tên tình trạng không tồn tại');
       return;
     }
 
@@ -148,10 +327,9 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
       return;
     }
 
-    // Tạo ID tạm cho chi tiết phiếu (client-side only)
-    const newId = Date.now(); 
+    const newId = stocktakingDetails.length + 1;
     const newDetail: StocktakingDetail = {
-      id: newId, 
+      id: newId,
       stocktakingId: 0,
       productId: product.id,
       product,
@@ -163,84 +341,138 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
 
     setStocktakingDetails([...stocktakingDetails, newDetail]);
     
-    // Reset form nhập nhanh
     setSelectedProductId(0);
+    setSelectedSlotId(0);
+    setSelectedStatus(ProductStatus.GOOD);
     setQuantity(0);
-    toast.success(`Đã thêm ${product.name}`);
+    
+    toast.success(`Đã thêm ${product.name} vào danh sách kiểm kê`);
   };
 
   const handleRemoveDetail = (detailId: number) => {
     setStocktakingDetails(stocktakingDetails.filter(d => d.id !== detailId));
-    toast.info('Đã xóa dòng chi tiết');
+    toast.info('Đã xóa khỏi danh sách kiểm kê');
   };
 
   const handleConfirmStocktaking = async () => {
     if (!currentUser) {
-      toast.error('Lỗi: Không tìm thấy thông tin nhân viên');
+      toast.error('Không tìm thấy thông tin nhân viên');
       return;
     }
+
     if (currentUser.position !== 'INVENTORY' && currentUser.position !== 'MANAGER') {
-      toast.error('Bạn không có quyền lập phiếu kiểm kê. Chỉ nhân viên "Kiểm kê" hoặc "Quản lý" mới có quyền tạo phiếu kiểm kê.');
+      toast.error('Nhân viên không có quyền kiểm kê');
       return;
     }
+
     if (stocktakingDetails.length === 0) {
-      toast.error('Phiếu kiểm kê trống');
+      toast.error('Phiếu kiểm kê phải có ít nhất 1 mục');
       return;
     }
 
-    setLoading(true);
     try {
-      await createStocktaking({
-        employeeId: currentUser.id,
-        details: stocktakingDetails.map(d => ({
-          productId: d.productId,
-          slotId: d.slotId,
-          status: d.status,
-          quantity: d.quantity,
-        }))
-      });
-      toast.success('Lưu phiếu kiểm kê thành công!');
+      setIsLoading(true);
       
-      // Reset form
-      setIsCreatingStocktaking(false);
-      setStocktakingDetails([]);
+      // ✅ CRITICAL DEBUG: Log currentUser
+      console.log('🔍 Current User:', currentUser);
+      console.log('🔍 Current User ID:', currentUser.id);
+      console.log('🔍 Current User ID type:', typeof currentUser.id);
       
-      // Reload danh sách
-  const data = await getStocktakings();
-  setStocktakings(Array.isArray(data) ? data : []);
-    } catch (err: any) {
-      toast.error(err.message || 'Lưu phiếu thất bại');
+      if (typeof currentUser.id !== 'number' || currentUser.id <= 0) {
+        throw new Error(`Invalid employee ID: ${currentUser.id}`);
+      }
+      
+      // ✅ Build request - NO authId in body (middleware will set it)
+      const requestData = {
+        // ❌ DON'T send authId in body - middleware extracts from token
+        products: stocktakingDetails.map(detail => ({
+          barcode: detail.product!.barcode,
+          slotId: detail.slotId,
+          status: detail.status,
+          quantity: detail.quantity,
+        })),
+      };
+      
+      console.log('📤 Sending stocktaking request (authId from token):', requestData);
+
+      if (editingStocktaking) {
+        await updateStocktaking(editingStocktaking.id, requestData as any);
+        toast.success('Cập nhật phiếu kiểm kê thành công!');
+      } else {
+        const response = await createStocktaking(requestData as any);
+        console.log('📥 Create stocktaking response:', response);
+        
+        toast.success('Lập phiếu kiểm kê thành công!', {
+          description: `Đã tạo phiếu với ${stocktakingDetails.length} mục`,
+        });
+      }
+      
+      await loadStocktakings();
+      handleCancelCreate();
+    } catch (error: any) {
+      console.error('❌ Save stocktaking error:', error);
+      console.error('❌ Error response data:', error.response?.data);
+      toast.error(error.response?.data?.data?.message || error.message || 'Không thể lưu phiếu kiểm kê');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleViewStocktaking = async (stocktaking: Stocktaking) => {
-    setLoadingDetail(true);
+  const handleViewStocktaking = (stocktaking: Stocktaking) => {
+    setViewingStocktaking(stocktaking);
     setShowStocktakingDialog(true);
+  };
+
+  const handleEditStocktaking = (stocktaking: Stocktaking) => {
+    if (currentUser?.position !== 'INVENTORY' && currentUser?.position !== 'MANAGER') {
+      toast.error('Chỉ nhân viên kiểm kê mới có quyền chỉnh sửa phiếu');
+      return;
+    }
+
+    setEditingStocktaking(stocktaking);
+    setIsCreatingStocktaking(true);
+    setStocktakingDetails(stocktaking.details);
+    
+    toast.info('Đang chỉnh sửa phiếu kiểm kê #' + stocktaking.id);
+  };
+
+  const handleDeleteStocktaking = async (id: number) => {
+    if (currentUser?.position !== 'INVENTORY' && currentUser?.position !== 'MANAGER') {
+      toast.error('Chỉ nhân viên kiểm kê mới có quyền xóa phiếu');
+      return;
+    }
+
+    setDeletingStocktakingId(id);
+  };
+
+  const confirmDeleteStocktaking = async () => {
+    if (!deletingStocktakingId) return;
+
     try {
-      const detail = await getStocktakingById(stocktaking.id);
-      setViewingStocktaking({
-        ...detail,
-        details: detail.stocktakingDetails || [],
-        createdAt: new Date(detail.createdAt)
-      } as Stocktaking);
-    } catch (err: any) {
-      setViewingStocktaking(null);
-      toast.error('Không thể tải chi tiết phiếu');
+      setIsLoading(true);
+      await deleteStocktaking(deletingStocktakingId);
+      await loadStocktakings();
+      toast.success('Xóa phiếu kiểm kê thành công');
+    } catch (error: any) {
+      toast.error(error.message || 'Không thể xóa phiếu kiểm kê');
     } finally {
-      setLoadingDetail(false);
+      setIsLoading(false);
+      setDeletingStocktakingId(null);
     }
   };
 
-  // 4. RENDER
   return (
     <div className="space-y-6">
       {/* Header */}
       <Card className="border-blue-200">
         <CardHeader className="bg-blue-50">
           <div className="flex justify-between items-center">
-            <CardTitle className="text-blue-900">Quản Lý Phiếu Kiểm Kê</CardTitle>
+            <CardTitle className="text-blue-900">
+              {editingStocktaking 
+                ? `Chỉnh sửa Phiếu Kiểm Kê #${editingStocktaking.id}` 
+                : 'Quản Lý Phiếu Kiểm Kê'
+              }
+            </CardTitle>
             {!isCreatingStocktaking && (
               <Button onClick={handleStartCreateStocktaking} className="bg-blue-600 hover:bg-blue-700">
                 <Plus className="mr-2 h-4 w-4" />
@@ -251,13 +483,13 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
         </CardHeader>
       </Card>
 
-      {/* Create Stocktaking Form */}
+      {/* Create/Edit Stocktaking Form */}
       {isCreatingStocktaking && (
         <Card className="border-purple-200 bg-purple-50/30">
           <CardHeader className="bg-purple-100">
             <CardTitle className="text-purple-900 flex items-center gap-2">
               <ClipboardCheck className="h-5 w-5" />
-              Lập Phiếu Kiểm Kê Mới
+              {editingStocktaking ? 'Chỉnh Sửa Phiếu Kiểm Kê' : 'Lập Phiếu Kiểm Kê Mới'}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
@@ -270,7 +502,9 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                   value={barcodeInput}
                   onChange={(e) => setBarcodeInput(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleBarcodeSearch();
+                    if (e.key === 'Enter') {
+                      handleBarcodeSearch();
+                    }
                   }}
                   className="border-purple-200"
                 />
@@ -280,12 +514,12 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
               </div>
             </div>
 
-            {/* Product & Slot Selection */}
+            {/* Product and Location Selection */}
             <div className="bg-white p-4 rounded-lg border border-purple-200 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Product Combobox */}
+                {/* Product Selection */}
                 <div className="space-y-2">
-                  <Label>Sản phẩm</Label>
+                  <Label>Chọn hàng hóa (Barcode)</Label>
                   <Popover open={openProductCombobox} onOpenChange={setOpenProductCombobox}>
                     <PopoverTrigger asChild>
                       <Button
@@ -294,31 +528,42 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                         aria-expanded={openProductCombobox}
                         className="w-full justify-between border-purple-200"
                       >
-                        {selectedProduct ? selectedProduct.name : "Chọn sản phẩm..."}
+                        {selectedProduct ? selectedProduct.name : 'Chọn sản phẩm...'}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[400px] p-0">
                       <Command>
-                        <CommandInput placeholder="Tìm sản phẩm..." />
+                        <CommandInput placeholder="Tìm kiếm sản phẩm..." />
                         <CommandList>
-                          <CommandEmpty>Không tìm thấy sản phẩm.</CommandEmpty>
-                          <CommandGroup>
+                          <CommandEmpty>Không tìm thấy sản phẩm</CommandEmpty>
+                          <CommandGroup heading="Danh sách sản phẩm">
                             {products.map((product) => (
                               <CommandItem
                                 key={product.id}
                                 value={product.name || ''}
                                 onSelect={() => {
+                                  console.log('📦 Selected product:', product);
+                                  console.log('📦 Product slotDetails:', product.slotDetails);
+                                  
                                   setSelectedProductId(product.id);
+                                  setQuantity(product.amount || 0);
+                                  setSelectedSlotId(0);
                                   setOpenProductCombobox(false);
                                 }}
                               >
                                 <Check
                                   className={`mr-2 h-4 w-4 ${
-                                    selectedProductId === product.id ? "opacity-100" : "opacity-0"
+                                    selectedProductId === product.id ? 'opacity-100' : 'opacity-0'
                                   }`}
                                 />
-                                {product.name} ({product.barcode})
+                                <div className="flex flex-col">
+                                  <span>{product.name}</span>
+                                  <span className="text-xs text-gray-500">
+                                    Barcode: {product.barcode} | Tồn: {product.amount}
+                                    {product.slotDetails && ` | ${product.slotDetails.length} vị trí`}
+                                  </span>
+                                </div>
                               </CommandItem>
                             ))}
                           </CommandGroup>
@@ -326,20 +571,33 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                       </Command>
                     </PopoverContent>
                   </Popover>
+                  {selectedProduct && (
+                    <p className="text-xs text-gray-500">
+                      Barcode: {selectedProduct.barcode} | Tồn kho: {selectedProduct.amount}
+                      {selectedProduct.slotDetails && ` | ${selectedProduct.slotDetails.length} vị trí được gán`}
+                    </p>
+                  )}
                 </div>
 
-                {/* Slot Combobox */}
+                {/* Location Selection */}
                 <div className="space-y-2">
-                  <Label>Vị trí (Slot)</Label>
+                  <Label>Vị trí (Kệ/Ngăn/Ô)</Label>
                   <Popover open={openSlotCombobox} onOpenChange={setOpenSlotCombobox}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
                         role="combobox"
                         aria-expanded={openSlotCombobox}
+                        disabled={!selectedProductId}
                         className="w-full justify-between border-purple-200"
                       >
-                        {selectedSlot ? `${selectedSlot.rack?.name} - ${selectedSlot.name}` : "Chọn vị trí..."}
+                        {selectedSlot && selectedSlot.rack?.shelf && selectedSlotId !== 0
+                          ? `${selectedSlot.rack.shelf.name} > ${selectedSlot.rack.name} > ${selectedSlot.name}`
+                          : !selectedProductId
+                          ? 'Vui lòng chọn sản phẩm trước'
+                          : availableSlots.length === 0
+                          ? 'Sản phẩm chưa được phân bổ vị trí'
+                          : 'Chọn vị trí...'}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
@@ -347,13 +605,19 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                       <Command>
                         <CommandInput placeholder="Tìm kiếm vị trí..." />
                         <CommandList>
-                          <CommandEmpty>Không tìm thấy vị trí</CommandEmpty>
-                          <CommandGroup heading="Danh sách vị trí">
-                            {slots.map((slot) => (
+                          <CommandEmpty>
+                            {selectedProductId && availableSlots.length === 0
+                              ? 'Sản phẩm này chưa được phân bổ vị trí nào'
+                              : 'Không tìm thấy vị trí'
+                            }
+                          </CommandEmpty>
+                          <CommandGroup heading={`Vị trí cho ${selectedProduct?.name || 'sản phẩm'}`}>
+                            {availableSlots.map((slot) => (
                               <CommandItem
                                 key={slot.id}
-                                value={`${slot.rack?.shelf?.name} ${slot.rack?.name} ${slot.name}`}
+                                value={`${slot.rack!.shelf!.name} ${slot.rack!.name} ${slot.name}`}
                                 onSelect={() => {
+                                  console.log('📍 Selected slot:', slot);
                                   setSelectedSlotId(slot.id);
                                   setOpenSlotCombobox(false);
                                 }}
@@ -364,9 +628,9 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                                   }`}
                                 />
                                 <div className="flex items-center gap-1 text-sm">
-                                  <span>{slot.rack?.shelf?.name || 'Kệ ??'}</span>
+                                  <span className="font-semibold">{slot.rack!.shelf!.name}</span>
                                   <ChevronRight className="h-3 w-3" />
-                                  <span>{slot.rack?.name || 'Tầng ??'}</span>
+                                  <span>{slot.rack!.name}</span>
                                   <ChevronRight className="h-3 w-3" />
                                   <span>{slot.name}</span>
                                 </div>
@@ -377,9 +641,12 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                       </Command>
                     </PopoverContent>
                   </Popover>
-                  {selectedSlot && (
+                  {selectedProductId > 0 && (
                     <p className="text-xs text-gray-500">
-                      Mã vị trí: Slot #{selectedSlot.id}
+                      {availableSlots.length === 0 
+                        ? '⚠️ Sản phẩm chưa được phân bổ vị trí. Vui lòng liên hệ quản lý.'
+                        : `✅ ${availableSlots.length} vị trí khả dụng cho sản phẩm này`
+                      }
                     </p>
                   )}
                 </div>
@@ -418,7 +685,11 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                 </div>
               </div>
 
-              <Button onClick={handleAddDetail} className="w-full bg-purple-600 hover:bg-purple-700">
+              <Button 
+                onClick={handleAddDetail} 
+                className="w-full bg-purple-600 hover:bg-purple-700"
+                disabled={!selectedProductId || !selectedSlotId || selectedSlotId === 0}
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 Thêm vào danh sách kiểm kê
               </Button>
@@ -450,9 +721,9 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                           <TableCell>{detail.product!.barcode}</TableCell>
                           <TableCell>
                             <div className="flex items-center gap-1 text-sm">
-                              <span className="text-gray-600">{detail.slot!.rack?.shelf?.name}</span>
+                              <span className="text-gray-600">{detail.slot!.rack!.shelf!.name}</span>
                               <ChevronRight className="h-3 w-3 text-gray-400" />
-                              <span className="text-gray-600">{detail.slot!.rack?.name}</span>
+                              <span className="text-gray-600">{detail.slot!.rack!.name}</span>
                               <ChevronRight className="h-3 w-3 text-gray-400" />
                               <span className="text-gray-600">{detail.slot!.name}</span>
                             </div>
@@ -497,10 +768,19 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
               <Button 
                 onClick={handleConfirmStocktaking}
                 className="bg-purple-600 hover:bg-purple-700"
-                disabled={stocktakingDetails.length === 0}
+                disabled={stocktakingDetails.length === 0 || isLoading}
               >
-                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
-                Xác nhận lưu phiếu
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Đang lưu...
+                  </>
+                ) : (
+                  <>
+                    <Check className="mr-2 h-4 w-4" />
+                    {editingStocktaking ? 'Cập nhật phiếu kiểm kê' : 'Xác nhận lưu phiếu kiểm kê'}
+                  </>
+                )}
               </Button>
             </div>
           </CardContent>
@@ -526,20 +806,19 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
               </Button>
             </div>
 
-            <div className="min-h-[48px]">
-              {loading ? (
-                <div className="flex items-center justify-center py-4">
-                  <Loader2 className="h-6 w-6 animate-spin mr-2" />
-                  <span>Đang tải dữ liệu...</span>
-                </div>
-              ) : stocktakings.length === 0 ? (
+            {isLoading ? (
+              <div className="text-center py-12">
+                <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-3" />
+                <p className="text-gray-500">Đang tải danh sách kiểm kê...</p>
+              </div>
+            ) : stocktakings.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
                 <ClipboardCheck className="h-12 w-12 mx-auto mb-3 opacity-20" />
                 <p>Chưa có phiếu kiểm kê nào</p>
                 <p className="text-sm">Nhấn "Lập phiếu kiểm kê" để bắt đầu</p>
               </div>
-              ) : (
-                <div className="border border-blue-200 rounded-lg overflow-hidden">
+            ) : (
+              <div className="border border-blue-200 rounded-lg overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-blue-50">
@@ -554,35 +833,79 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                   <TableBody>
                     {filteredStocktakings.map((stocktaking) => (
                       <TableRow key={stocktaking.id} className="hover:bg-blue-50">
-                        <TableCell>PKK{stocktaking.id.toString().padStart(3, '0')}</TableCell>
-                        <TableCell>{new Date(stocktaking.createdAt).toLocaleDateString('vi-VN')}</TableCell>
-                        <TableCell>{stocktaking.employee?.name || ''}</TableCell>
-                        <TableCell>{Array.isArray(stocktaking.stocktakingDetails) ? stocktaking.stocktakingDetails.length : 0}</TableCell>
+                        <TableCell className="font-medium">
+                          PKK{stocktaking.id.toString().padStart(3, '0')}
+                        </TableCell>
+                        <TableCell>{stocktaking.createdAt.toLocaleDateString('vi-VN')}</TableCell>
+                        <TableCell>{stocktaking.employee.name}</TableCell>
+                        <TableCell>{stocktaking.details.length}</TableCell>
                         <TableCell>
-                          {Array.isArray(stocktaking.stocktakingDetails)
-                            ? stocktaking.stocktakingDetails.reduce((sum: number, d: any) => sum + (d.quantity || 0), 0)
-                            : 0}
+                          {stocktaking.details.reduce((sum, d) => sum + d.quantity, 0)}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleViewStocktaking(stocktaking as any)}
-                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
+                          <div className="flex gap-1 justify-end">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleViewStocktaking(stocktaking)}
+                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              title="Xem chi tiết"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditStocktaking(stocktaking)}
+                              className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                              title="Chỉnh sửa"
+                              disabled={currentUser?.position !== 'INVENTORY' && currentUser?.position !== 'MANAGER'}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteStocktaking(stocktaking.id)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              title="Xóa"
+                              disabled={currentUser?.position !== 'INVENTORY' && currentUser?.position !== 'MANAGER'}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deletingStocktakingId} onOpenChange={() => setDeletingStocktakingId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận xóa phiếu kiểm kê</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn xóa phiếu kiểm kê PKK{deletingStocktakingId?.toString().padStart(3, '0')}? 
+              Hành động này không thể hoàn tác.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeleteStocktaking}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Xóa phiếu
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Stocktaking Details Dialog */}
       <Dialog open={showStocktakingDialog} onOpenChange={setShowStocktakingDialog}>
@@ -593,13 +916,10 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
               {viewingStocktaking && `Mã phiếu: PKK${viewingStocktaking.id.toString().padStart(3, '0')}`}
             </DialogDescription>
           </DialogHeader>
-          {loadingDetail ? (
-            <div className="text-center py-12 text-gray-500">
-              <Loader2 className="h-8 w-8 animate-spin inline-block mr-2" />
-              Đang tải chi tiết phiếu...
-            </div>
-          ) : viewingStocktaking && (
+
+          {viewingStocktaking && (
             <div className="space-y-4">
+              {/* Thông tin phiếu */}
               <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50 rounded-lg">
                 <div>
                   <p className="text-sm text-gray-600">Người kiểm</p>
@@ -607,9 +927,11 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Ngày kiểm</p>
-                  <p className="font-semibold">{new Date(viewingStocktaking.createdAt).toLocaleDateString('vi-VN')}</p>
+                  <p className="font-semibold">{viewingStocktaking.createdAt.toLocaleDateString('vi-VN')}</p>
                 </div>
               </div>
+
+              {/* Danh sách sản phẩm kiểm kê */}
               <div className="border border-blue-200 rounded-lg overflow-hidden">
                 <Table>
                   <TableHeader>
@@ -624,19 +946,19 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                   <TableBody>
                     {viewingStocktaking.details.map((detail) => (
                       <TableRow key={detail.id} className="hover:bg-blue-50">
-                        <TableCell>{detail.product?.name}</TableCell>
-                        <TableCell>{detail.product?.barcode}</TableCell>
+                        <TableCell>{detail.product!.name}</TableCell>
+                        <TableCell>{detail.product!.barcode}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1 text-sm whitespace-nowrap">
-                            <span className="text-gray-600">{detail.slot?.rack?.shelf?.name}</span>
+                            <span className="text-gray-600">{detail.slot!.rack!.shelf!.name}</span>
                             <ChevronRight className="h-3 w-3 text-gray-400" />
-                            <span className="text-gray-600">{detail.slot?.rack?.name}</span>
+                            <span className="text-gray-600">{detail.slot!.rack!.name}</span>
                             <ChevronRight className="h-3 w-3 text-gray-400" />
-                            <span className="text-gray-600">{detail.slot?.name}</span>
+                            <span className="text-gray-600">{detail.slot!.name}</span>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <span className={`px-2 py-1 rounded text-sm ${
+                          <span className={`px-2 py-1 rounded text-sm whitespace-nowrap inline-block ${
                             detail.status === ProductStatus.GOOD 
                               ? 'bg-green-100 text-green-700' 
                               : 'bg-red-100 text-red-700'
@@ -658,6 +980,7 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
               </div>
             </div>
           )}
+
           <DialogFooter>
             <Button
               onClick={() => setShowStocktakingDialog(false)}

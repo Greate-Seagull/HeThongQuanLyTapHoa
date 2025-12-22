@@ -12,18 +12,7 @@ export interface ProductReadAccessor {
 		}[];
 	}>;
 	existByIds(ids: ProductId[]): Promise<boolean>;
-	getProducts(
-		page: number,
-		limit: number
-	): Promise<
-		{
-			id: ProductId;
-			name: string;
-			price: number;
-			unit: string;
-			barcode: ProductBarcode;
-		}[]
-	>;
+	getProducts(): Promise<any[]>;
 	getIdsByBarcodes(
 		barcodes: ProductBarcode[]
 	): Promise<{ id: ProductId; barcode: ProductBarcode }[]>;

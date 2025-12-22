@@ -28,6 +28,25 @@ export interface Product {
   barcode: number
   amount: number
   status: ProductStatus
+  // ✅ ADD: slotDetails for warehouse location mapping
+  slotDetails?: Array<{
+    slotId: number
+    productId: number
+    slot?: {
+      id: number
+      name: string
+      rackId: number
+      rack?: {
+        id: number
+        name: string
+        shelfId: number
+        shelf?: {
+          id: number
+          name: string
+        }
+      }
+    }
+  }>
 }
 
 export interface ProductWithDetails extends Product {
@@ -301,9 +320,9 @@ export interface CreateGoodReceiptRequest {
 }
 
 export interface CreateStocktakingRequest {
-  employeeId: number
-  details: {
-    productId: number
+  authId: number  // ✅ Use authId (not employeeId)
+  products: {     // ✅ Use products[] (not details[])
+    barcode: number
     slotId: number
     status: ProductStatus
     quantity: number

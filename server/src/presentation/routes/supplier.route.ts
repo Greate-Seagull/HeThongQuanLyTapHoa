@@ -27,7 +27,14 @@ router.put(
   "/:id",
   authenticationMiddleware,
   authorizationMiddleware("MANAGER"),
-  controller(updateSupplierUsecase)
+  (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).jsend.fail("Invalid supplier ID");
+    }
+    req.body.id = id;
+    return controller(updateSupplierUsecase)(req, res);
+  }
 );
 
 // DELETE supplier
@@ -35,7 +42,17 @@ router.delete(
   "/:id",
   authenticationMiddleware,
   authorizationMiddleware("MANAGER"),
-  controller(deleteSupplierUsecase)
+  (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).jsend.fail("Invalid supplier ID");
+    }
+    
+    if (!req.body) req.body = {};
+    req.body.id = id;
+    
+    return controller(deleteSupplierUsecase)(req, res);
+  }
 );
 
 export default router;

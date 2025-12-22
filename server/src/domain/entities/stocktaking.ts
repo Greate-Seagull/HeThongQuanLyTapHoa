@@ -94,6 +94,7 @@ export class Stocktaking extends BaseEntity<StocktakingId> {
 	) {
 		const stocktaking = new Stocktaking();
 		stocktaking.employeeId = employeeId;
+		// ✅ CRITICAL FIX: Set createdAt explicitly
 		stocktaking.createdAt = new Date();
 		stocktaking.stocktakingDetails = details.map((d) =>
 			StocktakingDetail.create(
@@ -103,7 +104,6 @@ export class Stocktaking extends BaseEntity<StocktakingId> {
 				d.slotId
 			)
 		);
-		stocktaking.createdAt = new Date();
 		return stocktaking;
 	}
 
@@ -118,7 +118,7 @@ export class Stocktaking extends BaseEntity<StocktakingId> {
 
 	private set stocktakingDetails(value: StocktakingDetail[]) {
 		if (value.length < 1)
-			throw Error(`Expect promotion to have at least one product Id`);
+			throw Error(`Expect stocktaking to have at least one detail`);
 		this._stocktakingDetails = value;
 	}
 

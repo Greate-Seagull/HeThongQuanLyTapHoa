@@ -22,6 +22,16 @@ export default function StaffDashboardPage() {
   const getMenuItems = () => {
     const position = user?.employeeData?.position || ''
     
+    // ✅ CRITICAL FIX: Manager không có tab profile, chỉ có 3 tabs chức năng
+    if (position === 'MANAGER') {
+      return [
+        { id: 'inventory', label: 'Phiếu kiểm kê', icon: <ClipboardCheck className="h-4 w-4" /> },
+        { id: 'import', label: 'Phiếu nhập hàng', icon: <PackagePlus className="h-4 w-4" /> },
+        { id: 'invoice', label: 'Hóa đơn', icon: <FileText className="h-4 w-4" /> },
+      ]
+    }
+    
+    // Profile item cho các position khác (INVENTORY, RECEIVING, SALES)
     const profileItem = { id: 'profile', label: 'Thông tin cá nhân', icon: <User className="h-4 w-4" /> }
     
     if (position === 'INVENTORY') {
@@ -120,18 +130,8 @@ export default function StaffDashboardPage() {
       case 'invoice':
         return <InvoiceManagement currentUser={employeeData} />
       case 'profile':
-        return (
-          <ProfilePage
-            user={{
-              id: employeeData.id,
-              name: employeeData.name,
-              username: user.username,
-              position: employeeData.position,
-              loggedAt: new Date(),
-            }}
-            role="staff"
-          />
-        )
+        // ✅ FIX: ProfilePage fetches its own data, no props needed
+        return <ProfilePage />
       default:
         // Default to first available feature based on position
         if (employeeData.position === 'INVENTORY') {

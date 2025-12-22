@@ -252,8 +252,8 @@ export function ProductManagement() {
     setIsSaving(true)
     try {
       if (editingProduct) {
-        const response = await apiClient.put<Product>(`/products`, {
-          id: editingProduct.id,
+        // ✅ FIX: Use correct route /products/:id (not /products)
+        const response = await apiClient.put<Product>(`/products/${editingProduct.id}`, {
           name: formData.name,
           price: formData.price,
           amount: formData.amount,
@@ -284,16 +284,21 @@ export function ProductManagement() {
         }
       }
     } catch (error: any) {
-      if (
-        error?.message?.includes('barcode') ||
-        error?.message?.includes('unique') ||
-        error?.message?.includes('duplicate')
+      console.error('Error saving product:', error)
+      
+      // ✅ Better error handling
+      if (error?.response?.status === 404) {
+        toast.error('API endpoint không tồn tại. Vui lòng liên hệ quản trị viên.')
+      } else if (
+        error?.message?.toLowerCase().includes('barcode') ||
+        error?.message?.toLowerCase().includes('unique') ||
+        error?.message?.toLowerCase().includes('duplicate') ||
+        error?.response?.data?.message?.toLowerCase().includes('barcode')
       ) {
         toast.error('Mã vạch đã tồn tại trong hệ thống')
       } else {
-        toast.error('Mã vạch đã tồn tại trong hệ thống')
+        toast.error(error?.response?.data?.message || error?.message || 'Không thể lưu sản phẩm')
       }
-      console.error('Error saving product:', error)
     } finally {
       setIsSaving(false)
     }

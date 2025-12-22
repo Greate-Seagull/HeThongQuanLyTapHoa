@@ -75,14 +75,36 @@ class ApiClient {
   }
 
   async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    console.log(url)
-    const response = await this.client.post<any>(url, data, config)
-    // Backend wraps response in { data: {...}, status: "success" }
-    // Unwrap it to get the actual data
-    if (response.data && response.data.data) {
-      return response.data.data as T
+    console.log('📤 POST Request:', { url, data })
+    
+    try {
+      const response = await this.client.post<any>(url, data, config)
+      
+      // ✅ Add detailed logging for debugging
+      console.log('📥 POST Response:', {
+        status: response.status,
+        data: response.data,
+      })
+      
+      // Backend wraps response in { data: {...}, status: "success" }
+      if (response.data && response.data.data) {
+        return response.data.data
+      }
+      
+      return response.data
+    } catch (error: any) {
+      // ✅ CRITICAL: Log full error details
+      console.error('❌ POST Error:', {
+        url,
+        data,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        errorData: error.response?.data,
+        message: error.message,
+      })
+      
+      throw error
     }
-    return response.data
   }
 
   async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {

@@ -3,29 +3,55 @@ import { authenticationMiddleware } from "../middlewares/authentication.middlewa
 import { authorizationMiddleware } from "../middlewares/authorization.middleware";
 import { controller } from "../controllers/controller";
 import {
-  getProductsUsecase,
-  searchProductsUsecase,
-  updateProductsUsecase,
-  createProductUsecase,
-  updateProductUsecase,
-  deleteProductUsecase,
+	getProductsUsecase,
+	searchProductsUsecase,
+	createProductUsecase,
+	updateProductUsecase,
+	deleteProductUsecase,
 } from "../../composition-root";
 
 const router = Router();
+
+// Public routes
 router.get("/", controller(getProductsUsecase));
+router.get("/search", controller(searchProductsUsecase));
+
+// Protected routes
 router.use(authenticationMiddleware);
 
-router.get("/:productId", controller(searchProductsUsecase));
+router.post(
+	"/",
+	authorizationMiddleware("MANAGER"),
+	controller(createProductUsecase)
+);
+
 router.put(
-  "/bulk",
-  authenticationMiddleware,
-  authorizationMiddleware("ADMIN"),
-  controller(updateProductsUsecase)
+	"/:id",
+	authorizationMiddleware("MANAGER"),
+	(req, res) => {
+		const id = parseInt(req.params.id);
+		if (isNaN(id)) {
+			return res.status(400).jsend.fail("Invalid product ID");
+		}
+		req.body.id = id;
+		return controller(updateProductUsecase)(req, res);
+	}
 );
-router.post("/", controller(createProductUsecase));
-router.put("/", controller(updateProductUsecase));
-// router.delete("/:id", controller(deleteProductUsecase));
-router.delete("/:id", (req, res) =>
-  controller(deleteProductUsecase)({ ...req, id: req.params.id }, res)
+
+router.delete(
+	"/:id",
+	authorizationMiddleware("MANAGER"),
+	(req, res) => {
+		const id = parseInt(req.params.id);
+		if (isNaN(id)) {
+			return res.status(400).jsend.fail("Invalid product ID");
+		}
+		
+		if (!req.body) req.body = {};
+		req.body.id = id;
+		
+		return controller(deleteProductUsecase)(req, res);
+	}
 );
+
 export default router;

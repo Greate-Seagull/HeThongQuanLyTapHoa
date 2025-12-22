@@ -14,7 +14,26 @@ router.use(authenticationMiddleware);
 // router.use(authorizationMiddleware("ADMIN"));
 
 router.post("/", controller(createRackUsecase));
-router.put("/:id", controller(updateRackUsecase));
-router.delete("/:id", controller(deleteRackUsecase));
+
+router.put("/:id", (req, res) => {
+	const id = parseInt(req.params.id);
+	if (isNaN(id)) {
+		return res.status(400).jsend.fail("Invalid rack ID");
+	}
+	req.body.id = id;
+	return controller(updateRackUsecase)(req, res);
+});
+
+router.delete("/:id", (req, res) => {
+	const id = parseInt(req.params.id);
+	if (isNaN(id)) {
+		return res.status(400).jsend.fail("Invalid rack ID");
+	}
+	
+	if (!req.body) req.body = {};
+	req.body.id = id;
+	
+	return controller(deleteRackUsecase)(req, res);
+});
 
 export default router;

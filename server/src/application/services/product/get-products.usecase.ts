@@ -1,10 +1,21 @@
-import { prisma } from './../../../composition-root';
-import { ProductPrismaReadAccessor } from "../../../infrastructure/read-accessors/prisma/product.read-accessor";
+import { logger } from "../../../domain/services/logger.service";
+import { ProductReadAccessor } from "../read-accessors/product.read-accessor";
 
 export class GetProductsUsecase {
-  constructor(private readonly productReadAccess: ProductPrismaReadAccessor) {}
+  constructor(private readonly productReadAccessor: ProductReadAccessor) {}
 
-  async execute(input: any) {
-    return { products: await this.productReadAccess.getProducts() };
+  async execute() {
+    console.log('\n📦 GetProductsUsecase.execute()');
+    const log = logger.child({ task: "Get products" });
+    log.info("Task started");
+    
+    const products = await this.productReadAccessor.getProducts();
+    
+    console.log(`✅ Returning ${products.length} products`);
+    
+    log.info("Task completed", { count: products.length });
+    
+    // ✅ CRITICAL: Return { products: [] } format (NOT { data: [] })
+    return { products };
   }
 }

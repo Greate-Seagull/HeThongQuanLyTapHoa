@@ -4,11 +4,18 @@ import { BaseEntity } from "../abstracts/entity";
 
 export type SlotId = number | null;
 
+// ✅ ADD: Define SlotDetail interface (if not already exists)
+interface SlotDetail {
+	id: number;
+	slotId: number;
+	productId: number;
+}
+
 export class Slot extends BaseEntity<SlotId> {
 	protected _id: SlotId = null;
-	private _name: string = null;
+	private _name: string = "";
 	private _rackId: number = null;
-
+	private _slotDetails: SlotDetail[] = [];
 
 	static create(input: any) {
 		const entity = create(Slot, input);
@@ -19,6 +26,7 @@ export class Slot extends BaseEntity<SlotId> {
 
 	public update(input: any) {
 		if (input.name !== undefined) this.name = input.name;
+		if (input.rackId !== undefined) this.rackId = input.rackId;
 	}
 
 	// Setters
@@ -26,11 +34,14 @@ export class Slot extends BaseEntity<SlotId> {
 		this._id = value;
 	}
 	private set name(value: string) {
-		if (!value || value.length === 0) throw Error("Name cannot be empty");
+		if (!value || value.length < 1) throw Error("Invalid name");
 		this._name = value;
 	}
 	private set rackId(value: number) {
 		this._rackId = value;
+	}
+	private set slotDetails(value: SlotDetail[]) {
+		this._slotDetails = value;
 	}
 
 	// Getters

@@ -18,22 +18,36 @@ import {
  * Frontend has positions: SALES, INVENTORY, RECEIVING
  * Question: Should INVENTORY staff have access? (They need product management)
  */
-export const getProducts = async (): Promise<Product[]> => {
+export async function getProducts(): Promise<Product[]> {
   try {
-    const response = await apiClient.get<Product[]>('/products')
-    return response
-  } catch (error: any) {
-    console.error('Get products error:', error)
+    console.log('📤 Fetching products...');
+    // ✅ Backend returns { products: Product[] }
+    const response = await apiClient.get<{ products: Product[] }>('/products');
+    console.log('📥 Products response:', response);
     
-    // Handle specific errors
-    if (error.response?.status === 403) {
-      throw new Error('Bạn không có quyền truy cập danh sách sản phẩm. Chỉ quản trị viên mới được phép.')
+    // ✅ Extract products array
+    const products = response.products || [];
+    
+    console.log(`✅ Received ${products.length} products`);
+    
+    // Log sample
+    if (products.length > 0) {
+      const sample = products[0];
+      console.log('📦 Sample product:', {
+        id: sample.id,
+        name: sample.name,
+        barcode: sample.barcode,
+        slotDetailsCount: sample.slotDetails?.length || 0,
+      });
     }
     
+    return products;
+  } catch (error: any) {
+    console.error('Get products error:', error);
     throw new Error(
       error.response?.data?.message || 
       'Không thể tải danh sách sản phẩm. Vui lòng thử lại.'
-    )
+    );
   }
 }
 

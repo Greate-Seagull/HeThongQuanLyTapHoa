@@ -32,6 +32,7 @@
 		"cors": "^2.8.5",
 		"exceljs": "^4.4.0",
 		"express": "^5.1.0",
+		"html2canvas": "^1.4.1",
 		"inversify": "^7.10.4",
 		"jsend": "^1.1.0",
 		"jsonwebtoken": "^9.0.2",

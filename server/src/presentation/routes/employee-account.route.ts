@@ -1,6 +1,3 @@
-import { ChangeEmployeePasswordUsecase } from '../../application/services/employee-account/change-employee-password.usecase';
-const changeEmployeePasswordUsecase = new ChangeEmployeePasswordUsecase();
-
 import { Router } from "express";
 import { authenticationMiddleware } from "../middlewares/authentication.middleware";
 import { authorizationMiddleware } from "../middlewares/authorization.middleware";
@@ -12,29 +9,30 @@ import {
   getEmployeeAccountsUsecase,
   getEmployeeAccountProfileUsecase,
   deleteEmployeeAccountUsecase,
+  changeManagerPasswordUsecase,
 } from "../../composition-root";
-const router = Router();
 
-// router.use(authenticationMiddleware);
+const router = Router();
 
 // Lấy thông tin cá nhân employee-account
 router.get("/profile", authenticationMiddleware, (req, res) => {
-  const id =
-    (req as any).authId ||
-    (req as any).user?.id ||
-    req.body?.id ||
-    req.query?.id;
-  console.log("Profile request for account id:", id);
+  // ✅ FIX: Use accountId (EmployeeAccountID) instead of authId (EmployeeID)
+  const accountId = (req as any).accountId;
+  
+  console.log("Profile request for account id:", accountId);
 
-  if (!id) return res.status(401).jsend.fail("Missing account id");
-  return controller(getEmployeeAccountProfileUsecase)(
-    { ...req, body: { id } },
-    res
-  );
+  if (!accountId) return res.status(401).jsend.fail("Missing account id");
+  
+  // ✅ FIX: Initialize body if undefined, then set id
+  if (!req.body) req.body = {};
+  req.body.id = accountId; // Use EmployeeAccount.id
+  
+  return controller(getEmployeeAccountProfileUsecase)(req, res);
 });
 
-//Handlers
+// Handlers
 router.post("/sign-in", controller(useAccountUsecase));
+
 router.post(
   "/",
   // authenticationMiddleware,
@@ -58,22 +56,36 @@ router.delete(
   "/:id",
   // authenticationMiddleware,
   // authorizationMiddleware("MANAGER"),
-  (req, res) =>
-    controller(deleteEmployeeAccountUsecase)({ ...req, id: req.params.id }, res)
+  (req, res) => {
+    const id = parseInt(req.params.id);
+    
+    console.log('🗑️ DELETE /employee-accounts/:id called:', {
+      id,
+      params: req.params,
+      bodyBefore: req.body,
+    });
+    
+    // ✅ CRITICAL FIX: Initialize body first for DELETE request
+    if (!req.body || typeof req.body !== 'object') {
+      req.body = {};
+    }
+    
+    req.body.id = id;
+    
+    console.log('🗑️ Body after setting id:', req.body);
+    
+    return controller(deleteEmployeeAccountUsecase)(req, res);
+  }
 );
 
 // Đổi mật khẩu cho nhân viên
 router.post(
   '/change-password',
   authenticationMiddleware,
-  async (req, res) => {
-    req.body = { ...req.body, id: (req as any).authId };
-    try {
-      const result = await changeEmployeePasswordUsecase.execute(req.body);
-      res.json({ status: 'success', data: result });
-    } catch (err: any) {
-      res.status(400).json({ status: 'fail', message: err.message });
-    }
+  (req, res) => {
+    // ✅ FIX: Set authId from middleware
+    req.body.id = (req as any).authId;
+    return controller(changeManagerPasswordUsecase)(req, res);
   }
 );
 

@@ -40,9 +40,8 @@ export default function LoginPage() {
           password: password,
         })
         
-        // Backend now returns user data with token
         userData = {
-          username: username, // Using phoneNumber as username
+          username: username,
           role: 'customer' as UserRole,
           customerId: response.user?.id,
         }
@@ -56,32 +55,39 @@ export default function LoginPage() {
           password: password,
         })
         
-        // Debug: Log the response to see what backend returns
         console.log('Employee sign-in response:', response)
         
-        // Backend now returns employee data with token
+        // ✅ CRITICAL: Check if response has employee data
+        if (!response.employee) {
+          toast.error('Đăng nhập thất bại: Không tìm thấy thông tin nhân viên')
+          setIsLoading(false)
+          return
+        }
+        
         userData = {
           username: username,
           role: 'staff' as UserRole,
-          employeeData: response.employee, // Employee data now included in response
+          employeeData: response.employee,
         }
         
         console.log('userData created:', userData)
         
-        if (response.employee) {
-          toast.success(`Đăng nhập thành công! Chào mừng ${response.employee.name}`)
-        } else {
-          toast.warning('Đăng nhập thành công, nhưng thông tin nhân viên chưa đầy đủ')
-        }
+        toast.success(`Đăng nhập thành công! Chào mừng ${response.employee.name}`)
       } else if (selectedRole === 'owner') {
-        // Owner uses the same endpoint as employee (MANAGER position)
         response = await employeeSignIn({
           username: username,
           password: password,
         })
         
+        // ✅ Check if response has employee data
+        if (!response.employee) {
+          toast.error('Đăng nhập thất bại: Không tìm thấy thông tin nhân viên')
+          setIsLoading(false)
+          return
+        }
+        
         // Check if the employee has MANAGER position
-        if (response.employee?.position !== 'MANAGER') {
+        if (response.employee.position !== 'MANAGER') {
           toast.error('Chỉ chủ cửa hàng (MANAGER) mới có thể đăng nhập với vai trò này')
           setIsLoading(false)
           return
@@ -93,16 +99,11 @@ export default function LoginPage() {
           employeeData: response.employee,
         }
         
-        if (response.employee) {
-          toast.success(`Đăng nhập thành công! Chào mừng ${response.employee.name}`)
-        }
+        toast.success(`Đăng nhập thành công! Chào mừng ${response.employee.name}`)
       }
 
-      // Store token is already handled in auth.service.ts via apiClient.setToken()
-      // Also store in auth store for persistence
+      // Store token and login
       login(userData, response.token)
-      
-      toast.success('Đăng nhập thành công!')
       
       // Navigate based on role
       if (selectedRole === 'owner') {
@@ -114,7 +115,8 @@ export default function LoginPage() {
       }
     } catch (error: any) {
       console.error('Login error:', error)
-      toast.error(error.message || 'Đăng nhập thất bại. Vui lòng thử lại.')
+      // ✅ Show backend error message directly
+      toast.error(error.message || 'Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.')
     } finally {
       setIsLoading(false)
     }

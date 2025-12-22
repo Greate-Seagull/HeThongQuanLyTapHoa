@@ -14,8 +14,6 @@ const router = Router();
 router.use(authenticationMiddleware);
 // router.use(authorizationMiddleware("ADMIN"));
 
-
-
 // GET /slots - get all slots (basic info)
 import { slotRepo } from '../../composition-root';
 router.get("/", async (req, res, next) => {
@@ -28,8 +26,27 @@ router.get("/", async (req, res, next) => {
 });
 
 router.post("/", controller(createSlotUsecase));
-router.put("/:id", controller(updateSlotUsecase));
-router.delete("/:id", controller(deleteSlotUsecase));
+
+router.put("/:id", (req, res) => {
+	const id = parseInt(req.params.id);
+	if (isNaN(id)) {
+		return res.status(400).jsend.fail("Invalid slot ID");
+	}
+	req.body.id = id;
+	return controller(updateSlotUsecase)(req, res);
+});
+
+router.delete("/:id", (req, res) => {
+	const id = parseInt(req.params.id);
+	if (isNaN(id)) {
+		return res.status(400).jsend.fail("Invalid slot ID");
+	}
+	
+	if (!req.body) req.body = {};
+	req.body.id = id;
+	
+	return controller(deleteSlotUsecase)(req, res);
+});
 
 // GET /slots/list-with-product
 router.get("/list-with-product", controller(listSlotWithProductUsecase));

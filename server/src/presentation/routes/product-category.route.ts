@@ -27,7 +27,14 @@ router.put(
   "/:id",
   authenticationMiddleware,
   authorizationMiddleware("MANAGER"),
-  controller(updateProductCategoryUsecase)
+  (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).jsend.fail("Invalid category ID");
+    }
+    req.body.id = id;
+    return controller(updateProductCategoryUsecase)(req, res);
+  }
 );
 
 // DELETE category
@@ -35,7 +42,17 @@ router.delete(
   "/:id",
   authenticationMiddleware,
   authorizationMiddleware("MANAGER"),
-  controller(deleteProductCategoryUsecase)
+  (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).jsend.fail("Invalid category ID");
+    }
+    
+    if (!req.body) req.body = {};
+    req.body.id = id;
+    
+    return controller(deleteProductCategoryUsecase)(req, res);
+  }
 );
 
 export default router;

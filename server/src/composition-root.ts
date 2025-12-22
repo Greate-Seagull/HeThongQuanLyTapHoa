@@ -45,6 +45,7 @@ import { ProductCategoryReadAccessor } from "./infrastructure/read-accessors/pri
 import { ProductPrismaReadAccessor } from "./infrastructure/read-accessors/prisma/product.read-accessor";
 import { ReportReadAccessor } from "./infrastructure/read-accessors/prisma/report.read-accessor";
 import { ShelfReadAccessor } from "./infrastructure/read-accessors/prisma/shelf.read-accessor";
+import { StocktakingReadAccessor } from "./infrastructure/read-accessors/prisma/stocktaking.read-accessor";
 
 import { SupplierReadAccessor } from "./infrastructure/read-accessors/prisma/supplier.read-accessor";
 
@@ -87,6 +88,9 @@ import { DeleteCustomerAccountUsecase } from "./application/services/customer-ac
 import { CreateInvoiceUsecase } from "./application/services/invoice/create-invoice.usecase";
 import { CreateGoodReceiptUsecase } from "./application/services/good-receipt/create-good-receipt.usecase";
 import { CreateStocktakingUsecase } from "./application/services/stocktaking/create-stocktaking.usecase";
+import { GetStocktakingsUsecase } from "./application/services/stocktaking/get-stocktakings.usecase";
+import { UpdateStocktakingUsecase } from "./application/services/stocktaking/update-stocktaking.usecase";
+import { DeleteStocktakingUsecase } from "./application/services/stocktaking/delete-stocktaking.usecase";
 import { GetSuppliersUsecase } from "./application/services/supplier/get-suppliers.usecase";
 import { CreateSupplierUsecase } from "./application/services/supplier/create-supplier.usecase";
 import { UpdateSupplierUsecase } from "./application/services/supplier/update-supplier.usecase";
@@ -178,6 +182,7 @@ const shelfReadAccessor = new ShelfReadAccessor(prisma);
 const productCategoryReadAccessor = new ProductCategoryReadAccessor(prisma);
 const supplierReadAccessor = new SupplierReadAccessor(prisma);
 const reportReadAccessor = new ReportReadAccessor(prisma);
+const stocktakingReadAccessor = new StocktakingReadAccessor(prisma);
 const shelfRepo = new ShelfRepository(prisma);
 const rackRepo = new RackRepository(prisma);
 export const slotRepo = new SlotRepository(prisma);
@@ -290,9 +295,26 @@ export const createGoodReceiptUsecase = new CreateGoodReceiptUsecase(
   transactionManager
 );
 export const createStocktakingUsecase = new CreateStocktakingUsecase(
+  employeeReadAccessor,
   productReadAccessor,
   shelfReadAccessor,
   stocktakingRepo
+);
+
+export const getStocktakingsUsecase = new GetStocktakingsUsecase(
+  stocktakingReadAccessor
+);
+
+export const updateStocktakingUsecase = new UpdateStocktakingUsecase(
+  employeeReadAccessor,
+  productReadAccessor,
+  shelfReadAccessor,
+  stocktakingRepo
+);
+
+export const deleteStocktakingUsecase = new DeleteStocktakingUsecase(
+  stocktakingRepo,
+  employeeReadAccessor
 );
 
 // Supplier usecases
@@ -359,13 +381,13 @@ export const updateShelfUsecase = new UpdateShelfUsecase(shelfRepo);
 export const deleteShelfUsecase = new DeleteShelfUsecase(shelfRepo);
 export const getShelvesUsecase = new GetShelvesUsecase(shelfReadAccessor);
 export const createRackUsecase = new CreateRackUsecase(rackRepo, shelfRepo);
-export const updateRackUsecase = new UpdateRackUsecase(rackRepo);
+export const updateRackUsecase = new UpdateRackUsecase(rackRepo, shelfRepo);
 export const deleteRackUsecase = new DeleteRackUsecase(rackRepo);
 
 const slotDetailRepo = new SlotDetailRepository(prisma);
 const slotDetailUsecase = new SlotDetailUsecase(slotDetailRepo);
 export const createSlotUsecase = new CreateSlotUsecase(slotRepo, rackRepo, slotDetailUsecase);
-export const updateSlotUsecase = new UpdateSlotUsecase(slotRepo, slotDetailUsecase);
+export const updateSlotUsecase = new UpdateSlotUsecase(slotRepo, rackRepo, slotDetailUsecase);
 export const listSlotWithProductUsecase = new ListSlotWithProductUsecase(slotDetailUsecase);
 export const deleteSlotUsecase = new DeleteSlotUsecase(slotRepo);
 export const updatePromotionUsecase = new UpdatePromotionUsecase(
@@ -394,11 +416,7 @@ export const createEmployeeWithAccountUsecase = buildCreateEmployeeWithAccountUs
   employeeAccountRepo,
   passwordService
 );
-import { ListStocktakingsUsecase } from "./application/services/stocktaking/list-stocktakings.usecase";
-import { GetStocktakingByIdUsecase } from "./application/services/stocktaking/get-stocktaking-by-id.usecase";
 
-export const listStocktakingsUsecase = new ListStocktakingsUsecase(stocktakingRepo);
-export const getStocktakingByIdUsecase = new GetStocktakingByIdUsecase(stocktakingRepo);
 import { GetInvoicesUsecase } from "./application/services/invoice/get-invoices.usecase";
 import { GetInvoiceByIdUsecase } from "./application/services/invoice/get-invoice-by-id.usecase";
 

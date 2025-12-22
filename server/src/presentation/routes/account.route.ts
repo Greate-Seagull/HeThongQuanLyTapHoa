@@ -1,14 +1,5 @@
-import { updateManagerProfileUsecase } from '../../composition-root';
-import { changeManagerPasswordUsecase } from '../../composition-root';
-// Đổi mật khẩu cho manager (employee account)
-
-
-// Đổi mật khẩu cho customer (hoặc employee nếu muốn dùng chung)
-import { changeCustomerPasswordUsecase } from '../../composition-root';
-
 import { Router } from "express";
 import { authenticationMiddleware } from "../middlewares/authentication.middleware";
-import { authorizationMiddleware } from "../middlewares/authorization.middleware";
 import { controller } from "../controllers/controller";
 import {
   signInUsecase,
@@ -18,97 +9,57 @@ import {
   createCustomerAccountUsecase,
   updateCustomerAccountUsecase,
   deleteCustomerAccountUsecase,
+  changeCustomerPasswordUsecase,
 } from "../../composition-root";
 
 const router = Router();
 
-// Cập nhật profile manager
-router.put(
-  '/manager',
-  authenticationMiddleware,
-  authorizationMiddleware('MANAGER'),
-  (req, res) => {
-    // Không ghi đè id, giữ nguyên id FE truyền lên (employeeId)
-    controller(updateManagerProfileUsecase)(req, res);
-  }
-);
-
-// Đăng nhập
+// Public routes
 router.post("/sign-in", controller(signInUsecase));
-// Đăng ký
-router.post("/", controller(signUpUsecase));
+router.post("/sign-up", controller(signUpUsecase));
 
-// Lấy thông tin account hiện tại từ token (Profile)
-router.get("/profile", authenticationMiddleware, (req, res) => {
-  const authId =
-    (req as any).authId ||
-    (req as any).user?.id ||
-    req.body?.id ||
-    req.query?.id;
-  if (!authId) return res.status(401).jsend.fail("Missing account id");
-  return controller(getMyAccountUsecase)({ ...req, body: { authId } }, res);
+// Protected routes
+router.use(authenticationMiddleware);
+
+router.get("/me", (req, res) => {
+  // ✅ FIX: Use userId (not accountId) for customer
+  const userId = (req as any).userId || (req as any).authId;
+  
+  console.log('📥 GET /accounts/me called:', {
+    userId,
+    accountId: (req as any).accountId,
+    userType: (req as any).userType,
+  });
+  
+  if (!userId) return res.status(401).jsend.fail("Not authenticated");
+  
+  // ✅ Initialize body
+  if (!req.body) req.body = {};
+  req.body.authId = userId;
+  
+  return controller(getMyAccountUsecase)(req, res);
 });
 
-// router.get("/profile", authenticationMiddleware, (req, res) => {
-//   const id =
-//     (req as any).authId ||
-//     (req as any).user?.id ||
-//     req.body?.id ||
-//     req.query?.id;
-//   if (!id) return res.status(401).jsend.fail("Missing account id");
-//   return controller(getEmployeeAccountProfileUsecase)(
-//     { ...req, body: { id } },
-//     res
-//   );
-// });
+router.get("/", controller(getAccountsUsecase));
 
-// Lấy tất cả account (join user)
-router.get("/", authenticationMiddleware, controller(getAccountsUsecase));
+router.post("/", controller(createCustomerAccountUsecase));
 
-// Quản lý Account (Create, Update, Delete)
-router.post(
-  "/create",
-  authenticationMiddleware,
-  authorizationMiddleware("MANAGER"),
-  controller(createCustomerAccountUsecase)
-);
+router.put("/:id", (req, res) => {
+  if (!req.body) req.body = {};
+  req.body.id = parseInt(req.params.id);
+  return controller(updateCustomerAccountUsecase)(req, res);
+});
 
+router.delete("/:id", (req, res) => {
+  if (!req.body) req.body = {};
+  req.body.id = parseInt(req.params.id);
+  return controller(deleteCustomerAccountUsecase)(req, res);
+});
 
-// Cập nhật profile cá nhân (customer)
-router.put(
-  "/profile",
-  authenticationMiddleware,
-  (req, res) => {
-    // Gán id vào body để controller merge đúng input
-    req.body = { ...req.body, id: (req as any).authId };
-    controller(updateCustomerAccountUsecase)(req, res);
-  }
-);
-
-router.delete(
-  "/:id",
-  authenticationMiddleware,
-  authorizationMiddleware("MANAGER"),
-  (req, res) => controller(deleteCustomerAccountUsecase)({ ...req, id: req.params.id }, res)
-);
-
-router.post(
-  '/change-password',
-  authenticationMiddleware,
-  (req, res) => {
-    req.body = { ...req.body, id: (req as any).authId };
-    controller(changeCustomerPasswordUsecase)(req, res);
-  }
-);
-
-router.post(
-  '/manager/change-password',
-  authenticationMiddleware,
-  authorizationMiddleware('MANAGER'),
-  (req, res) => {
-    req.body = { ...req.body, id: (req as any).authId };
-    controller(changeManagerPasswordUsecase)(req, res);
-  }
-);
+router.post("/change-password", (req, res) => {
+  if (!req.body) req.body = {};
+  req.body.id = (req as any).userId || (req as any).authId;
+  return controller(changeCustomerPasswordUsecase)(req, res);
+});
 
 export default router;

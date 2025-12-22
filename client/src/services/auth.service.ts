@@ -105,31 +105,51 @@ export interface EmployeeSignInRequest {
 
 export interface EmployeeSignInResponse {
   token: string
-  // TODO: Backend MUST add these fields
-  employee?: Employee
+  employee: {
+    id: number              // EmployeeAccount.id
+    employeeId: number      // Real Employee.id
+    username: string
+    name: string
+    position: string
+  }
 }
 
 export const employeeSignIn = async (
   data: EmployeeSignInRequest
 ): Promise<EmployeeSignInResponse> => {
   try {
+    console.log('📤 Employee sign-in request:', data)
+    
     const response = await apiClient.post<EmployeeSignInResponse>(
       '/employee-accounts/sign-in',
       data
     )
     
-    // Store token in apiClient
-    if (response.token) {
-      apiClient.setToken(response.token)
+    console.log('📥 Employee sign-in response:', response)
+    
+    // ✅ CRITICAL: Validate response structure
+    if (!response.token) {
+      throw new Error('Đăng nhập thất bại. Vui lòng kiểm tra tên đăng nhập và mật khẩu.')
     }
+    
+    if (!response.employee) {
+      throw new Error('Response missing employee data')
+    }
+    
+    // Store token in apiClient
+    apiClient.setToken(response.token)
     
     return response
   } catch (error: any) {
     console.error('Employee sign-in error:', error)
-    throw new Error(
-      error.response?.data?.message || 
-      'Đăng nhập thất bại. Vui lòng kiểm tra tên đăng nhập và mật khẩu.'
-    )
+    
+    // ✅ Extract error message from backend
+    const errorMessage = error.response?.data?.data?.message 
+      || error.response?.data?.message 
+      || error.message 
+      || 'Đăng nhập thất bại. Vui lòng kiểm tra tên đăng nhập và mật khẩu.'
+    
+    throw new Error(errorMessage)
   }
 }
 

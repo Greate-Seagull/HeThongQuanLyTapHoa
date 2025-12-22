@@ -1,14 +1,15 @@
 import { Read, Required, Type, Write } from "../../types/decorators";
 import { create } from "../services/factory.service";
 import { BaseEntity } from "../abstracts/entity";
+import { Slot } from "./slot";  // ✅ ADD: Import Slot
 
 export type RackId = number | null;
 
 export class Rack extends BaseEntity<RackId> {
 	protected _id: RackId = null;
-	private _name: string = null;
+	private _name: string = "";
 	private _shelfId: number = null;
-
+	private _slots: Slot[] = [];
 
 	static create(input: any) {
 		const entity = create(Rack, input);
@@ -19,7 +20,7 @@ export class Rack extends BaseEntity<RackId> {
 
 	public update(input: any) {
 		if (input.name !== undefined) this.name = input.name;
-		// Thường ít khi di chuyển Rack sang Shelf khác, nhưng nếu cần có thể thêm update shelfId
+		if (input.shelfId !== undefined) this.shelfId = input.shelfId;
 	}
 
 	// Setters
@@ -27,11 +28,14 @@ export class Rack extends BaseEntity<RackId> {
 		this._id = value;
 	}
 	private set name(value: string) {
-		if (!value || value.length === 0) throw Error("Name cannot be empty");
+		if (!value || value.length < 1) throw Error("Invalid name");
 		this._name = value;
 	}
 	private set shelfId(value: number) {
 		this._shelfId = value;
+	}
+	private set slots(value: Slot[]) {
+		this._slots = value;
 	}
 
 	// Getters

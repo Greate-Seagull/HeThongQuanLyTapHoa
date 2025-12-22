@@ -64,9 +64,16 @@ export class SignInUsecase {
       accountId: savedAccount.id,
     });
 
+    // ✅ CRITICAL FIX: Use Account.id in token (NOT userId)
     const token = this.tokenService.generateJwt({
-      id: account.userId, // Đảm bảo id trong token là userId
+      id: account.id,          // ✅ Account.id (115, 116) - not userId
       position: "CUSTOMER",
+    });
+    
+    console.log('✅ Generated token for customer:', {
+      accountId: account.id,
+      userId: account.userId,
+      userName: user.name,
     });
 
     log.info("Task completed");

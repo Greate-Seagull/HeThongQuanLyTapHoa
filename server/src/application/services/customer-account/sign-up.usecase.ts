@@ -41,7 +41,7 @@ export class SignUpUsecase {
 		});
 		log.info("Task started");
 
-		const exist = await this.accountRead.existPhoneNumber(
+		const exist = await this.accountRead.existsByPhoneNumber(
 			parsedInput.phoneNumber
 		);
 		if (exist) {

@@ -7,8 +7,14 @@ export class EmployeeReadAccess {
 		const count = await this.prisma.employee.count({
 			where: { id: id },
 		});
-
 		return count === 1;
+	}
+
+	async getById(id: number) {
+		return await this.prisma.employee.findUnique({
+			where: { id },
+			select: { id: true, name: true, position: true },
+		});
 	}
 
 	async getPositionById(employeeId: number) {

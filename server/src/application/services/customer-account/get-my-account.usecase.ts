@@ -4,11 +4,12 @@ import { AccountReadAccessor } from "../../../infrastructure/read-accessors/pris
 import z from "zod";
 
 const inputSchema = z.object({
-  authId: z.number(),
+  authId: z.number(),  // This is userId from middleware
 });
 
 const outputSchema = z.object({
   id: z.number(),
+  userId: z.number(),
   phoneNumber: z.string(),
   user: z.object({
     id: z.number(),
@@ -28,13 +29,40 @@ export class GetMyAccountUsecase {
     const parsedInput = inputSchema.parse(input);
     const log = logger.child({
       task: "Get my account",
-      id: parsedInput.authId,
+      userId: parsedInput.authId,
     });
     log.info("Task started");
-  // authId giờ là userId, nên phải lấy account theo userId
-  const account = await this.accountRead.getByUserId(parsedInput.authId);
-    if (!account) throw Error("Account not found");
-    log.info("Task completed");
-    return outputSchema.parse(account);
+
+    // ✅ Get account by userId (from middleware)
+    const account = await this.accountRead.getByUserId(parsedInput.authId);
+    
+    if (!account) {
+      log.warn("Account not found");
+      throw Error("Account not found");
+    }
+    
+    console.log('✅ Found customer account:', {
+      accountId: account.id,
+      userId: account.user.id,
+      name: account.user.name,
+      point: account.user.point,
+      phoneNumber: account.phoneNumber,
+    });
+
+    log.info("Task completed", {
+      accountId: account.id,
+      point: account.user.point,
+    });
+    
+    return outputSchema.parse({
+      id: account.id,
+      userId: account.user.id,
+      phoneNumber: account.phoneNumber,
+      user: {
+        id: account.user.id,
+        name: account.user.name,
+        point: account.user.point,
+      },
+    });
   }
 }
