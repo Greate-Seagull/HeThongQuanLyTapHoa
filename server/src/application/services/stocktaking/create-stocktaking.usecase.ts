@@ -18,6 +18,7 @@ const inputSchema = z.object({
 	),
 });
 
+
 const outputSchema = z.object();
 
 export class CreateStocktakingUsecase {

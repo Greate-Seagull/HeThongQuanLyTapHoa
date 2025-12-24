@@ -17,10 +17,6 @@ router.use(authorizationMiddleware("INVENTORY"));
 router.get("/", controller(listStocktakingsUsecase));
 // Lấy chi tiết phiếu kiểm kê theo id
 router.get("/:id", controller(getStocktakingByIdUsecase));
-router.post(
-  "/",
-  authenticationMiddleware,
-  controller(createStocktakingUsecase)
-);
+router.post("/", controller(createStocktakingUsecase));
 
 export default router;

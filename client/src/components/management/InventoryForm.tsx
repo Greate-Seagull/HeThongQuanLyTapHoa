@@ -108,6 +108,8 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
       (stocktaking.employee?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
   )
 
+  const currentUserPosition = localStorage.getItem('auth-storage') || ''
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
@@ -262,7 +264,10 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
         toast.success('Cập nhật phiếu kiểm kê thành công!')
       } else {
         // CREATE MODE
+        console.log(currentUserPosition);
+        
         await createStocktaking({
+          employeeId: currentUserPosition.state.user.employeeData.id,
           products: stocktakingDetails.map((d) => ({
             barcode: d.product?.barcode || 0,
             slotId: d.slotId,
