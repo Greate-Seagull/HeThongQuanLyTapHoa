@@ -53,7 +53,7 @@ export class CreateGoodReceiptUsecase {
 		);
 		if (products.length != input.items.length) {
 			log.warn("Task failed: invalid product id");
-			throw Error(`Expect all products to be valid`);
+			throw Error(`Expect all products to be valid`);			
 		}
 		log.debug("Task validated");
 
