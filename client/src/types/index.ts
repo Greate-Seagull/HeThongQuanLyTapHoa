@@ -301,9 +301,8 @@ export interface CreateGoodReceiptRequest {
 }
 
 export interface CreateStocktakingRequest {
-  employeeId: number
-  details: {
-    productId: number
+  products: {
+    barcode: number
     slotId: number
     status: ProductStatus
     quantity: number

@@ -32,6 +32,7 @@ import {
   Eye,
   Package,
   Loader2,
+  Edit,
 } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
@@ -57,6 +58,7 @@ import {
   getStocktakings,
   getStocktakingById,
   createStocktaking,
+  updateStocktaking,
 } from '@/services/stocktaking.service'
 import { log } from 'console'
 
@@ -95,7 +97,8 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
   const [stocktakingDetails, setStocktakingDetails] = useState<StocktakingDetail[]>([])
   const [openProductCombobox, setOpenProductCombobox] = useState(false)
   const [openSlotCombobox, setOpenSlotCombobox] = useState(false)
-
+  const [isEditingStocktaking, setIsEditingStocktaking] = useState(false)
+  const [editingStocktakingId, setEditingStocktakingId] = useState<number | null>(null)
   // Helper tìm kiếm (Dùng state products/slots thay vì mock)
   const selectedProduct = products.find((p) => p.id === selectedProductId)
   const selectedSlot = slots.find((s) => s._id === selectedSlotId)
@@ -151,6 +154,16 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
     setSelectedStatus(ProductStatus.GOOD)
     setQuantity(0)
     setBarcodeInput('')
+  }
+
+  const handleEditStocktaking = async (stocktaking: Stocktaking) => {
+    setIsEditingStocktaking(true)
+    setEditingStocktakingId(stocktaking.id)
+    setIsCreatingStocktaking(true)
+
+    // Load chi tiết phiếu
+    const detail = await getStocktakingById(stocktaking.id)
+    setStocktakingDetails(detail.stocktakingDetails || [])
   }
 
   const handleBarcodeSearch = () => {
@@ -236,21 +249,37 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
 
     setLoading(true)
     try {
-      await createStocktaking({
-        employeeId: currentUser.id,
-        details: stocktakingDetails.map((d) => ({
-          productId: d.productId,
-          slotId: d.slotId,
-          status: d.status,
-          quantity: d.quantity,
-        })),
-      })
-      toast.success('Lưu phiếu kiểm kê thành công!')
+      if (isEditingStocktaking && editingStocktakingId) {
+        // UPDATE MODE
+        await updateStocktaking(editingStocktakingId, {
+          products: stocktakingDetails.map((d) => ({
+            barcode: d.product?.barcode || 0,
+            slotId: d.slotId,
+            status: d.status,
+            quantity: d.quantity,
+          })),
+        })
+        toast.success('Cập nhật phiếu kiểm kê thành công!')
+      } else {
+        // CREATE MODE
+        await createStocktaking({
+          products: stocktakingDetails.map((d) => ({
+            barcode: d.product?.barcode || 0,
+            slotId: d.slotId,
+            status: d.status,
+            quantity: d.quantity,
+          })),
+        })
+        toast.success('Lưu phiếu kiểm kê thành công!')
+      }
 
       // Reset form
       setIsCreatingStocktaking(false)
       setStocktakingDetails([])
-
+      setIsCreatingStocktaking(false)
+      setIsEditingStocktaking(false)
+      setEditingStocktakingId(null)
+      setStocktakingDetails([])
       // Reload danh sách
       const data = await getStocktakings()
       setStocktakings(Array.isArray(data) ? data : [])
@@ -306,7 +335,7 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
           <CardHeader className="bg-purple-100">
             <CardTitle className="flex items-center gap-2 text-purple-900">
               <ClipboardCheck className="h-5 w-5" />
-              Lập Phiếu Kiểm Kê Mới
+              {isEditingStocktaking ? 'Sửa Phiếu Kiểm Kê' : 'Lập Phiếu Kiểm Kê Mới'}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6 p-6">
@@ -646,14 +675,33 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                               : 0}
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleViewStocktaking(stocktaking as any)}
-                              className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleViewStocktaking(stocktaking as any)}
+                                className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEditStocktaking(stocktaking as any)}
+                                className="text-amber-600 hover:bg-amber-50 hover:text-amber-700"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteStocktaking(stocktaking.id)}
+                                className="cursor-not-allowed text-red-400 opacity-50 hover:bg-red-50 hover:text-red-500"
+                                disabled
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}

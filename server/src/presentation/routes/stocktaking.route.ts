@@ -2,7 +2,11 @@ import { Router } from "express";
 import { authenticationMiddleware } from "../middlewares/authentication.middleware";
 import { authorizationMiddleware } from "../middlewares/authorization.middleware";
 import { controller } from "../controllers/controller";
-import { createStocktakingUsecase, listStocktakingsUsecase, getStocktakingByIdUsecase } from "../../composition-root";
+import {
+  createStocktakingUsecase,
+  listStocktakingsUsecase,
+  getStocktakingByIdUsecase,
+} from "../../composition-root";
 
 const router = Router();
 
@@ -13,6 +17,10 @@ router.use(authorizationMiddleware("INVENTORY"));
 router.get("/", controller(listStocktakingsUsecase));
 // Lấy chi tiết phiếu kiểm kê theo id
 router.get("/:id", controller(getStocktakingByIdUsecase));
-router.post("/", controller(createStocktakingUsecase));
+router.post(
+  "/",
+  authenticationMiddleware,
+  controller(createStocktakingUsecase)
+);
 
 export default router;
