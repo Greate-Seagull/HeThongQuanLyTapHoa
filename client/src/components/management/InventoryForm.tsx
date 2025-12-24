@@ -267,7 +267,6 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
         console.log(currentUserPosition);
         
         await createStocktaking({
-          employeeId: currentUserPosition.state.user.employeeData.id,
           products: stocktakingDetails.map((d) => ({
             barcode: d.product?.barcode || 0,
             slotId: d.slotId,
