@@ -292,8 +292,7 @@ export interface CreateInvoiceRequest {
 }
 
 export interface CreateGoodReceiptRequest {
-  employeeId: number
-  details: {
+  items: {
     productId: number
     quantity: number
     price: number

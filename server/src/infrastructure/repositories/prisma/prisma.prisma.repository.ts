@@ -38,8 +38,10 @@ export abstract class PrismaRepository<
 			where: { id: { in: ids } },
 			select: this.getBaseQuery().select,
 		});
-
-		return raws.map((raw: any) => this.buildEntity(raw));
+		console.debug("[getByIds] Prisma raws:", JSON.stringify(raws));
+		const entities = raws.map((raw: any) => this.buildEntity(raw));
+		console.debug("[getByIds] Entities:", JSON.stringify(entities));
+		return entities;
 	}
 
 	public async add(
@@ -107,9 +109,13 @@ export abstract class PrismaRepository<
 	): any;
 
 	protected buildEntity(raw: any): EntityType | null {
-		if (!raw) return null;
-
+		if (!raw) {
+			console.debug("[buildEntity] raw is null");
+			return null;
+		}
+		console.debug("[buildEntity] raw input:", JSON.stringify(raw));
 		const entity = this.fromPersistence(raw);
+		console.debug("[buildEntity] entity output:", JSON.stringify(entity));
 		return entity;
 	}
 

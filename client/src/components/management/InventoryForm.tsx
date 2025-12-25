@@ -77,14 +77,6 @@ interface InventoryFormProps {
 }
 
 // Helper: Lấy số lượng hiện tại của sản phẩm tại slot
-async function getCurrentQuantity(productId: number, slotId: number): Promise<number> {
-  try {
-    const response = await apiClient.get(`products/${productId}/slot/${slotId}/quantity`)
-    return response?.quantity || 0
-  } catch {
-    return 0
-  }
-}
 
 // Helper: Cập nhật trạng thái sản phẩm
 async function updateProductStatus(productId: number, slotId: number, status: ProductStatus) {
@@ -171,20 +163,14 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
     }
     fetchData()
   }, [currentUser])
-
-  // Fetch số lượng hiện tại khi chọn sản phẩm + slot
   useEffect(() => {
-    const fetchQuantity = async () => {
-      if (selectedProductId && selectedSlotId) {
-        const qty = await getCurrentQuantity(selectedProductId, selectedSlotId)
-        setCurrentQuantity(qty)
-      } else {
-        setCurrentQuantity(0)
-      }
+    if (selectedProductId) {
+      const product = products.find((p) => p.id === selectedProductId)
+      setCurrentQuantity(product?.amount || 0)
+    } else {
+      setCurrentQuantity(0)
     }
-    fetchQuantity()
-  }, [selectedProductId, selectedSlotId])
-
+  }, [selectedProductId, products])
   // Handlers
   const handleStartCreateStocktaking = () => {
     setIsCreatingStocktaking(true)
@@ -246,10 +232,10 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
     // Số lượng = số lượng hiện tại tại slot
     const quantity = currentQuantity
 
-    if (quantity <= 0) {
-      toast.error('Không có sản phẩm tại vị trí này để kiểm kê')
-      return
-    }
+    // if (quantity <= 0) {
+    //   toast.error('Không có sản phẩm tại vị trí này để kiểm kê')
+    //   return
+    // }
 
     const newId = Date.now()
     const newDetail: StocktakingDetail = {
