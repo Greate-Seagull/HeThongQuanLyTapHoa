@@ -68,6 +68,12 @@ export class GoodReceiptDetail {
 }
 
 export class GoodReceipt extends BaseEntity<GoodReceiptId> {
+		// Cập nhật lại danh sách items
+		public updateItems(details: { quantity: number; price: number; productId: number }[]) {
+			this._goodReceiptDetails = details.map((detail) =>
+				GoodReceiptDetail.create(detail.quantity, detail.price, detail.productId)
+			);
+		}
 	private _employeeId: EmployeeId = null;
 	private _createdAt: Date = new Date();
 	private _goodReceiptDetails: GoodReceiptDetail[] = [];

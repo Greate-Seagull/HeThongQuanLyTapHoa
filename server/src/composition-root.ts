@@ -1,3 +1,10 @@
+import { UpdateGoodReceiptUsecase } from "./application/services/good-receipt/update-good-receipt.usecase";
+export const updateGoodReceiptUsecase = new UpdateGoodReceiptUsecase(
+  employeeReadAccessor,
+  productRepo1,
+  goodReceiptRepo,
+  transactionManager
+);
 import { UpdateManagerProfileUsecase } from "./application/services/employee-account/update-manager-profile.usecase";
 export const updateManagerProfileUsecase = new UpdateManagerProfileUsecase();
 import { UpdateEmployeeUsecase } from "./application/services/employee/update-employee.usecase";

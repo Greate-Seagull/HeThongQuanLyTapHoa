@@ -8,6 +8,23 @@ import { buildSafePrismaSelect } from "../../domain/services/query-builder.servi
 import { ChangeTracker } from "../cache/change-tracker";
 
 export class GoodReceiptRepository implements GoodReceiptRepository {
+		async update(entity: GoodReceipt, transaction?: Prisma.TransactionClient) {
+			const repo = transaction ? transaction : this.prisma;
+			const data = toPersistenceObject(entity);
+			// Xóa hết chi tiết cũ, tạo lại chi tiết mới
+			await repo.goodReceiptDetail.deleteMany({ where: { goodReceiptId: entity.id } });
+			data.goodReceiptDetails = {
+				create: entity.goodReceiptDetails.map(toPersistenceObject),
+			};
+			const raw = await repo.goodReceipt.update({
+				where: { id: entity.id },
+				data,
+				...GoodReceiptRepository.baseQuery,
+			});
+			const savedEntity = fromPersistence(GoodReceipt, raw);
+			this.tracker.track(savedEntity.id, raw);
+			return savedEntity;
+		}
 	private tracker = new ChangeTracker<any>();
 
 	constructor(private readonly prisma: PrismaClient) {}

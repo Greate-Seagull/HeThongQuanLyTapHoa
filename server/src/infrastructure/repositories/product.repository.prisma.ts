@@ -14,6 +14,24 @@ import {
 } from "../../domain/services/mapper.service";
 
 export class ProductRepositoryPrisma implements ProductRepository {
+    async saveMany(products: Product[], transaction?: Prisma.TransactionClient): Promise<Product[]> {
+      const repo = transaction ? transaction : this.prisma;
+      const promisedRaws = products.map((p) => {
+        return repo.product.update({
+          where: { id: p.id },
+          data: this.tracker.diff(p.id, toPersistence(p)),
+          ...ProductRepositoryPrisma.baseQuery,
+        });
+      });
+      const raws = await Promise.all(promisedRaws);
+      const entities: Product[] = [];
+      for (const raw of raws) {
+        const entity = fromPersistence(Product, raw);
+        this.tracker.track(entity.id, raw);
+        entities.push(entity);
+      }
+      return entities;
+    }
   private tracker = new ChangeTracker<any>();
 
   constructor(private readonly prisma: PrismaClient) {}
