@@ -533,7 +533,7 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
       </Card>
 
       {/* Checkout Screen */}
-      {isCreatingInvoice && (
+      {!loading && isCreatingInvoice && (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Left: Product Search & Cart */}
           <div className="space-y-6 lg:col-span-2">
