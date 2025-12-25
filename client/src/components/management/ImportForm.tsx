@@ -91,6 +91,8 @@ export function ImportForm({ currentUser }: ImportFormProps) {
   const [receiptDetails, setReceiptDetails] = useState<GoodReceiptDetail[]>([])
   const [openProductCombobox, setOpenProductCombobox] = useState(false)
   const [barcodeInput, setBarcodeInput] = useState('')
+  // Thêm state mới
+  const [originalQuantities, setOriginalQuantities] = useState<Record<number, number>>({})
   // Fetch products from API
   useEffect(() => {
     const fetchProducts = async () => {
@@ -154,10 +156,9 @@ export function ImportForm({ currentUser }: ImportFormProps) {
   const availableProducts = Array.isArray(products)
     ? products.filter((p) => !receiptDetails.some((d) => d.productId === p.id))
     : []
-  const handleStartEdit = (receipt: GoodReceipt) => {
+  const handleStartEdit = async (receipt: GoodReceipt) => {
     setIsEditingReceipt(true)
-    setIsCreatingReceipt(true) // ← THÊM dòng này
-
+    setIsCreatingReceipt(true)
     setEditingReceiptId(receipt.id)
 
     // Load dữ liệu phiếu nhập vào form
@@ -169,6 +170,22 @@ export function ImportForm({ currentUser }: ImportFormProps) {
         price: d.price,
       }))
     )
+
+    // ← THÊM: Lấy số lượng đã bán của từng sản phẩm
+    const soldQuantities: Record<number, number> = {}
+    for (const detail of receipt.details) {
+      try {
+        const product = products.find((p) => p.id === detail.productId)
+        if (product) {
+          // Số lượng đã bán = Số lượng nhập ban đầu - Số lượng hiện tại
+          const soldQty = detail.quantity - product.amount
+          soldQuantities[detail.productId] = Math.max(0, soldQty)
+        }
+      } catch (err) {
+        soldQuantities[detail.productId] = 0
+      }
+    }
+    setOriginalQuantities(soldQuantities)
 
     // Reset các field khác
     setSelectedProductId(0)
@@ -323,8 +340,22 @@ export function ImportForm({ currentUser }: ImportFormProps) {
           price: d.price,
         })),
       }
-      // ← THÊM logic edit/create
-      if (isEditingReceipt && editingReceiptId) {
+      // ← THÊM: Kiểm tra số lượng tối thiểu khi edit
+      if (isEditingReceipt) {
+        // Validate số lượng tối thiểu
+        for (const detail of receiptDetails) {
+          const minQty = originalQuantities[detail.productId] || 0
+          if (detail.quantity < minQty) {
+            const product = products.find((p) => p.id === detail.productId)
+            toast.error(
+              `${product?.name}: Không thể giảm số lượng xuống dưới ${minQty} (đã bán ${minQty} sản phẩm)`
+            )
+            setLoading(false)
+            return
+          }
+        }
+
+        // ← THÊM: Call API update
         await apiClient.put(`/good-receipts/${editingReceiptId}`, payload)
         toast.success('Cập nhật phiếu nhập thành công!')
       } else {
@@ -517,6 +548,7 @@ export function ImportForm({ currentUser }: ImportFormProps) {
             </div>
 
             {/* Receipt Details Table */}
+            {/* Receipt Details Table */}
             {receiptDetails.length > 0 && (
               <div className="rounded-lg border border-green-200 bg-white p-4">
                 <h3 className="mb-3 flex items-center gap-2 font-semibold text-green-900">
@@ -540,8 +572,63 @@ export function ImportForm({ currentUser }: ImportFormProps) {
                         <TableRow key={detail.productId}>
                           <TableCell>{detail.product.name}</TableCell>
                           <TableCell>{detail.product.barcode}</TableCell>
-                          <TableCell>{detail.quantity}</TableCell>
-                          <TableCell>{detail.price.toLocaleString('vi-VN')}đ</TableCell>
+
+                          {/* ← SỬA PHẦN NÀY: Thêm Input để edit số lượng */}
+                          <TableCell>
+                            <div className="space-y-1">
+                              <Input
+                                type="number"
+                                min={
+                                  isEditingReceipt ? originalQuantities[detail.productId] || 1 : 1
+                                }
+                                value={detail.quantity}
+                                onChange={(e) => {
+                                  const newQty = parseInt(e.target.value) || 0
+                                  const minQty = isEditingReceipt
+                                    ? originalQuantities[detail.productId] || 0
+                                    : 0
+
+                                  if (newQty < minQty) {
+                                    toast.warning(`Số lượng tối thiểu: ${minQty} (đã bán)`)
+                                    return
+                                  }
+
+                                  setReceiptDetails(
+                                    receiptDetails.map((d) =>
+                                      d.productId === detail.productId
+                                        ? { ...d, quantity: newQty }
+                                        : d
+                                    )
+                                  )
+                                }}
+                                className="w-24 border-green-200"
+                              />
+                              {isEditingReceipt && originalQuantities[detail.productId] > 0 && (
+                                <p className="text-xs text-amber-600">
+                                  Tối thiểu: {originalQuantities[detail.productId]} (đã bán)
+                                </p>
+                              )}
+                            </div>
+                          </TableCell>
+
+                          {/* ← SỬA PHẦN NÀY: Thêm Input để edit giá nhập */}
+                          <TableCell>
+                            <Input
+                              type="number"
+                              min="1"
+                              value={detail.price}
+                              onChange={(e) => {
+                                const newPrice = parseInt(e.target.value) || 0
+                                setReceiptDetails(
+                                  receiptDetails.map((d) =>
+                                    d.productId === detail.productId ? { ...d, price: newPrice } : d
+                                  )
+                                )
+                              }}
+                              className="w-32 border-green-200"
+                            />
+                          </TableCell>
+
                           <TableCell>
                             {(detail.quantity * detail.price).toLocaleString('vi-VN')}đ
                           </TableCell>
@@ -742,11 +829,13 @@ export function ImportForm({ currentUser }: ImportFormProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
+                    {/* ← SỬA: Dùng viewingReceipt.details thay vì receiptDetails */}
                     {viewingReceipt.details.map((detail) => (
                       <TableRow key={detail.productId} className="hover:bg-blue-50">
                         <TableCell>{detail.product.name}</TableCell>
                         <TableCell>{detail.product.barcode}</TableCell>
-                        <TableCell>{detail.quantity}</TableCell>
+                        <TableCell>{detail.quantity}</TableCell>{' '}
+                        {/* ← CHỈ hiển thị, KHÔNG cho edit */}
                         <TableCell>{detail.price.toLocaleString('vi-VN')}đ</TableCell>
                         <TableCell>
                           {(detail.quantity * detail.price).toLocaleString('vi-VN')}đ

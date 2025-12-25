@@ -1,3 +1,5 @@
+import { updateGoodReceiptUsecase } from "../../composition-root";
+
 import { Router } from "express";
 import { authenticationMiddleware } from "../middlewares/authentication.middleware";
 import { authorizationMiddleware } from "../middlewares/authorization.middleware";
@@ -36,6 +38,11 @@ router.post(
   "/",
   authenticationMiddleware,
   controller(createGoodReceiptUsecase)
+);
+router.put(
+  "/:id",
+  authenticationMiddleware,
+  controller(updateGoodReceiptUsecase)
 );
 
 export default router;

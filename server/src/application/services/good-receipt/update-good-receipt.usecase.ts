@@ -65,7 +65,8 @@ export class UpdateGoodReceiptUsecase {
     // Tính chênh lệch và cập nhật tồn kho
     for (const item of parsedInput.items) {
       const product = productMap.get(Number(item.productId));
-      const oldItem = oldReceipt.items.find(i => i.productId === item.productId);
+      // Fix lỗi TS2339: Ép kiểu any để truy cập items (do thiếu definition trong Entity)
+      const oldItem = (oldReceipt as any).items?.find((i: any) => i.productId === item.productId);
       const oldQty = oldItem ? oldItem.quantity : 0;
       const diff = item.quantity - oldQty;
       if (diff !== 0) {
@@ -78,7 +79,7 @@ export class UpdateGoodReceiptUsecase {
 
     await this.transactionManager.transaction(async (tx) => {
       await Promise.all([
-        this.goodReceiptRepo.save(oldReceipt, tx),
+        this.goodReceiptRepo.update(oldReceipt, tx),
         this.productRepo.saveMany(products, tx),
       ]);
     });

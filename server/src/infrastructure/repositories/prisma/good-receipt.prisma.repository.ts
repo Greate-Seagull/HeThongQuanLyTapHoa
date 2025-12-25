@@ -11,6 +11,19 @@ export class GoodReceiptPrismaRepository
 {
 	private static baseSelect = buildSafePrismaSelect(GoodReceipt);
 
+	async update(entity: GoodReceipt, transaction?: Prisma.TransactionClient): Promise<GoodReceipt> {
+		const repo = transaction ? transaction : this.client;
+		// Xóa hết chi tiết cũ, tạo lại chi tiết mới
+		await repo.goodReceiptDetail.deleteMany({ where: { goodReceiptId: entity.id } });
+		const data = this.buildUpdateData(entity);
+		const raw = await repo.goodReceipt.update({
+			where: { id: entity.id },
+			data,
+			select: GoodReceiptPrismaRepository.baseSelect.select,
+		});
+		return this.fromPersistence(raw);
+	}
+
 	protected buildUpdateData(entity: GoodReceipt): Partial<GoodReceiptDto> {
 		let persitence = this.toPersistence(entity) as any;
 		persitence.goodReceiptDetails = {

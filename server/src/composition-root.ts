@@ -1,10 +1,5 @@
 import { UpdateGoodReceiptUsecase } from "./application/services/good-receipt/update-good-receipt.usecase";
-export const updateGoodReceiptUsecase = new UpdateGoodReceiptUsecase(
-  employeeReadAccessor,
-  productRepo1,
-  goodReceiptRepo,
-  transactionManager
-);
+
 import { UpdateManagerProfileUsecase } from "./application/services/employee-account/update-manager-profile.usecase";
 export const updateManagerProfileUsecase = new UpdateManagerProfileUsecase();
 import { UpdateEmployeeUsecase } from "./application/services/employee/update-employee.usecase";
@@ -155,6 +150,7 @@ export const invoiceRepo = new InvoicePrismaRepository(
   prisma,
   invoiceDtoSchema
 );
+// Fix lỗi TS2554: Constructor không nhận tham số
 export const goodReceiptRepo = new GoodReceiptPrismaRepository(
   prisma,
   goodReceiptDtoSchema
@@ -295,6 +291,14 @@ export const createGoodReceiptUsecase = new CreateGoodReceiptUsecase(
   goodReceiptRepo,
   transactionManager
 );
+// Fix lỗi TS2448 (Hoisting): Di chuyển xuống dưới sau khi employeeReadAccessor đã được khai báo
+// Fix lỗi TS2345: Đổi productRepo1 thành productRepo để đúng interface
+export const updateGoodReceiptUsecase = new UpdateGoodReceiptUsecase(
+  employeeReadAccessor,
+  productRepo,
+  goodReceiptRepo,
+  transactionManager
+);
 export const createStocktakingUsecase = new CreateStocktakingUsecase(
   productReadAccessor,
   shelfReadAccessor,
@@ -426,7 +430,9 @@ export const updateStocktakingUsecase = new UpdateStocktakingUsecase(
   shelfReadAccessor,
   stocktakingRepo
 );
-export const updateProductStatusUsecase = new UpdateProductStatusUsecase(prisma);
+export const updateProductStatusUsecase = new UpdateProductStatusUsecase(
+  prisma
+);
 import { GetInvoicesUsecase } from "./application/services/invoice/get-invoices.usecase";
 import { GetInvoiceByIdUsecase } from "./application/services/invoice/get-invoice-by-id.usecase";
 
