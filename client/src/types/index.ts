@@ -281,10 +281,9 @@ export interface CreatePromotionRequest {
 }
 
 export interface CreateInvoiceRequest {
-  employeeId: number
   userId?: number | null
   usedPoint?: number
-  details: {
+  items: {
     productId: number
     quantity: number
     promotionId?: number | null

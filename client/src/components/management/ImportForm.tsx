@@ -94,18 +94,18 @@ export function ImportForm({ currentUser }: ImportFormProps) {
   // Thêm state mới
   const [originalQuantities, setOriginalQuantities] = useState<Record<number, number>>({})
   // Fetch products from API
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const res = await apiClient.get<Product[]>('/products')
-        const productData = res?.products || res?.products || []
+  const fetchProducts = async () => {
+    try {
+      const res = await apiClient.get<Product[]>('/products')
+      const productData = res?.products || res?.products || []
 
-        setProducts(Array.isArray(productData) ? productData : [])
-      } catch (err) {
-        setProducts([])
-        toast.error('Không thể tải danh sách sản phẩm')
-      }
+      setProducts(Array.isArray(productData) ? productData : [])
+    } catch (err) {
+      setProducts([])
+      toast.error('Không thể tải danh sách sản phẩm')
     }
+  }
+  useEffect(() => {
     fetchProducts()
   }, [])
 
@@ -344,7 +344,7 @@ export function ImportForm({ currentUser }: ImportFormProps) {
       if (isEditingReceipt) {
         // Validate số lượng tối thiểu
         for (const detail of receiptDetails) {
-          const minQty = originalQuantities[detail.productId] || 0
+          const minQty = isEditingReceipt ? originalQuantities[detail.productId] || 0 : 0
           if (detail.quantity < minQty) {
             const product = products.find((p) => p.id === detail.productId)
             toast.error(
@@ -355,13 +355,15 @@ export function ImportForm({ currentUser }: ImportFormProps) {
           }
         }
 
-        // ← THÊM: Call API update
         await apiClient.put(`/good-receipts/${editingReceiptId}`, payload)
         toast.success('Cập nhật phiếu nhập thành công!')
       } else {
         await createGoodReceipt(payload)
         toast.success('Nhập hàng thành công!')
       }
+      await fetchProducts()
+      // Reload goodReceipts history
+      await fetchReceipts()
       setIsEditingReceipt(false) // ← THÊM
       setEditingReceiptId(null)
       setIsCreatingReceipt(false)
@@ -370,10 +372,6 @@ export function ImportForm({ currentUser }: ImportFormProps) {
       setQuantity(0)
       setImportPrice(0)
       // Reload products
-      const res = await apiClient.get<Product[]>('/products')
-      setProducts(res)
-      // Reload goodReceipts history
-      await fetchReceipts()
     } catch (err: any) {
       toast.error(err.message || 'Nhập hàng thất bại')
     } finally {
@@ -579,7 +577,9 @@ export function ImportForm({ currentUser }: ImportFormProps) {
                               <Input
                                 type="number"
                                 min={
-                                  isEditingReceipt ? originalQuantities[detail.productId] || 1 : 1
+                                  isEditingReceipt
+                                    ? detail.quantity - (detail.product.amount || 0)
+                                    : 1
                                 }
                                 value={detail.quantity}
                                 onChange={(e) => {
@@ -603,11 +603,13 @@ export function ImportForm({ currentUser }: ImportFormProps) {
                                 }}
                                 className="w-24 border-green-200"
                               />
-                              {isEditingReceipt && originalQuantities[detail.productId] > 0 && (
-                                <p className="text-xs text-amber-600">
-                                  Tối thiểu: {originalQuantities[detail.productId]} (đã bán)
-                                </p>
-                              )}
+                              {isEditingReceipt &&
+                                detail.quantity - (detail.product.amount || 0) > 0 && (
+                                  <p className="text-xs text-amber-600">
+                                    Tối thiểu: {detail.quantity - (detail.product.amount || 0)} (đã
+                                    bán)
+                                  </p>
+                                )}
                             </div>
                           </TableCell>
 
