@@ -103,8 +103,78 @@ export class Stocktaking extends BaseEntity<StocktakingId> {
 				d.slotId
 			)
 		);
-		stocktaking.createdAt = new Date();
 		return stocktaking;
+	}
+
+	/**
+	 * Cập nhật chi tiết phiếu kiểm kê
+	 * @param details Danh sách chi tiết mới
+	 * @param updatedBy ID của người cập nhật (optional)
+	 */
+	public updateDetails(
+		details: {
+			status: string;
+			quantity: number;
+			productId: ProductId;
+			slotId: number;
+		}[],
+		updatedBy?: EmployeeId
+	) {
+		// Validate danh sách không rỗng
+		if (details.length < 1) {
+			throw Error(`Expect stocktaking to have at least one detail`);
+		}
+
+		// Cập nhật chi tiết mới
+		this.stocktakingDetails = details.map((d) =>
+			StocktakingDetail.create(
+				d.status,
+				d.quantity,
+				d.productId,
+				d.slotId
+			)
+		);
+
+		// Cập nhật người sửa (nếu có)
+		if (updatedBy !== undefined && updatedBy !== null) {
+			this.employeeId = updatedBy;
+		}
+
+		return this;
+	}
+
+	/**
+	 * Cập nhật chỉ một chi tiết cụ thể
+	 */
+	public updateDetail(
+		productId: ProductId,
+		slotId: number,
+		newQuantity: number,
+		newStatus?: string
+	) {
+		const detailIndex = this._stocktakingDetails.findIndex(
+			(d) => d.productId === productId && d.slotId === slotId
+		);
+
+		if (detailIndex === -1) {
+			throw Error(
+				`Detail not found for productId: ${productId}, slotId: ${slotId}`
+			);
+		}
+
+		// Tạo detail mới với thông tin cập nhật
+		const oldDetail = this._stocktakingDetails[detailIndex];
+		const updatedDetail = StocktakingDetail.create(
+			newStatus || oldDetail.status,
+			newQuantity,
+			productId,
+			slotId
+		);
+
+		// Thay thế detail cũ
+		this._stocktakingDetails[detailIndex] = updatedDetail;
+
+		return this;
 	}
 
 	// Setters
@@ -118,7 +188,7 @@ export class Stocktaking extends BaseEntity<StocktakingId> {
 
 	private set stocktakingDetails(value: StocktakingDetail[]) {
 		if (value.length < 1)
-			throw Error(`Expect promotion to have at least one product Id`);
+			throw Error(`Expect stocktaking to have at least one detail`);
 		this._stocktakingDetails = value;
 	}
 
@@ -137,6 +207,11 @@ export class Stocktaking extends BaseEntity<StocktakingId> {
 	@Write
 	@Relation(StocktakingDetail)
 	get stocktakingDetails(): StocktakingDetail[] {
+		return this._stocktakingDetails;
+	}
+
+	// Alias để dễ sử dụng
+	get details(): StocktakingDetail[] {
 		return this._stocktakingDetails;
 	}
 }

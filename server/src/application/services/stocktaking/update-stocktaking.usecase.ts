@@ -5,9 +5,7 @@ import { ProductBarcode, ProductId } from "../../../domain/entities/product";
 import { StocktakingRepository } from "../../repositories/stocktaking.repository";
 import { ProductReadAccessor } from "../read-accessors/product.read-accessor";
 import { ShelfReadAccessor } from "../read-accessors/shelf.read-accessor";
-import { InventoryReadAccessor } from "../read-accessors/InventoryReadAccessor";
 
-// ============= UPDATE STOCKTAKING USECASE =============
 const updateInputSchema = z.object({
   authId: z.number(),
   stocktakingId: z.number(),
@@ -30,8 +28,7 @@ export class UpdateStocktakingUsecase {
   constructor(
     private readonly productReadAccess: ProductReadAccessor,
     private readonly shelfReadAccess: ShelfReadAccessor,
-    private readonly stocktakingRepo: StocktakingRepository,
-    private readonly inventoryReadAccess: InventoryReadAccessor
+    private readonly stocktakingRepo: StocktakingRepository
   ) {}
 
   async execute(input: any) {
@@ -69,42 +66,53 @@ export class UpdateStocktakingUsecase {
       throw Error(`Expect all slots to be valid`);
     }
 
-    // 3. Kiểm tra business rule: không cho sửa số lượng khiến inventory bị âm
+    // 3. Kiểm tra business rule: không cho sửa số lượng khiến tồn kho bị âm
     const barcodeMap = new Map<ProductBarcode, ProductId>(
       idAndBarcodes.map((i) => [i.barcode, i.id])
     );
 
+    // Group products by productId để tính tổng quantity thay đổi cho mỗi sản phẩm
+    const productChanges = new Map<ProductId, number>();
+
     for (const product of parsedInput.products) {
       const productId = barcodeMap.get(product.barcode);
+      
+      // Tìm chi tiết cũ của sản phẩm này trong phiếu kiểm kê
       const oldDetail = existingStocktaking.details.find(
         (d) => d.productId === productId && d.slotId === product.slotId
       );
 
       if (oldDetail) {
         const quantityDiff = product.quantity - oldDetail.quantity;
+        
+        // Cộng dồn thay đổi cho từng sản phẩm
+        const currentChange = productChanges.get(productId) || 0;
+        productChanges.set(productId, currentChange + quantityDiff);
+      }
+    }
 
-        // Nếu giảm số lượng (quantityDiff < 0), kiểm tra có đủ hàng để giảm không
-        if (quantityDiff < 0) {
-          const currentInventory = await this.inventoryReadAccess.getQuantity(
+    // Kiểm tra từng sản phẩm có đủ số lượng không
+    for (const [productId, quantityDiff] of productChanges.entries()) {
+      // Chỉ kiểm tra nếu GIẢM số lượng
+      if (quantityDiff < 0) {
+        const currentAmount = await this.productReadAccess.getProductAmount(
+          productId
+        );
+        
+        // Số lượng hiện tại + thay đổi phải >= 0
+        if (currentAmount + quantityDiff < 0) {
+          const product = idAndBarcodes.find((p) => p.id === productId);
+          log.warn("Task failed: insufficient stock", {
             productId,
-            product.slotId
+            barcode: product?.barcode,
+            currentAmount,
+            attemptedReduction: Math.abs(quantityDiff),
+          });
+          throw Error(
+            `Không thể giảm số lượng sản phẩm (barcode: ${product?.barcode}). ` +
+            `Tồn kho hiện tại: ${currentAmount}, ` +
+            `số lượng muốn giảm: ${Math.abs(quantityDiff)}`
           );
-
-          // Số lượng hiện tại - số lượng muốn giảm phải >= 0
-          if (currentInventory + quantityDiff < 0) {
-            log.warn("Task failed: insufficient inventory", {
-              productId,
-              slotId: product.slotId,
-              currentInventory,
-              attemptedReduction: Math.abs(quantityDiff),
-            });
-            throw Error(
-              `Không thể giảm số lượng sản phẩm ${product.barcode} tại slot ${product.slotId}. ` +
-                `Tồn kho hiện tại: ${currentInventory}, số lượng muốn giảm: ${Math.abs(
-                  quantityDiff
-                )}`
-            );
-          }
         }
       }
     }
@@ -123,7 +131,7 @@ export class UpdateStocktakingUsecase {
     }));
 
     existingStocktaking.updateDetails(updatedDetails, parsedInput.authId);
-    await this.stocktakingRepo.update(existingStocktaking);
+    await this.stocktakingRepo.save(existingStocktaking);
 
     log.info("Task completed");
     return updateOutputSchema.parse({

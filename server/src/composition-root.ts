@@ -1,4 +1,4 @@
-import { UpdateManagerProfileUsecase } from './application/services/employee-account/update-manager-profile.usecase';
+import { UpdateManagerProfileUsecase } from "./application/services/employee-account/update-manager-profile.usecase";
 export const updateManagerProfileUsecase = new UpdateManagerProfileUsecase();
 import { UpdateEmployeeUsecase } from "./application/services/employee/update-employee.usecase";
 
@@ -222,7 +222,6 @@ export const deleteEmployeeAccountUsecase = new DeleteEmployeeAccountUsecase(
   transactionManager
 );
 
-
 export const getEmployeeAccountProfileUsecase =
   new GetEmployeeAccountProfileUsecase(
     employeeAccountRepo,
@@ -364,9 +363,18 @@ export const deleteRackUsecase = new DeleteRackUsecase(rackRepo);
 
 const slotDetailRepo = new SlotDetailRepository(prisma);
 const slotDetailUsecase = new SlotDetailUsecase(slotDetailRepo);
-export const createSlotUsecase = new CreateSlotUsecase(slotRepo, rackRepo, slotDetailUsecase);
-export const updateSlotUsecase = new UpdateSlotUsecase(slotRepo, slotDetailUsecase);
-export const listSlotWithProductUsecase = new ListSlotWithProductUsecase(slotDetailUsecase);
+export const createSlotUsecase = new CreateSlotUsecase(
+  slotRepo,
+  rackRepo,
+  slotDetailUsecase
+);
+export const updateSlotUsecase = new UpdateSlotUsecase(
+  slotRepo,
+  slotDetailUsecase
+);
+export const listSlotWithProductUsecase = new ListSlotWithProductUsecase(
+  slotDetailUsecase
+);
 export const deleteSlotUsecase = new DeleteSlotUsecase(slotRepo);
 export const updatePromotionUsecase = new UpdatePromotionUsecase(
   productReadAccessor,
@@ -389,21 +397,26 @@ export const changeManagerPasswordUsecase = new ChangeManagerPasswordUsecase(
 );
 
 // Export usecase tạo nhân viên kèm account (sau khi đã khai báo các biến phụ thuộc)
-export const createEmployeeWithAccountUsecase = buildCreateEmployeeWithAccountUsecase(
-  employeeRepo,
-  employeeAccountRepo,
-  passwordService
-);
+export const createEmployeeWithAccountUsecase =
+  buildCreateEmployeeWithAccountUsecase(
+    employeeRepo,
+    employeeAccountRepo,
+    passwordService
+  );
 import { ListStocktakingsUsecase } from "./application/services/stocktaking/list-stocktakings.usecase";
 import { GetStocktakingByIdUsecase } from "./application/services/stocktaking/get-stocktaking-by-id.usecase";
 import { UpdateStocktakingUsecase } from "./application/services/stocktaking/update-stocktaking.usecase";
 
-export const listStocktakingsUsecase = new ListStocktakingsUsecase(stocktakingRepo);
-export const getStocktakingByIdUsecase = new GetStocktakingByIdUsecase(stocktakingRepo);
+export const listStocktakingsUsecase = new ListStocktakingsUsecase(
+  stocktakingRepo
+);
+export const getStocktakingByIdUsecase = new GetStocktakingByIdUsecase(
+  stocktakingRepo
+);
 export const updateStocktakingUsecase = new UpdateStocktakingUsecase(
-  stocktakingRepo,
-  productRepo,
-  transactionManager
+  productReadAccessor, // Sửa từ productReadAccess -> productReadAccessor
+  shelfReadAccessor,
+  stocktakingRepo
 );
 import { GetInvoicesUsecase } from "./application/services/invoice/get-invoices.usecase";
 import { GetInvoiceByIdUsecase } from "./application/services/invoice/get-invoice-by-id.usecase";
