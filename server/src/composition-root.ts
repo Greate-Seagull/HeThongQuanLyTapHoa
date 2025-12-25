@@ -406,6 +406,7 @@ export const createEmployeeWithAccountUsecase =
 import { ListStocktakingsUsecase } from "./application/services/stocktaking/list-stocktakings.usecase";
 import { GetStocktakingByIdUsecase } from "./application/services/stocktaking/get-stocktaking-by-id.usecase";
 import { UpdateStocktakingUsecase } from "./application/services/stocktaking/update-stocktaking.usecase";
+import { UpdateProductStatusUsecase } from "./application/services/product/update-product-slot-status.usecase";
 
 export const listStocktakingsUsecase = new ListStocktakingsUsecase(
   stocktakingRepo
@@ -418,6 +419,7 @@ export const updateStocktakingUsecase = new UpdateStocktakingUsecase(
   shelfReadAccessor,
   stocktakingRepo
 );
+export const updateProductStatusUsecase = new UpdateProductStatusUsecase(prisma);
 import { GetInvoicesUsecase } from "./application/services/invoice/get-invoices.usecase";
 import { GetInvoiceByIdUsecase } from "./application/services/invoice/get-invoice-by-id.usecase";
 
