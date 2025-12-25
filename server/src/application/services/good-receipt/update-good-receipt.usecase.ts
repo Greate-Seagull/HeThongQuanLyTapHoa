@@ -7,7 +7,7 @@ import { GoodReceiptRepository } from "../../repositories/good-receipt.repositor
 import { EmployeeReadAccessor } from "../read-accessors/employee.read-accessor";
 
 const inputSchema = z.object({
-  goodReceiptId: z.number(),
+  id: z.coerce.number(),
   authId: z.number(),
   items: z.array(
     z.object({
@@ -17,6 +17,7 @@ const inputSchema = z.object({
     })
   ),
 });
+
 
 export class UpdateGoodReceiptUsecase {
   constructor(
@@ -31,18 +32,22 @@ export class UpdateGoodReceiptUsecase {
     const log = logger.child({
       task: "Updating good receipt",
       employeeId: parsedInput.authId,
-      goodReceiptId: parsedInput.goodReceiptId,
+      id: parsedInput.id,
     });
     log.info("Task started");
 
     // Lấy phiếu nhập cũ
-    const oldReceipt = await this.goodReceiptRepo.getById(parsedInput.goodReceiptId);
+    const oldReceipt = await this.goodReceiptRepo.getById(
+      parsedInput.id
+    );
     if (!oldReceipt) throw Error("Good receipt not found");
 
     // Lấy danh sách sản phẩm liên quan
-    const uniqueProductIds = [...new Set(parsedInput.items.map(i => Number(i.productId)))];
+    const uniqueProductIds = [
+      ...new Set(parsedInput.items.map((i) => Number(i.productId))),
+    ];
     const products = await this.productRepo.getByIds(uniqueProductIds);
-    const productMap = new Map(products.map(p => [Number(p.id), p]));
+    const productMap = new Map(products.map((p) => [Number(p.id), p]));
 
     // Kiểm tra số lượng mới không nhỏ hơn số lượng đã bán
     for (const item of parsedInput.items) {
@@ -66,7 +71,9 @@ export class UpdateGoodReceiptUsecase {
     for (const item of parsedInput.items) {
       const product = productMap.get(Number(item.productId));
       // Fix lỗi TS2339: Ép kiểu any để truy cập items (do thiếu definition trong Entity)
-      const oldItem = (oldReceipt as any).items?.find((i: any) => i.productId === item.productId);
+      const oldItem = (oldReceipt as any).items?.find(
+        (i: any) => i.productId === item.productId
+      );
       const oldQty = oldItem ? oldItem.quantity : 0;
       const diff = item.quantity - oldQty;
       if (diff !== 0) {
