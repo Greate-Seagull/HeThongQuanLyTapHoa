@@ -17,19 +17,23 @@ export class StocktakingPrismaRepository
   private static baseSelect = buildSafePrismaSelect(Stocktaking);
 
   protected buildUpdateData(entity: Stocktaking): Partial<StocktakingDto> {
-    let persitence = this.toPersistence(entity) as any;
-    persitence.stocktakingDetails = {
-      connect: persitence.stocktakingDetails,
+    let persistence = this.toPersistence(entity) as any;
+
+    // XÓA tất cả details cũ, sau đó TẠO MỚI
+    persistence.stocktakingDetails = {
+      deleteMany: {}, // Xóa tất cả details cũ
+      create: persistence.stocktakingDetails, // Tạo mới với data mới
     };
-    return persitence;
+
+    return persistence;
   }
 
   protected buildCreateData(entity: Stocktaking): Partial<StocktakingDto> {
-    let persitence = this.toPersistence(entity) as any;
-    persitence.stocktakingDetails = {
-      create: persitence.stocktakingDetails,
+    let persistence = this.toPersistence(entity) as any;
+    persistence.stocktakingDetails = {
+      create: persistence.stocktakingDetails,
     };
-    return persitence;
+    return persistence;
   }
 
   protected getBaseQuery(): { select: object } {

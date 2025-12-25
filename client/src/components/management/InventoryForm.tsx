@@ -264,8 +264,8 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
         toast.success('Cập nhật phiếu kiểm kê thành công!')
       } else {
         // CREATE MODE
-        console.log(currentUserPosition);
-        
+        console.log(currentUserPosition)
+
         await createStocktaking({
           products: stocktakingDetails.map((d) => ({
             barcode: d.product?.barcode || 0,
@@ -562,17 +562,43 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <span
-                              className={`rounded px-2 py-1 text-sm ${
-                                detail.status === ProductStatus.GOOD
-                                  ? 'bg-green-100 text-green-700'
-                                  : 'bg-red-100 text-red-700'
-                              }`}
+                            <Select
+                              value={detail.status}
+                              onValueChange={(value) => {
+                                setStocktakingDetails(
+                                  stocktakingDetails.map((d) =>
+                                    d.id === detail.id
+                                      ? { ...d, status: value as ProductStatus }
+                                      : d
+                                  )
+                                )
+                              }}
                             >
-                              {detail.status === ProductStatus.GOOD ? 'Tốt' : 'Hết hạn'}
-                            </span>
+                              <SelectTrigger className="h-8 w-32 border-purple-200">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value={ProductStatus.GOOD}>Tốt</SelectItem>
+                                <SelectItem value={ProductStatus.EXPIRED}>Hết hạn</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </TableCell>
-                          <TableCell>{detail.quantity}</TableCell>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              min="1"
+                              value={detail.quantity}
+                              onChange={(e) => {
+                                const newQty = parseInt(e.target.value) || 0
+                                setStocktakingDetails(
+                                  stocktakingDetails.map((d) =>
+                                    d.id === detail.id ? { ...d, quantity: newQty } : d
+                                  )
+                                )
+                              }}
+                              className="h-8 w-20 border-purple-200"
+                            />
+                          </TableCell>
                           <TableCell className="text-right">
                             <Button
                               variant="ghost"

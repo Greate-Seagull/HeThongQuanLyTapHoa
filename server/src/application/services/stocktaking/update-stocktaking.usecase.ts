@@ -8,7 +8,7 @@ import { ShelfReadAccessor } from "../read-accessors/shelf.read-accessor";
 
 const updateInputSchema = z.object({
   authId: z.number(),
-  stocktakingId: z.number(),
+  id: z.number(),
   products: z.array(
     z.object({
       barcode: z.number(),
@@ -33,20 +33,22 @@ export class UpdateStocktakingUsecase {
 
   async execute(input: any) {
     const parsedInput = updateInputSchema.parse(input);
+    console.log("parsedInput", parsedInput);
+
     const log = logger.child({
       task: "Updating stock-taking",
       employeeId: parsedInput.authId,
-      stocktakingId: parsedInput.stocktakingId,
+      stocktakingId: parsedInput.id,
     });
     log.info("Task started");
 
     // 1. Kiểm tra stocktaking có tồn tại không
     const existingStocktaking = await this.stocktakingRepo.getById(
-      parsedInput.stocktakingId
+      parsedInput.id
     );
     if (!existingStocktaking) {
       log.warn("Task failed: stocktaking not found");
-      throw Error(`Stocktaking with id ${parsedInput.stocktakingId} not found`);
+      throw Error(`Stocktaking with id ${parsedInput.id} not found`);
     }
 
     // 2. Validate products và slots giống create
@@ -54,7 +56,10 @@ export class UpdateStocktakingUsecase {
     const idAndBarcodes = await this.productReadAccess.getIdsByBarcodes(
       barcodes
     );
-    if (idAndBarcodes.length != barcodes.length) {
+    console.log("getIdsByBarcodes ", idAndBarcodes);
+
+    const uniqueBarcodes = new Set(barcodes);
+    if (idAndBarcodes.length != uniqueBarcodes.size) {
       log.warn("Task failed: invalid product barcode");
       throw Error(`Expect all products to be valid`);
     }
@@ -71,20 +76,28 @@ export class UpdateStocktakingUsecase {
       idAndBarcodes.map((i) => [i.barcode, i.id])
     );
 
+    console.log("barcodeMap:", barcodeMap);
+    console.log("Looking for barcode:", parsedInput.products[0].barcode);
+    console.log(
+      "Found productId:",
+      barcodeMap.get(parsedInput.products[0].barcode)
+    );
+
     // Group products by productId để tính tổng quantity thay đổi cho mỗi sản phẩm
     const productChanges = new Map<ProductId, number>();
 
     for (const product of parsedInput.products) {
       const productId = barcodeMap.get(product.barcode);
-      
+      if (!productId) continue;
+
       // Tìm chi tiết cũ của sản phẩm này trong phiếu kiểm kê
-      const oldDetail = existingStocktaking.details.find(
-        (d) => d.productId === productId && d.slotId === product.slotId
+      const oldDetail = existingStocktaking.details?.find(
+        (d) => d && d.productId === productId && d.slotId === product.slotId
       );
 
       if (oldDetail) {
         const quantityDiff = product.quantity - oldDetail.quantity;
-        
+
         // Cộng dồn thay đổi cho từng sản phẩm
         const currentChange = productChanges.get(productId) || 0;
         productChanges.set(productId, currentChange + quantityDiff);
@@ -98,7 +111,7 @@ export class UpdateStocktakingUsecase {
         const currentAmount = await this.productReadAccess.getProductAmount(
           productId
         );
-        
+
         // Số lượng hiện tại + thay đổi phải >= 0
         if (currentAmount + quantityDiff < 0) {
           const product = idAndBarcodes.find((p) => p.id === productId);
@@ -110,8 +123,8 @@ export class UpdateStocktakingUsecase {
           });
           throw Error(
             `Không thể giảm số lượng sản phẩm (barcode: ${product?.barcode}). ` +
-            `Tồn kho hiện tại: ${currentAmount}, ` +
-            `số lượng muốn giảm: ${Math.abs(quantityDiff)}`
+              `Tồn kho hiện tại: ${currentAmount}, ` +
+              `số lượng muốn giảm: ${Math.abs(quantityDiff)}`
           );
         }
       }
@@ -131,6 +144,8 @@ export class UpdateStocktakingUsecase {
     }));
 
     existingStocktaking.updateDetails(updatedDetails, parsedInput.authId);
+    console.log("existingStocktaking", existingStocktaking);
+
     await this.stocktakingRepo.save(existingStocktaking);
 
     log.info("Task completed");
