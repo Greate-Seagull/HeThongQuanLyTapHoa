@@ -396,12 +396,17 @@ export const createEmployeeWithAccountUsecase = buildCreateEmployeeWithAccountUs
 );
 import { ListStocktakingsUsecase } from "./application/services/stocktaking/list-stocktakings.usecase";
 import { GetStocktakingByIdUsecase } from "./application/services/stocktaking/get-stocktaking-by-id.usecase";
+import { UpdateStocktakingUsecase } from "./application/services/stocktaking/update-stocktaking.usecase";
 
 export const listStocktakingsUsecase = new ListStocktakingsUsecase(stocktakingRepo);
 export const getStocktakingByIdUsecase = new GetStocktakingByIdUsecase(stocktakingRepo);
+export const updateStocktakingUsecase = new UpdateStocktakingUsecase(
+  stocktakingRepo,
+  productRepo,
+  transactionManager
+);
 import { GetInvoicesUsecase } from "./application/services/invoice/get-invoices.usecase";
 import { GetInvoiceByIdUsecase } from "./application/services/invoice/get-invoice-by-id.usecase";
 
 export const getInvoicesUsecase = new GetInvoicesUsecase(invoiceRepo);
 export const getInvoiceByIdUsecase = new GetInvoiceByIdUsecase(invoiceRepo);
-
