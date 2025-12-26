@@ -798,14 +798,14 @@ export function ImportForm({ currentUser }: ImportFormProps) {
                                 >
                                   <Eye className="h-4 w-4" />
                                 </Button>
-                                <Button
+                                {/* <Button
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleRemoveProduct(receipt.id)} // ← Cần implement hàm xóa nếu muốn dùng
                                   className="text-red-600"
                                 >
                                   <Trash2 className="h-4 w-4" />
-                                </Button>
+                                </Button> */}
                               </div>
                             </TableCell>
                           </TableRow>
