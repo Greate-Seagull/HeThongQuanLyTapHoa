@@ -689,14 +689,14 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button
+                        {/* <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDeleteStocktaking(st.id)}
                           className="text-red-600"
                         >
                           <Trash2 className="h-4 w-4" />
-                        </Button>
+                        </Button> */}
                       </TableCell>
                     </TableRow>
                   ))}
