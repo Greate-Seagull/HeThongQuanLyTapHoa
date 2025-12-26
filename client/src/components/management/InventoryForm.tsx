@@ -635,7 +635,7 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
       {!isCreatingStocktaking && (
         <Card className="border-blue-200">
           <CardHeader className="bg-blue-50">
-            <CardTitle className="text-blue-900">Lịch Sử Nhập Hàng</CardTitle>
+            <CardTitle className="text-blue-900">Lịch Sử Kiểm Kê</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
             <div className="mb-6 flex max-w-md gap-2">
