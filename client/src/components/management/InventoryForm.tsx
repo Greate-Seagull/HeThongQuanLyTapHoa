@@ -633,18 +633,19 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
 
       {/* Stocktaking List */}
       {!isCreatingStocktaking && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Lịch Sử Kiểm Kê</CardTitle>
+        <Card className="border-blue-200">
+          <CardHeader className="bg-blue-50">
+            <CardTitle className="text-blue-900">Lịch Sử Nhập Hàng</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <div className="mb-4 flex gap-2">
+            <div className="mb-6 flex max-w-md gap-2">
               <Input
-                placeholder="Tìm kiếm..."
+                placeholder="Tìm kiếm theo mã phiếu hoặc người nhập..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                className="border-blue-200"
               />
-              <Button>
+              <Button className="bg-blue-600 hover:bg-blue-700">
                 <Search className="h-4 w-4" />
               </Button>
             </div>
@@ -675,6 +676,7 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                         <Button
                           variant="ghost"
                           size="sm"
+                          className='text-blue-600'
                           onClick={() => handleViewStocktaking(st as any)}
                         >
                           <Eye className="h-4 w-4" />
@@ -683,7 +685,7 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleEditStocktaking(st as any)}
-                          className="text-amber-600"
+                          className="text-blue-600"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
