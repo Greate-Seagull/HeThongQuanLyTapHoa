@@ -7,7 +7,10 @@ import {
 } from "../../domain/services/mapper.service";
 import { buildSafePrismaSelect } from "../../domain/services/query-builder.service";
 import { includes } from "zod";
-import { rack } from "tests/integration/create-stocktaking/create-stocktaking.test-data";
+import {
+  rack,
+  slot,
+} from "tests/integration/create-stocktaking/create-stocktaking.test-data";
 
 export class SlotRepository {
   private tracker = new ChangeTracker<any>();
@@ -27,6 +30,11 @@ export class SlotRepository {
 
   async update(slot: Slot): Promise<Slot> {
     const data = toPersistenceObject(slot);
+    const diff = this.tracker.diff(slot.id, data);
+
+    console.log("🔵 Slot ID:", slot.id);
+    console.log("🔵 Data to update:", data);
+    console.log("🔵 Diff from tracker:", diff); // <-- THÊM DÒNG NÀY
     const raw = await this.prisma.slot.update({
       where: { id: slot.id },
       data: this.tracker.diff(slot.id, data),
@@ -51,6 +59,11 @@ export class SlotRepository {
             shelf: true, // Lấy luôn thông tin Kệ (Shelf)
           },
         },
+        slotDetails: {
+          include: {
+            product: true, // Lấy luôn thông tin Sản phẩm (Product)
+          },
+        },
       },
     });
 
@@ -67,6 +80,26 @@ export class SlotRepository {
       entities.push(entity);
     }
     return entities;
+  }
+  async getById(id: SlotId): Promise<Slot | null> {
+    const raw = await this.prisma.slot.findUnique({
+      where: { id },
+      include: {
+        rack: {
+          include: {
+            shelf: true,
+          },
+        },
+      },
+    });
+
+    if (!raw) return null;
+
+    const entity = fromPersistence(Slot, raw);
+    (entity as any).rack = raw.rack;
+    this.tracker.track(entity.id, raw);
+
+    return entity;
   }
   static baseQuery = buildSafePrismaSelect(Slot);
 }

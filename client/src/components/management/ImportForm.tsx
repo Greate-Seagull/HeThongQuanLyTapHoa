@@ -822,75 +822,139 @@ export function ImportForm({ currentUser }: ImportFormProps) {
       {/* Receipt Detail Dialog */}
       {showReceiptDialog && viewingReceipt && (
         <Dialog open={showReceiptDialog} onOpenChange={setShowReceiptDialog}>
-          <DialogContent className="max-w-3xl border-blue-200">
-            <DialogHeader>
-              <DialogTitle className="text-blue-900">Chi tiết phiếu nhập hàng</DialogTitle>
-              <DialogDescription className="text-sm text-gray-500">
+          <DialogContent className="flex max-h-[90vh] w-[95vw] max-w-4xl flex-col border-blue-200 p-0">
+            <DialogHeader className="border-b border-blue-100 px-4 py-3 sm:px-6">
+              <DialogTitle className="text-base text-blue-900 sm:text-lg">
+                Chi tiết phiếu nhập hàng
+              </DialogTitle>
+              <DialogDescription className="text-xs text-gray-500 sm:text-sm">
                 Mã phiếu: PNH{viewingReceipt.id.toString().padStart(3, '0')}
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4">
-              {/* Thông tin phiếu */}
-              <div className="grid grid-cols-2 gap-4 rounded-lg bg-blue-50 p-4">
-                <div>
-                  <p className="text-sm text-gray-600">Người nhập</p>
-                  <p className="font-semibold">{viewingReceipt.employee.name}</p>
+            {/* Phần nội dung cuộn được */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6">
+              <div className="space-y-4">
+                {/* Thông tin phiếu */}
+                <div className="grid grid-cols-1 gap-3 rounded-lg bg-blue-50 p-3 sm:grid-cols-2 sm:gap-4 sm:p-4">
+                  <div>
+                    <p className="text-xs text-gray-600 sm:text-sm">Người nhập</p>
+                    <p className="truncate font-semibold" title={viewingReceipt.employee.name}>
+                      {viewingReceipt.employee.name}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 sm:text-sm">Ngày nhập</p>
+                    <p className="font-semibold">
+                      {viewingReceipt.createdAt.toLocaleDateString('vi-VN')}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Ngày nhập</p>
-                  <p className="font-semibold">
-                    {viewingReceipt.createdAt.toLocaleDateString('vi-VN')}
-                  </p>
-                </div>
-              </div>
 
-              {/* Danh sách sản phẩm */}
-              <div className="overflow-hidden rounded-lg border border-blue-200">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-blue-50">
-                      <TableHead className="text-blue-900">Sản phẩm</TableHead>
-                      <TableHead className="text-blue-900">Mã vạch</TableHead>
-                      <TableHead className="text-blue-900">SL</TableHead>
-                      <TableHead className="text-blue-900">Giá nhập</TableHead>
-                      <TableHead className="text-blue-900">Thành tiền</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {/* ← SỬA: Dùng viewingReceipt.details thay vì receiptDetails */}
-                    {viewingReceipt.details.map((detail) => (
-                      <TableRow key={detail.productId} className="hover:bg-blue-50">
-                        <TableCell>{detail.product.name}</TableCell>
-                        <TableCell>{detail.product.barcode}</TableCell>
-                        <TableCell>{detail.quantity}</TableCell>{' '}
-                        {/* ← CHỈ hiển thị, KHÔNG cho edit */}
-                        <TableCell>{detail.price.toLocaleString('vi-VN')}đ</TableCell>
-                        <TableCell>
-                          {(detail.quantity * detail.price).toLocaleString('vi-VN')}đ
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    <TableRow className="bg-blue-100 font-semibold">
-                      <TableCell colSpan={4} className="text-right">
-                        Tổng cộng:
-                      </TableCell>
-                      <TableCell>
-                        {viewingReceipt.details
-                          .reduce((sum, d) => sum + d.quantity * d.price, 0)
-                          .toLocaleString('vi-VN')}
-                        đ
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
+                {/* Danh sách sản phẩm - Responsive table */}
+                <div className="overflow-hidden rounded-lg border border-blue-200">
+                  {/* Desktop view */}
+                  <div className="hidden overflow-x-auto sm:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-blue-50">
+                          <TableHead className="min-w-[150px] text-blue-900">Sản phẩm</TableHead>
+                          <TableHead className="min-w-[120px] text-blue-900">Mã vạch</TableHead>
+                          <TableHead className="w-[80px] text-blue-900">SL</TableHead>
+                          <TableHead className="min-w-[100px] text-blue-900">Giá nhập</TableHead>
+                          <TableHead className="min-w-[120px] text-blue-900">Thành tiền</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {viewingReceipt.details.map((detail) => (
+                          <TableRow key={detail.productId} className="hover:bg-blue-50">
+                            <TableCell className="max-w-[200px]">
+                              <div className="truncate" title={detail.product.name}>
+                                {detail.product.name}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="truncate" title={detail.product.barcode}>
+                                {detail.product.barcode}
+                              </div>
+                            </TableCell>
+                            <TableCell>{detail.quantity}</TableCell>
+                            <TableCell className="whitespace-nowrap">
+                              {detail.price.toLocaleString('vi-VN')}đ
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap">
+                              {(detail.quantity * detail.price).toLocaleString('vi-VN')}đ
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        <TableRow className="bg-blue-100 font-semibold">
+                          <TableCell colSpan={4} className="text-right">
+                            Tổng cộng:
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap">
+                            {viewingReceipt.details
+                              .reduce((sum, d) => sum + d.quantity * d.price, 0)
+                              .toLocaleString('vi-VN')}
+                            đ
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Mobile view - Card layout */}
+                  <div className="block sm:hidden">
+                    <div className="divide-y divide-blue-100">
+                      {viewingReceipt.details.map((detail) => (
+                        <div key={detail.productId} className="space-y-2 p-3">
+                          <div className="font-semibold text-blue-900">{detail.product.name}</div>
+                          <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div>
+                              <span className="text-gray-600">Mã vạch:</span>
+                              <div className="truncate font-medium" title={detail.product.barcode}>
+                                {detail.product.barcode}
+                              </div>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Số lượng:</span>
+                              <div className="font-medium">{detail.quantity}</div>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Giá nhập:</span>
+                              <div className="font-medium">
+                                {detail.price.toLocaleString('vi-VN')}đ
+                              </div>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Thành tiền:</span>
+                              <div className="font-medium">
+                                {(detail.quantity * detail.price).toLocaleString('vi-VN')}đ
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      <div className="bg-blue-100 p-3 font-semibold">
+                        <div className="flex justify-between">
+                          <span>Tổng cộng:</span>
+                          <span>
+                            {viewingReceipt.details
+                              .reduce((sum, d) => sum + d.quantity * d.price, 0)
+                              .toLocaleString('vi-VN')}
+                            đ
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="border-t border-blue-100 px-4 py-3 sm:px-6">
               <Button
                 onClick={() => setShowReceiptDialog(false)}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="w-full bg-blue-600 hover:bg-blue-700 sm:w-auto"
               >
                 Đóng
               </Button>

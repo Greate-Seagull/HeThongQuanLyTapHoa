@@ -111,7 +111,7 @@ export class Product extends BaseEntity<ProductId> {
   // Getters
   @Read
   @Write
-  @Required
+  @Optional
   @Type(Number)
   public get id(): ProductId {
     return this._id;

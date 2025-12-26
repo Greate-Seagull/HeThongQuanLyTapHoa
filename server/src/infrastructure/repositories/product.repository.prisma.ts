@@ -14,24 +14,27 @@ import {
 } from "../../domain/services/mapper.service";
 
 export class ProductRepositoryPrisma implements ProductRepository {
-    async saveMany(products: Product[], transaction?: Prisma.TransactionClient): Promise<Product[]> {
-      const repo = transaction ? transaction : this.prisma;
-      const promisedRaws = products.map((p) => {
-        return repo.product.update({
-          where: { id: p.id },
-          data: this.tracker.diff(p.id, toPersistence(p)),
-          ...ProductRepositoryPrisma.baseQuery,
-        });
+  async saveMany(
+    products: Product[],
+    transaction?: Prisma.TransactionClient
+  ): Promise<Product[]> {
+    const repo = transaction ? transaction : this.prisma;
+    const promisedRaws = products.map((p) => {
+      return repo.product.update({
+        where: { id: p.id },
+        data: this.tracker.diff(p.id, toPersistence(p)),
+        ...ProductRepositoryPrisma.baseQuery,
       });
-      const raws = await Promise.all(promisedRaws);
-      const entities: Product[] = [];
-      for (const raw of raws) {
-        const entity = fromPersistence(Product, raw);
-        this.tracker.track(entity.id, raw);
-        entities.push(entity);
-      }
-      return entities;
+    });
+    const raws = await Promise.all(promisedRaws);
+    const entities: Product[] = [];
+    for (const raw of raws) {
+      const entity = fromPersistence(Product, raw);
+      this.tracker.track(entity.id, raw);
+      entities.push(entity);
     }
+    return entities;
+  }
   private tracker = new ChangeTracker<any>();
 
   constructor(private readonly prisma: PrismaClient) {}
@@ -150,12 +153,22 @@ export class ProductRepositoryPrisma implements ProductRepository {
 
   async create(product: Product): Promise<Product> {
     const data = toPersistenceObject(product);
+
+    // Loại bỏ ID ra khỏi object data trước khi create
+    // vì Database sẽ tự sinh ID này
+    const { id, ...createData } = data;
+
     const raw = await this.prisma.product.create({
-      data: this.tracker.diff(product.id, data),
+      // Sử dụng createData (đã bỏ id) thay vì dùng tracker.diff
+      data: createData,
       ...ProductRepositoryPrisma.baseQuery,
     });
+
     const entity = fromPersistence(Product, raw);
+
+    // Sau khi tạo xong mới bắt đầu track để phục vụ cho các lần Update sau
     this.tracker.track(entity.id, raw);
+
     return entity;
   }
 

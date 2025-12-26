@@ -10,8 +10,13 @@ export class SlotDetailRepository {
   }
 
   async update(slotId: number, productId: number) {
-    // Xóa hết slotDetail cũ của slot, chỉ giữ 1 sản phẩm/slot
-    await this.prisma.slotDetail.deleteMany({ where: { slotId } });
+    console.log("slotid, productid", slotId, productId);    
+    // Xóa TẤT CẢ SlotDetail cũ của slot này trước
+    await this.prisma.slotDetail.deleteMany({
+      where: { slotId: slotId },
+    });
+
+    // Tạo mới SlotDetail với productId mới
     return this.prisma.slotDetail.create({
       data: { slotId, productId },
     });

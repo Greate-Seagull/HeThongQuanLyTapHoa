@@ -264,7 +264,7 @@ export default function CustomerDashboardPage() {
 
                 <div className="text-base text-gray-600 pt-4 bg-yellow-50 p-4 rounded-lg">
                   💡 Tích lũy thêm điểm để nhận được nhiều ưu đãi hấp dẫn!<br />
-                  <span className="text-sm">(1 điểm = 100đ khi sử dụng)</span>
+                  <span className="text-sm">(1 điểm = 1đ khi sử dụng)</span>
                 </div>
               </div>
             </CardContent>

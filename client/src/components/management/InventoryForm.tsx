@@ -71,7 +71,13 @@ interface Stocktaking {
   createdAt: Date
   details: StocktakingDetail[]
 }
-
+interface SlotWithProduct {
+  slotId: number
+  slotName: string
+  rackId: number
+  productId: number
+  productName: string
+}
 interface InventoryFormProps {
   currentUser?: { id: number; position: string }
 }
@@ -94,6 +100,8 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
   // State
   const [products, setProducts] = useState<Product[]>([])
   const [slots, setSlots] = useState<Slot[]>([])
+  const [allSlotsWithProduct, setAllSlotsWithProduct] = useState<SlotWithProduct[]>([])
+  const [availableSlots, setAvailableSlots] = useState<SlotWithProduct[]>([])
   const [stocktakings, setStocktakings] = useState<StocktakingWithDetails[]>([])
   const [loading, setLoading] = useState(false)
   const [loadingDetail, setLoadingDetail] = useState(false)
@@ -119,27 +127,29 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
 
   const selectedProduct = products.find((p) => p.id === selectedProductId)
   const selectedSlot = slots.find((s) => s._id === selectedSlotId)
-  const filteredStocktakings = stocktakings.filter(
-    (stocktaking) =>
-      stocktaking.id.toString().includes(searchTerm) ||
-      (stocktaking.employee?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredStocktakings = stocktakings
+    .filter(
+      (stocktaking) =>
+        stocktaking.id.toString().includes(searchTerm) ||
+        (stocktaking.employee?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => b.id - a.id) // Sắp xếp theo mã phiếu giảm dần
 
   // Load dữ liệu ban đầu
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
       try {
-        const [productsRes, slotsRes, stocktakingsData] = await Promise.all([
+        const [productsRes, slotsWithProductRes, stocktakingsData] = await Promise.all([
           apiClient.get<any>('/products'),
-          apiClient.get<any>('/slots'),
+          apiClient.get<any>('/slots/list-with-product'), // ← ĐỔI API
           getStocktakings(),
         ])
 
         const productsArray = productsRes?.products || []
-        const slotsArray = slotsRes
+        const slotsData = slotsWithProductRes || [] // ← ĐỔI
         setProducts(productsArray)
-        setSlots(Array.isArray(slotsArray) ? slotsArray : [])
+        setAllSlotsWithProduct(Array.isArray(slotsData) ? slotsData : []) // ← ĐỔI
         setStocktakings(Array.isArray(stocktakingsData) ? stocktakingsData : [])
 
         // Kiểm tra phiếu mới cho Manager
@@ -163,14 +173,25 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
     }
     fetchData()
   }, [currentUser])
+
+  // Filter slots khi chọn product
   useEffect(() => {
     if (selectedProductId) {
+      const filtered = allSlotsWithProduct.filter((slot) => slot.productId === selectedProductId)
+      setAvailableSlots(filtered)
+
       const product = products.find((p) => p.id === selectedProductId)
       setCurrentQuantity(product?.amount || 0)
+
+      if (selectedSlotId && !filtered.find((s) => s.slotId === selectedSlotId)) {
+        setSelectedSlotId(0)
+      }
     } else {
+      setAvailableSlots([])
       setCurrentQuantity(0)
+      setSelectedSlotId(0)
     }
-  }, [selectedProductId, products])
+  }, [selectedProductId, allSlotsWithProduct, products, selectedSlotId])
   // Handlers
   const handleStartCreateStocktaking = () => {
     setIsCreatingStocktaking(true)
@@ -222,20 +243,15 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
     }
 
     const product = products.find((p) => p.id === selectedProductId)
-    const slot = slots.find((s) => s._id === selectedSlotId)
+    const slotData = allSlotsWithProduct.find((s) => s.slotId === selectedSlotId) // ĐỔI
 
-    if (!product || !slot) {
+    if (!product || !slotData) {
+      // ĐỔI
       toast.error('Sản phẩm hoặc vị trí không hợp lệ')
       return
     }
 
-    // Số lượng = số lượng hiện tại tại slot
     const quantity = currentQuantity
-
-    // if (quantity <= 0) {
-    //   toast.error('Không có sản phẩm tại vị trí này để kiểm kê')
-    //   return
-    // }
 
     const newId = Date.now()
     const newDetail: StocktakingDetail = {
@@ -243,8 +259,11 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
       stocktakingId: 0,
       productId: product.id,
       product,
-      slotId: slot._id,
-      slot,
+      slotId: slotData.slotId,
+      slot: {
+        _id: slotData.slotId,
+        _name: slotData.slotName,
+      } as any,
       status: selectedStatus,
       quantity,
     }
@@ -434,6 +453,7 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                   <Popover open={openProductCombobox} onOpenChange={setOpenProductCombobox}>
                     <PopoverTrigger asChild>
                       <Button variant="outline" role="combobox" className="w-full justify-between">
+                        {/* ĐỔI dòng này: */}
                         {selectedProduct ? selectedProduct.name : 'Chọn sản phẩm...'}
                         <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
                       </Button>
@@ -467,36 +487,38 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                 </div>
 
                 {/* Slot Combobox */}
+                {/* Slot Combobox */}
                 <div className="space-y-2">
                   <Label>Vị trí</Label>
                   <Popover open={openSlotCombobox} onOpenChange={setOpenSlotCombobox}>
                     <PopoverTrigger asChild>
                       <Button variant="outline" role="combobox" className="w-full justify-between">
-                        {selectedSlot
-                          ? `${selectedSlot.rack?.shelf?.name} > ${selectedSlot.rack?.name} > ${selectedSlot._name}`
+                        {selectedSlotId
+                          ? availableSlots.find((s) => s.slotId === selectedSlotId)?.slotName ||
+                            'Chọn vị trí...'
                           : 'Chọn vị trí...'}
                         <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[300px] p-0">
+                    <PopoverContent className="w-[400px] p-0">
                       <Command>
                         <CommandInput placeholder="Tìm vị trí..." />
                         <CommandList>
                           <CommandEmpty>Không tìm thấy</CommandEmpty>
                           <CommandGroup>
-                            {slots.map((slot) => (
+                            {availableSlots.map((slot) => (
                               <CommandItem
-                                key={slot._id}
-                                value={`${slot._id} ${slot.rack?.shelf?.name} ${slot.rack?.name} ${slot.name}`}
+                                key={slot.slotId}
+                                value={slot.slotName}
                                 onSelect={() => {
-                                  setSelectedSlotId(slot._id)
+                                  setSelectedSlotId(slot.slotId)
                                   setOpenSlotCombobox(false)
                                 }}
                               >
                                 <Check
-                                  className={`mr-2 h-4 w-4 ${selectedSlotId === slot._id ? 'opacity-100' : 'opacity-0'}`}
+                                  className={`mr-2 h-4 w-4 ${selectedSlotId === slot.slotId ? 'opacity-100' : 'opacity-0'}`}
                                 />
-                                {slot.rack?.shelf?.name} {slot.rack?.name} {slot._name}
+                                {slot.slotName}
                               </CommandItem>
                             ))}
                           </CommandGroup>
@@ -676,7 +698,7 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className='text-blue-600'
+                          className="text-blue-600"
                           onClick={() => handleViewStocktaking(st as any)}
                         >
                           <Eye className="h-4 w-4" />

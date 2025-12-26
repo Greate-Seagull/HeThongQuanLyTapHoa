@@ -228,6 +228,10 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
       toast.error('Số lượng phải lớn hơn 0')
       return
     }
+    if (quantity > searchedProduct.amount) {
+      toast.error(`Số lượng vượt quá tồn kho (còn ${searchedProduct.amount})`)
+      return
+    }
     // Kiểm tra đã có trong giỏ chưa
     const existingItem = cart.find((item) => item.productId === searchedProduct.id)
     if (existingItem) {
@@ -327,7 +331,7 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
               ? {
                   id: inv.user.id,
                   name: inv.user.name,
-                  phone: inv.user.phone ?? '',
+                  phone: inv.user.accounts?.[0]?.phoneNumber ?? '',
                   loyaltyPoints: inv.user.loyaltyPoints ?? 0,
                 }
               : null,
@@ -474,7 +478,7 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
           ? {
               id: detail.user.id,
               name: detail.user.name,
-              phone: '',
+              phone: detail.user.accounts?.[0]?.phoneNumber,
               loyaltyPoints: 0,
             }
           : null,
@@ -1168,10 +1172,10 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
                   </p>
                 </div>
                 <div>
-                  <p>
+                  <>
                     <span className="font-semibold">Khách hàng:</span>{' '}
                     {currentInvoice.customer?.name || 'Khách lẻ'}
-                  </p>
+                  </>
                   {currentInvoice.customer && (
                     <>
                       <p>

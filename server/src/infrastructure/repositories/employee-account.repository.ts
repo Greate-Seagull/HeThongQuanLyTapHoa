@@ -24,7 +24,10 @@ export class EmployeeAccountRepository implements EmployeeAccountRepository {
     return savedEntity;
   }
 
-  async addMany(accounts: EmployeeAccount[], transaction?: Prisma.TransactionClient) {
+  async addMany(
+    accounts: EmployeeAccount[],
+    transaction?: Prisma.TransactionClient
+  ) {
     const result: EmployeeAccount[] = [];
     for (const account of accounts) {
       result.push(await this.add(account, transaction));
@@ -60,7 +63,10 @@ export class EmployeeAccountRepository implements EmployeeAccountRepository {
     return savedEntity;
   }
 
-  async saveMany(accounts: EmployeeAccount[], transaction?: Prisma.TransactionClient) {
+  async saveMany(
+    accounts: EmployeeAccount[],
+    transaction?: Prisma.TransactionClient
+  ) {
     const result: EmployeeAccount[] = [];
     for (const account of accounts) {
       result.push(await this.save(account, transaction));
@@ -103,6 +109,18 @@ export class EmployeeAccountRepository implements EmployeeAccountRepository {
       this.tracker.track(entity.id, raw);
       return entity;
     });
+  }
+  async findByEmployeeId(employeeId: number): Promise<EmployeeAccount | null> {
+    const raw = await this.prisma.employeeAccount.findFirst({
+      where: {
+        employeeId,
+      },
+      ...EmployeeAccountRepository.baseQuery,
+    });
+    if (!raw) return null;
+    const savedEntity = fromPersistence(EmployeeAccount, raw);
+    this.tracker.track(savedEntity.id, raw);
+    return savedEntity;
   }
 
   static baseQuery = buildSafePrismaSelect(EmployeeAccount);
