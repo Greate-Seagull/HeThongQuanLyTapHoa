@@ -77,6 +77,8 @@ export class CreateInvoiceUsecase {
 			userId: parsedInput.userId,
 		});
 		log.info("Task started");
+		console.log("parsedInput", parsedInput);
+		
 
 		// Fetch employee
 		const employee = await this.employeeRepo.getById(parsedInput.authId);

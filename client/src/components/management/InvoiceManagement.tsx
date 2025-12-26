@@ -34,6 +34,7 @@ import {
   User,
   Loader2,
   Loader,
+  Eye,
 } from 'lucide-react'
 import html2canvas from 'html2canvas'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -111,6 +112,7 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
   const [pointsToUse, setPointsToUse] = useState<number>(0)
   const [openCustomerCombobox, setOpenCustomerCombobox] = useState(false)
   const [openProductCombobox, setOpenProductCombobox] = useState(false)
+  const [allPromotions, setAllPromotions] = useState<Promotion[]>([])
 
   const selectedCustomer = customers.find((c) => c.id === selectedCustomerId)
 
@@ -128,13 +130,15 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
     return idMatch || codeMatch || employeeMatch || customerNameMatch || customerPhoneMatch
   })
 
-  // Tính giảm giá dựa trên promotion và giá sản phẩm
   const calculateDiscountAmount = (promotion: Promotion, price: number): number => {
+    let discount = 0
     if (promotion.promotionType === PromotionType.PERCENTAGE) {
-      return (price * promotion.value) / 100
+      discount = (price * promotion.value) / 100
     } else {
-      return promotion.value
+      discount = promotion.value
     }
+    // ← THÊM: Đảm bảo giảm giá không vượt quá giá gốc
+    return Math.min(discount, price)
   }
 
   const handleSearchProduct = async () => {
@@ -162,23 +166,16 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
     setSearchedProduct(product)
     setQuantity(1)
     try {
-      const promotions = await getPromotionsForProduct(product.id)
-      const now = new Date()
-      const validPromotions = promotions.filter(
-        (p) => new Date(p.startedAt) <= now && new Date(p.endedAt) >= now
-      )
-      // Chọn khuyến mãi có giá trị giảm cao nhất
-      const best = validPromotions.reduce((prev, curr) => {
-        const prevDiscount =
-          prev.promotionType === PromotionType.PERCENTAGE ? prev.value : prev.value
-        const currDiscount =
-          curr.promotionType === PromotionType.PERCENTAGE ? curr.value : curr.value
-        return currDiscount > prevDiscount ? curr : prev
-      }, validPromotions[0])
+      setSearchedProduct(product)
+      setQuantity(1)
+
+      const best = findBestPromotion(product.id, product.price)
       setBestPromotion(best || null)
+
       if (best) {
+        const discountAmount = calculateDiscountAmount(best, product.price)
         toast.success(`Tìm thấy: ${product.name}`, {
-          description: `Khuyến mãi: ${best.name} - Giảm ${best.promotionType === PromotionType.PERCENTAGE ? best.value + '%' : best.value.toLocaleString('vi-VN') + 'đ'}`,
+          description: `Khuyến mãi: ${best.name} - Giảm ${discountAmount.toLocaleString('vi-VN')}đ`,
         })
       } else {
         toast.success(`Tìm thấy: ${product.name}`, {
@@ -190,6 +187,36 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
         description: 'Không thể kiểm tra khuyến mãi',
       })
     }
+  }
+  // Lấy các khuyến mãi của 1 sản phẩm từ allPromotions
+  const getPromotionsForProductId = (productId: number): Promotion[] => {
+    return allPromotions.filter((promo) =>
+      promo.promotionDetails?.some((detail) => detail.productId === productId)
+    )
+  }
+
+  const findBestPromotion = (productId: number, productPrice: number): Promotion | null => {
+    const promotions = getPromotionsForProductId(productId)
+    const now = new Date()
+    const validPromotions = promotions.filter(
+      (p) => new Date(p.startedAt) <= now && new Date(p.endedAt) >= now
+    )
+
+    if (validPromotions.length === 0) return null
+
+    // ← THÊM: Lọc bỏ promotion giảm quá giá gốc
+    const applicablePromotions = validPromotions.filter((p) => {
+      const discount = calculateDiscountAmount(p, productPrice)
+      return discount < productPrice // Chỉ giữ promotion không làm giá âm
+    })
+
+    if (applicablePromotions.length === 0) return null
+
+    return applicablePromotions.reduce((best, current) => {
+      const bestDiscount = calculateDiscountAmount(best, productPrice)
+      const currentDiscount = calculateDiscountAmount(current, productPrice)
+      return currentDiscount > bestDiscount ? current : best
+    })
   }
 
   const handleAddToCart = async () => {
@@ -207,22 +234,8 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
       toast.error('Sản phẩm đã có trong giỏ hàng')
       return
     }
-    // Tự động tìm khuyến mãi tốt nhất mỗi lần thêm qua API
-    let promotion: Promotion | null = null
-    try {
-      const promotions = await getPromotionsForProduct(searchedProduct.id)
-      const now = new Date()
-      const validPromotions = promotions.filter(
-        (p) => new Date(p.startedAt) <= now && new Date(p.endedAt) >= now
-      )
-      promotion = validPromotions.reduce((prev, curr) => {
-        const prevDiscount =
-          prev.promotionType === PromotionType.PERCENTAGE ? prev.value : prev.value
-        const currDiscount =
-          curr.promotionType === PromotionType.PERCENTAGE ? curr.value : curr.value
-        return currDiscount > prevDiscount ? curr : prev
-      }, validPromotions[0])
-    } catch {}
+    const promotion = findBestPromotion(searchedProduct.id, searchedProduct.price)
+
     const newDetail: InvoiceDetail = {
       id: cart.length + 1,
       productId: searchedProduct.id,
@@ -237,7 +250,10 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
     setBestPromotion(null)
     setProductBarcode('')
     setQuantity(1)
-    toast.success(`Đã thêm ${searchedProduct.name} vào giỏ hàng`)
+    const discountAmount = promotion ? calculateDiscountAmount(promotion, searchedProduct.price) : 0
+    toast.success(`Đã thêm ${searchedProduct.name} vào giỏ hàng`, {
+      description: promotion ? `Giảm ${discountAmount.toLocaleString('vi-VN')}đ/sp` : undefined,
+    })
   }
 
   const handleRemoveFromCart = (detailId: number) => {
@@ -275,13 +291,21 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
     const fetchData = async () => {
       setLoading(true)
       try {
-        const [productsData, customersData, invoicesData] = await Promise.all([
+        const [productsData, customersData, invoicesData, promotionsData] = await Promise.all([
           apiClient.get('/products'),
           apiClient.get('/accounts'),
           getInvoices(),
+          apiClient.get('/promotions'), // ← THÊM DÒNG NÀY
         ])
         console.log(productsData)
-
+        console.log('All promotions loaded:', promotionsData)
+        const promo161 = promotionsData?.find((p) => p.id === 161)
+        console.log('Promotion 161 details:', promo161?.promotionDetails)
+        console.log(
+          'Has product 276?',
+          promo161?.promotionDetails?.some((pd) => pd.productId === 276)
+        )
+        setAllPromotions(Array.isArray(promotionsData) ? promotionsData : [])
         setProducts(Array.isArray(productsData?.products) ? productsData?.products : [])
         setCustomers(
           Array.isArray(customersData)
@@ -372,12 +396,19 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
         userId: selectedCustomerId || null,
         usedPoint: pointsToUse,
         items: cart.map((item) => ({
-          // ← SỬA: Đổi thành "items"
           productId: item.productId,
           quantity: item.quantity,
           promotionId: item.promotionId,
         })),
       }
+      console.log('=== SENDING INVOICE ===')
+      console.log('Invoice data:', JSON.stringify(invoiceData, null, 2))
+      console.log('Cart item types:', {
+        productId: typeof cart[0]?.productId,
+        quantity: typeof cart[0]?.quantity,
+        promotionId: typeof cart[0]?.promotionId,
+      })
+      console.log('Cart promotion object:', cart[0]?.promotion)
       await createInvoice(invoiceData)
       toast.success('Thanh toán thành công!')
 
@@ -422,6 +453,7 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
       setSelectedCustomerId(0)
       setPointsToUse(0)
     } catch (err: any) {
+      console.error('Invoice error:', err)
       toast.error(err.message || 'Lỗi tạo hóa đơn')
     } finally {
       setLoading(false)
@@ -430,10 +462,11 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
 
   // Xem chi tiết hóa đơn từ API (không dùng price, discountAmount, finalPrice từ backend)
   const handleViewInvoice = async (invoiceId: number) => {
+    
     setLoading(true)
     try {
       const detail = await getInvoiceById(invoiceId)
-      setCurrentInvoice({
+      const invoiceData = {
         id: detail.id,
         employeeId: detail.employeeId,
         employee: detail.employee ?? { id: 0, name: 'N/A', position: EmployeePosition.SALES },
@@ -477,7 +510,10 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
               promotion: d.promotion ?? null,
             }))
           : [],
-      })
+      }
+
+      // ✅ Set dữ liệu TRƯỚC, mở dialog SAU
+      setCurrentInvoice(invoiceData)
       setShowInvoiceDialog(true)
     } catch (err: any) {
       toast.error('Không thể tải chi tiết hóa đơn')
@@ -485,7 +521,6 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
       setLoading(false)
     }
   }
-
   const handlePrintInvoice = async () => {
     if (!currentInvoice) return
     if (!invoiceContentRef.current) {
@@ -533,7 +568,7 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
       </Card>
 
       {/* Checkout Screen */}
-      { isCreatingInvoice && (
+      {isCreatingInvoice && (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Left: Product Search & Cart */}
           <div className="space-y-6 lg:col-span-2">
@@ -581,12 +616,7 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
                           <CommandGroup>
                             {products.map((product) => {
                               const isInCart = cart.some((item) => item.productId === product.id)
-                              // Lấy khuyến mãi tốt nhất qua API (đồng bộ hóa với bestPromotion nếu đã chọn)
-                              // Để tránh gọi API nhiều lần, chỉ hiển thị icon nếu bestPromotion trùng product
-                              const promotion =
-                                searchedProduct && searchedProduct.id === product.id
-                                  ? bestPromotion
-                                  : null
+                              const promotion = findBestPromotion(product.id, product.price)
                               return (
                                 <CommandItem
                                   key={product.id}
@@ -1047,7 +1077,7 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
                       <TableHead className="text-blue-900">Khách hàng</TableHead>
                       <TableHead className="text-blue-900">Số SP</TableHead>
                       <TableHead className="text-blue-900">Tổng tiền</TableHead>
-                      <TableHead className="text-right text-blue-900">Thao tác</TableHead>
+                      <TableHead className="text-center text-blue-900">Thao tác</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1069,14 +1099,14 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
                         <TableCell className="font-semibold">
                           {invoice.total.toLocaleString('vi-VN')}đ
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-center">
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleViewInvoice(invoice.id)}
                             className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
                           >
-                            <Receipt className="h-4 w-4" />
+                            <Eye className="h-4 w-4" />
                           </Button>
                         </TableCell>
                       </TableRow>
