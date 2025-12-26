@@ -1107,7 +1107,7 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button
+                          {/* <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => {
@@ -1116,7 +1116,7 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
                             className="text-red-600"
                           >
                             <Trash2 className="h-4 w-4" />
-                          </Button>
+                          </Button> */}
                         </TableCell>
                       </TableRow>
                     ))}
