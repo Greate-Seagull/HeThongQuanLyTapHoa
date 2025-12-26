@@ -91,6 +91,7 @@ export function ImportForm({ currentUser }: ImportFormProps) {
   const [receiptDetails, setReceiptDetails] = useState<GoodReceiptDetail[]>([])
   const [openProductCombobox, setOpenProductCombobox] = useState(false)
   const [barcodeInput, setBarcodeInput] = useState('')
+  const [soldProductIds, setSoldProductIds] = useState<Set<number>>(new Set())
   // Thêm state mới
   const [originalQuantities, setOriginalQuantities] = useState<Record<number, number>>({})
   // Fetch products from API
@@ -157,41 +158,57 @@ export function ImportForm({ currentUser }: ImportFormProps) {
     ? products.filter((p) => !receiptDetails.some((d) => d.productId === p.id))
     : []
   const handleStartEdit = async (receipt: GoodReceipt) => {
-    setIsEditingReceipt(true)
-    setIsCreatingReceipt(true)
-    setEditingReceiptId(receipt.id)
+    setLoading(true)
+    try {
+      // Check xem có sản phẩm nào đã được bán chưa
+      const invoicesRes = await apiClient.get<any[]>('/invoices')
+      const allInvoices = Array.isArray(invoicesRes) ? invoicesRes : []
 
-    // Load dữ liệu phiếu nhập vào form
-    setReceiptDetails(
-      receipt.details.map((d) => ({
-        productId: d.productId,
-        product: d.product,
-        quantity: d.quantity,
-        price: d.price,
-      }))
-    )
+      const soldIds = new Set<number>()
 
-    // ← THÊM: Lấy số lượng đã bán của từng sản phẩm
-    const soldQuantities: Record<number, number> = {}
-    for (const detail of receipt.details) {
-      try {
-        const product = products.find((p) => p.id === detail.productId)
-        if (product) {
-          // Số lượng đã bán = Số lượng nhập ban đầu - Số lượng hiện tại
-          const soldQty = detail.quantity - product.amount
-          soldQuantities[detail.productId] = Math.max(0, soldQty)
+      // Kiểm tra từng sản phẩm trong phiếu nhập
+      for (const detail of receipt.details) {
+        const hasSold = allInvoices.some((invoice) => {
+          const invoiceDetails = invoice.invoiceDetails || []
+          return invoiceDetails.some((invDetail: any) => invDetail.productId === detail.productId)
+        })
+
+        if (hasSold) {
+          soldIds.add(detail.productId)
         }
-      } catch (err) {
-        soldQuantities[detail.productId] = 0
       }
-    }
-    setOriginalQuantities(soldQuantities)
 
-    // Reset các field khác
-    setSelectedProductId(0)
-    setQuantity(0)
-    setImportPrice(0)
-    setBarcodeInput('')
+      setSoldProductIds(soldIds) // ← LƯU danh sách sản phẩm đã bán
+      if (soldIds.size > 0) {
+        toast.warning(
+          'Cảnh báo: Một số sản phẩm trong phiếu này đã được bán. Bạn không thể xóa hoặc cập nhật phiếu nhập này.',
+          { duration: 5000 }
+        )
+      }
+      // Vẫn cho phép edit
+      setIsEditingReceipt(true)
+      setIsCreatingReceipt(true)
+      setEditingReceiptId(receipt.id)
+
+      setReceiptDetails(
+        receipt.details.map((d) => ({
+          productId: d.productId,
+          product: d.product,
+          quantity: d.quantity,
+          price: d.price,
+        }))
+      )
+
+      setSelectedProductId(0)
+      setQuantity(0)
+      setImportPrice(0)
+      setBarcodeInput('')
+      setOriginalQuantities({})
+    } catch (err) {
+      toast.error('Không thể kiểm tra trạng thái phiếu nhập')
+    } finally {
+      setLoading(false)
+    }
   }
   const selectedProduct = Array.isArray(products)
     ? products.find((p) => p.id === selectedProductId)
@@ -226,6 +243,7 @@ export function ImportForm({ currentUser }: ImportFormProps) {
     setQuantity(0)
     setImportPrice(0)
     setBarcodeInput('')
+    setSoldProductIds(new Set()) // ← THÊM
   }
 
   const handleBarcodeSearch = () => {
@@ -639,6 +657,7 @@ export function ImportForm({ currentUser }: ImportFormProps) {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleRemoveProduct(detail.productId)}
+                              disabled={soldProductIds.has(detail.productId)} // ← THÊM
                               className="text-red-600 hover:bg-red-50 hover:text-red-700"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -667,7 +686,7 @@ export function ImportForm({ currentUser }: ImportFormProps) {
               <Button
                 onClick={handleConfirmReceipt}
                 className="bg-green-600 hover:bg-green-700"
-                disabled={receiptDetails.length === 0 || loading} // ← Thêm loading
+                disabled={receiptDetails.length === 0 || loading || soldProductIds.size > 0} // ← THÊM soldProductIds.size > 0
               >
                 {loading ? ( // ← Thêm conditional render
                   <>
@@ -778,6 +797,14 @@ export function ImportForm({ currentUser }: ImportFormProps) {
                                   className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
                                 >
                                   <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleRemoveProduct(receipt.id)} // ← Cần implement hàm xóa nếu muốn dùng
+                                  className="text-red-600"
+                                >
+                                  <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>
                             </TableCell>

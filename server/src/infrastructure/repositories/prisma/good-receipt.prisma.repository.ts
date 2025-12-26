@@ -36,12 +36,17 @@ export class GoodReceiptPrismaRepository
   protected buildUpdateData(entity: GoodReceipt): Partial<GoodReceiptDto> {
     let persitence = this.toPersistence(entity) as any;
 
-    // ✅ SỬA: Dùng createMany thay vì connect
-    persitence.goodReceiptDetails = {
-      createMany: {
-        data: persitence.goodReceiptDetails,
-      },
-    };
+    // ✅ SỬA: Loại bỏ goodReceiptId và dùng create
+    if (persitence.goodReceiptDetails && Array.isArray(persitence.goodReceiptDetails)) {
+      persitence.goodReceiptDetails = {
+        create: persitence.goodReceiptDetails.map((detail: any) => ({
+          productId: detail.productId,
+          quantity: detail.quantity,
+          price: detail.price,
+          // Không cần goodReceiptId - Prisma tự thêm
+        })),
+      };
+    }
 
     return persitence;
   }
@@ -49,10 +54,16 @@ export class GoodReceiptPrismaRepository
   protected buildCreateData(entity: GoodReceipt): Partial<GoodReceiptDto> {
     let persitence = this.toPersistence(entity) as any;
 
-    // ✅ Giữ nguyên create cho tạo mới
-    persitence.goodReceiptDetails = {
-      create: persitence.goodReceiptDetails,
-    };
+    // ✅ Tương tự cho create
+    if (persitence.goodReceiptDetails && Array.isArray(persitence.goodReceiptDetails)) {
+      persitence.goodReceiptDetails = {
+        create: persitence.goodReceiptDetails.map((detail: any) => ({
+          productId: detail.productId,
+          quantity: detail.quantity,
+          price: detail.price,
+        })),
+      };
+    }
 
     return persitence;
   }
@@ -82,6 +93,11 @@ export class GoodReceiptPrismaRepository
     return raws;
   }
 
+  // ✅ Alias cho usecase
+  public async getById(id: number): Promise<any | null> {
+    return this.findById(id);
+  }
+
   // Lấy phiếu nhập kho theo id
   public async findById(id: number): Promise<any | null> {
     const raw = await this.client.goodReceipt.findUnique({
@@ -95,6 +111,37 @@ export class GoodReceiptPrismaRepository
         },
       },
     });
+
+    // ✅ Filter out null items
+    if (raw && raw.goodReceiptDetails) {
+      raw.goodReceiptDetails = raw.goodReceiptDetails.filter(
+        (detail: any) => detail && detail.productId !== null
+      );
+    }
+
     return raw;
+  }
+
+  // ✅ Tính tổng số lượng nhập từ các phiếu nhập (trừ 1 phiếu chỉ định)
+  async getTotalQuantityByProduct(
+    productId: number,
+    excludeReceiptId?: number
+  ): Promise<number> {
+    const whereCondition: any = {
+      productId: productId,
+    };
+
+    if (excludeReceiptId) {
+      whereCondition.goodReceiptId = { not: excludeReceiptId };
+    }
+
+    const result = await this.client.goodReceiptDetail.aggregate({
+      where: whereCondition,
+      _sum: {
+        quantity: true,
+      },
+    });
+
+    return Number(result._sum.quantity || 0);
   }
 }

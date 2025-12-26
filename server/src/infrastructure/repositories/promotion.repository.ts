@@ -90,5 +90,7 @@ export class PromotionRepository implements PromotionRepository {
 		return entities;
 	}
 
+	
+
 	static baseQuery = buildSafePrismaSelect(Promotion);
 }

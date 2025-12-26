@@ -462,7 +462,6 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
 
   // Xem chi tiết hóa đơn từ API (không dùng price, discountAmount, finalPrice từ backend)
   const handleViewInvoice = async (invoiceId: number) => {
-    
     setLoading(true)
     try {
       const detail = await getInvoiceById(invoiceId)
@@ -1107,6 +1106,16 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
                             className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
                           >
                             <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              toast.error('Chức năng xóa hóa đơn chưa được hỗ trợ')
+                            }}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </TableCell>
                       </TableRow>
