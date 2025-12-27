@@ -69,6 +69,8 @@ router.post(
   async (req, res) => {
     req.body = { ...req.body, id: (req as any).authId };
     try {
+      console.log("testabc", req.body);
+      
       const result = await changeEmployeePasswordUsecase.execute(req.body);
       res.json({ status: 'success', data: result });
     } catch (err: any) {

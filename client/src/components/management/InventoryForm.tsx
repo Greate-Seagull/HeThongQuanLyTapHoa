@@ -633,7 +633,7 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                           <TableCell>{detail.product!.name}</TableCell>
                           <TableCell className="text-sm">
                             {detail.slot!.rack?.shelf?.name} &gt; {detail.slot!.rack?.name} &gt;{' '}
-                            {detail.slot!._name}
+                            {detail.slot!.name}
                           </TableCell>
                           <TableCell>
                             <Select
@@ -840,7 +840,7 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                       <TableRow key={d.id}>
                         <TableCell>{d.product?.name}</TableCell>
                         <TableCell className="text-xs">
-                          {d.slot?.rack?.shelf?.name} &gt; {d.slot?.rack?.name} &gt; {d.slot?._name}
+                          {d.slot?.rack?.shelf?.name} &gt; {d.slot?.rack?.name} &gt; {d.slot?.name}
                         </TableCell>
                         <TableCell>
                           <span

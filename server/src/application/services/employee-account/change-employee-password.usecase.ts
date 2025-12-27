@@ -15,6 +15,8 @@ export class ChangeEmployeePasswordUsecase {
     const account = await prisma.employeeAccount.findFirst({
       where: { employeeId: id },
     });
+    console.log("testabc1", account);
+    
     if (!account) throw new Error("Tài khoản không tồn tại");
 
     // Kiểm tra mật khẩu hiện tại
@@ -27,7 +29,7 @@ export class ChangeEmployeePasswordUsecase {
 
     // Cập nhật mật khẩu
     await prisma.employeeAccount.update({
-      where: { id },
+      where: {  id: account.id },
       data: { passwordHash: newHash, salt },
     });
     return { success: true };

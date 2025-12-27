@@ -320,21 +320,21 @@ export function LocationManagement() {
     try {
       // ✅ THÊM VALIDATION NÀY
       // Kiểm tra nếu đang edit và slot hiện tại có sản phẩm
-      if (editingSlot) {
-        const currentSlotInfo = slotsWithProduct.find((s) => s.slotId === editingSlot.id)
+      // if (editingSlot) {
+      //   const currentSlotInfo = slotsWithProduct.find((s) => s.slotId === editingSlot.id)
 
-        // Nếu slot đang có sản phẩm mà người dùng chọn "Không có sản phẩm" (productId = 0)
-        if (
-          currentSlotInfo?.productId &&
-          (!slotFormData.productId || slotFormData.productId === 0)
-        ) {
-          toast.error(
-            'Không thể xóa sản phẩm khỏi ô này. Vui lòng chọn sản phẩm khác hoặc giữ nguyên.'
-          )
-          setIsSavingSlot(false)
-          return
-        }
-      }
+      //   // Nếu slot đang có sản phẩm mà người dùng chọn "Không có sản phẩm" (productId = 0)
+      //   if (
+      //     currentSlotInfo?.productId &&
+      //     (!slotFormData.productId || slotFormData.productId === 0)
+      //   ) {
+      //     toast.error(
+      //       'Không thể xóa sản phẩm khỏi ô này. Vui lòng chọn sản phẩm khác hoặc giữ nguyên.'
+      //     )
+      //     setIsSavingSlot(false)
+      //     return
+      //   }
+      // }
       // ✅ KẾT THÚC VALIDATION
 
       const payload = {

@@ -28,6 +28,11 @@ export class SlotDetailRepository {
       include: { product: true },
     });
   }
+  async deleteBySlotId(slotId: number) {
+    return this.prisma.slotDetail.deleteMany({
+      where: { slotId },
+    });
+  }
 
   async getAllWithProduct() {
     return this.prisma.slotDetail.findMany({

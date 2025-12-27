@@ -41,12 +41,17 @@ export class UpdateSlotUsecase {
     await this.slotRepo.update(slot);
     console.log("Slot with id", slot.id, "after update:", slot);
 
-    if (parsedInput.productId !== undefined) {
+    if (parsedInput.productId !== undefined && parsedInput.productId !== null) {
+      // Có productId hợp lệ → Cập nhật
       await this.slotDetailUsecase.update(
         parsedInput.id,
         parsedInput.productId
       );
+    } else {
+      // KHÔNG có productId hoặc productId = null → Xóa
+      await this.slotDetailUsecase.deleteBySlotId(parsedInput.id);
     }
+    // Không truyền productId → Giữ nguyên, không làm gì
 
     log.info("Task completed");
     return outputSchema.parse({ slotId: parsedInput.id });
