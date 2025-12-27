@@ -202,7 +202,7 @@ export default function CustomerDashboardPage() {
 
     const subtotalBeforeDiscount = details.reduce((sum, d) => sum + d.price * d.quantity, 0)
     const promotionDiscount = details.reduce((sum, d) => sum + d.discount, 0)
-    const pointsDiscount = invoice.usedPoint * 100 // 1 điểm = 100đ
+    const pointsDiscount = invoice.usedPoint * 1 // 1 điểm = 100đ
     const totalDiscount = promotionDiscount + pointsDiscount
 
     return {

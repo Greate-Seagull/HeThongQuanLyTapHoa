@@ -313,6 +313,32 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
       return
     }
 
+    // ✅ THÊM VALIDATION: Kiểm tra số lượng thực tế không được > số lượng hệ thống
+    const invalidItems: string[] = []
+
+    for (const detail of stocktakingDetails) {
+      const systemQty = products.find((p) => p.id === detail.productId)?.amount || 0
+      const actualQty = detail.quantity
+
+      // Nếu số lượng thực tế > số lượng hệ thống → Lỗi
+      if (actualQty > systemQty) {
+        const productName = detail.product?.name || 'Không rõ'
+        invalidItems.push(
+          `${productName}: Thực tế ${actualQty} > Hệ thống ${systemQty} (dư ${actualQty - systemQty})`
+        )
+      }
+    }
+
+    // Nếu có lỗi, hiển thị toast và dừng lại
+    if (invalidItems.length > 0) {
+      toast.error('Số lượng thực tế không hợp lệ!', {
+        description: invalidItems.join('\n'),
+        duration: 6000,
+      })
+      return
+    }
+
+    // ✅ Nếu hợp lệ, tiếp tục lưu phiếu
     setLoading(true)
     try {
       if (isEditingStocktaking && editingStocktakingId) {
