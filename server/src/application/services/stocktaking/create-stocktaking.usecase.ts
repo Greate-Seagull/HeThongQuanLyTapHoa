@@ -36,11 +36,13 @@ export class CreateStocktakingUsecase {
 		});
 		log.info("Task started");
 
+		// Lấy danh sách barcode duy nhất (vì một sản phẩm có thể ở nhiều slot)
 		const barcodes = parsedInput.products.map((p) => p.barcode);
+		const uniqueBarcodes = [...new Set(barcodes)];
 		const idAndBarcodes = await this.productReadAccess.getIdsByBarcodes(
-			barcodes
+			uniqueBarcodes
 		);
-		if (idAndBarcodes.length != barcodes.length) {
+		if (idAndBarcodes.length != uniqueBarcodes.length) {
 			log.warn("Task failed: invalid product id");
 			throw Error(`Expect all products to be valid`);
 		}

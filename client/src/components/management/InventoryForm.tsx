@@ -75,6 +75,8 @@ interface SlotWithProduct {
   slotId: number
   slotName: string
   rackId: number
+  rackName: string
+  shelfName: string
   productId: number
   productName: string
 }
@@ -112,6 +114,12 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deletingStocktakingId, setDeletingStocktakingId] = useState<number | null>(null)
   const [actualQuantity, setActualQuantity] = useState<number>(0)
+  
+  // State cho điều chỉnh tồn kho
+  const [showAdjustInventoryDialog, setShowAdjustInventoryDialog] = useState(false)
+  const [adjustingProductId, setAdjustingProductId] = useState<number | null>(null)
+  const [newInventoryAmount, setNewInventoryAmount] = useState<number>(0)
+  
   // Form state
   const [barcodeInput, setBarcodeInput] = useState('')
   const [selectedProductId, setSelectedProductId] = useState<number>(0)
@@ -146,7 +154,10 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
           getStocktakings(),
         ])
 
-        const productsArray = productsRes?.products || []
+        // Đảm bảo productsArray luôn là array
+        const productsArray = Array.isArray(productsRes) 
+          ? productsRes 
+          : (Array.isArray(productsRes?.products) ? productsRes.products : [])
         const slotsData = slotsWithProductRes || [] // ← ĐỔI
         setProducts(productsArray)
         setAllSlotsWithProduct(Array.isArray(slotsData) ? slotsData : []) // ← ĐỔI
@@ -243,8 +254,8 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
   }
 
   const handleAddDetail = async () => {
-    if (!selectedProductId || !selectedSlotId) {
-      toast.error('Vui lòng chọn đầy đủ sản phẩm và vị trí')
+    if (!selectedProductId) {
+      toast.error('Vui lòng chọn sản phẩm')
       return
     }
 
@@ -254,19 +265,32 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
     }
 
     const product = products.find((p) => p.id === selectedProductId)
-    const slotData = allSlotsWithProduct.find((s) => s.slotId === selectedSlotId)
-
-    if (!product || !slotData) {
-      toast.error('Sản phẩm hoặc vị trí không hợp lệ')
+    if (!product) {
+      toast.error('Sản phẩm không hợp lệ')
       return
     }
 
-    const newId = Date.now()
-    const newDetail: StocktakingDetail = {
-      id: newId,
+    // Kiểm tra sản phẩm đã được thêm chưa
+    const alreadyAdded = stocktakingDetails.some((d) => d.productId === selectedProductId)
+    if (alreadyAdded) {
+      toast.error('Sản phẩm này đã được thêm vào phiếu kiểm kê')
+      return
+    }
+
+    // Lấy TẤT CẢ các slot có sản phẩm này
+    const productSlots = allSlotsWithProduct.filter((s) => s.productId === selectedProductId)
+    
+    if (productSlots.length === 0) {
+      toast.error('Sản phẩm này chưa có vị trí nào trong kho')
+      return
+    }
+
+    // Thêm tất cả các slot vào danh sách kiểm kê
+    const newDetails: StocktakingDetail[] = productSlots.map((slotData, index) => ({
+      id: Date.now() + index,
       stocktakingId: 0,
       productId: product.id,
-      product,
+      product: { ...product }, // Clone product object để tránh mất dữ liệu
       slotId: slotData.slotId,
       slot: {
         _id: slotData.slotId,
@@ -280,30 +304,79 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
         },
       } as any,
       status: selectedStatus,
-      quantity: actualQuantity, // ← Dùng số lượng thực tế
-    }
+      quantity: actualQuantity,
+    }))
 
-    // Tính chênh lệch
-    const difference = currentQuantity - actualQuantity
-    const diffText = difference > 0 ? `+${difference}` : difference < 0 ? `${difference}` : 'Khớp'
-
-    toast.success(`Đã thêm ${product.name}`, {
-      description: `HT: ${currentQuantity} | Thực tế: ${actualQuantity} | Chênh lệch: ${diffText}`, // ← ĐỔI text
+    setStocktakingDetails([...stocktakingDetails, ...newDetails])
+    
+    toast.success(`Đã thêm ${product.name} vào ${productSlots.length} vị trí`, {
+      description: `Số lượng kiểm kê: ${actualQuantity} | Trạng thái: ${selectedStatus}`,
     })
-    setStocktakingDetails([...stocktakingDetails, newDetail])
+    
+    // Reset form
     setSelectedProductId(0)
     setSelectedSlotId(0)
     setCurrentQuantity(0)
-    setActualQuantity(0) // ← Reset
-
-    toast.success(`Đã thêm ${product.name}`, {
-      description: `HT: ${currentQuantity} | Thực tế: ${actualQuantity} | Chênh lệch: ${diffText}`,
-    })
+    setActualQuantity(0)
   }
 
   const handleRemoveDetail = (detailId: number) => {
-    setStocktakingDetails(stocktakingDetails.filter((d) => d.id !== detailId))
-    toast.info('Đã xóa dòng chi tiết')
+    // Tìm productId của dòng cần xóa
+    const detailToRemove = stocktakingDetails.find((d) => d.id === detailId)
+    if (!detailToRemove) return
+
+    // Xóa TẤT CẢ các dòng cùng productId (tất cả vị trí của sản phẩm đó)
+    const productId = detailToRemove.productId
+    const remainingDetails = stocktakingDetails.filter((d) => d.productId !== productId)
+    const removedCount = stocktakingDetails.length - remainingDetails.length
+
+    setStocktakingDetails(remainingDetails)
+    toast.info(`Đã xóa sản phẩm khỏi ${removedCount} vị trí`, {
+      description: 'Tất cả vị trí của sản phẩm này đã được xóa khỏi phiếu kiểm kê',
+    })
+  }
+
+  const handleOpenAdjustInventory = (productId: number) => {
+    const product = products.find((p) => p.id === productId)
+    if (!product) {
+      toast.error('Sản phẩm không tồn tại')
+      return
+    }
+    setAdjustingProductId(productId)
+    setNewInventoryAmount(product.amount)
+    setShowAdjustInventoryDialog(true)
+  }
+
+  const handleConfirmAdjustInventory = async () => {
+    if (!adjustingProductId || newInventoryAmount < 0) {
+      toast.error('Số lượng tồn kho không hợp lệ')
+      return
+    }
+
+    setLoading(true)
+    try {
+      await apiClient.patch(`/products/${adjustingProductId}/adjust-inventory`, {
+        newAmount: newInventoryAmount,
+        reason: 'Điều chỉnh tồn kho sau kiểm kê',
+      })
+
+      toast.success('Đã điều chỉnh tồn kho thành công')
+      setShowAdjustInventoryDialog(false)
+      setAdjustingProductId(null)
+      setNewInventoryAmount(0)
+
+      // Refresh lại danh sách sản phẩm
+      const updatedProducts = await apiClient.get<any>('/products')
+      const productsArray = Array.isArray(updatedProducts) 
+        ? updatedProducts 
+        : (Array.isArray(updatedProducts?.products) ? updatedProducts.products : [])
+      setProducts(productsArray)
+    } catch (error: any) {
+      console.error('Lỗi điều chỉnh tồn kho:', error)
+      toast.error(error.response?.data?.message || 'Lỗi điều chỉnh tồn kho')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleConfirmStocktaking = async () => {
@@ -497,14 +570,13 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
 
             {/* Product & Slot Selection */}
             <div className="space-y-4 rounded-lg border border-purple-200 bg-white p-4">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4">
                 {/* Product Combobox */}
                 <div className="space-y-2">
                   <Label>Sản phẩm</Label>
                   <Popover open={openProductCombobox} onOpenChange={setOpenProductCombobox}>
                     <PopoverTrigger asChild>
                       <Button variant="outline" role="combobox" className="w-full justify-between">
-                        {/* ĐỔI dòng này: */}
                         {selectedProduct ? selectedProduct.name : 'Chọn sản phẩm...'}
                         <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
                       </Button>
@@ -515,13 +587,26 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                         <CommandList>
                           <CommandEmpty>Không tìm thấy</CommandEmpty>
                           <CommandGroup>
-                            {products.map((product) => (
+                            {products
+                              .filter((product) => {
+                                // Ẩn sản phẩm đã được thêm vào phiếu kiểm kê
+                                return !stocktakingDetails.some((d) => d.productId === product.id)
+                              })
+                              .map((product) => (
                               <CommandItem
                                 key={product.id}
-                                value={product.name + product.barcode}
+                                value={(product.name || '') + product.barcode}
                                 onSelect={() => {
                                   setSelectedProductId(product.id)
                                   setOpenProductCombobox(false)
+                                  
+                                  // Hiển thị thông báo số lượng vị trí sẽ được kiểm kê
+                                  const productSlots = allSlotsWithProduct.filter(
+                                    (s) => s.productId === product.id
+                                  )
+                                  toast.info(
+                                    `Sẽ kiểm kê ${productSlots.length} vị trí của sản phẩm này`
+                                  )
                                 }}
                               >
                                 <Check
@@ -535,52 +620,13 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                       </Command>
                     </PopoverContent>
                   </Popover>
-                </div>
-
-                {/* Slot Combobox */}
-                {/* Slot Combobox */}
-                <div className="space-y-2">
-                  <Label>Vị trí</Label>
-                  <Popover open={openSlotCombobox} onOpenChange={setOpenSlotCombobox}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" role="combobox" className="w-full justify-between">
-                        {selectedSlotId
-                          ? (() => {
-                              const slot = availableSlots.find((s) => s.slotId === selectedSlotId)
-                              return slot
-                                ? `${slot.shelfName} - ${slot.rackName} - ${slot.slotName}`
-                                : 'Chọn vị trí...'
-                            })()
-                          : 'Chọn vị trí...'}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[400px] p-0">
-                      <Command>
-                        <CommandInput placeholder="Tìm vị trí..." />
-                        <CommandList>
-                          <CommandEmpty>Không tìm thấy</CommandEmpty>
-                          <CommandGroup>
-                            {availableSlots.map((slot) => (
-                              <CommandItem
-                                key={slot.slotId}
-                                value={`${slot.shelfName} ${slot.rackName} ${slot.slotName}`}
-                                onSelect={() => {
-                                  setSelectedSlotId(slot.slotId)
-                                  setOpenSlotCombobox(false)
-                                }}
-                              >
-                                <Check
-                                  className={`mr-2 h-4 w-4 ${selectedSlotId === slot.slotId ? 'opacity-100' : 'opacity-0'}`}
-                                />
-                                {slot.shelfName} {slot.rackName} {slot.slotName}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
+                  {selectedProduct && (
+                    <p className="text-sm text-gray-600">
+                      ℹ️ Sẽ tự động kiểm kê TẤT CẢ vị trí có sản phẩm này (
+                      {allSlotsWithProduct.filter((s) => s.productId === selectedProductId).length}{' '}
+                      vị trí)
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -671,9 +717,10 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                             <Select
                               value={detail.status}
                               onValueChange={(v) => {
+                                // Đồng bộ trạng thái cho tất cả dòng cùng sản phẩm
                                 setStocktakingDetails(
                                   stocktakingDetails.map((d) =>
-                                    d.id === detail.id ? { ...d, status: v as ProductStatus } : d
+                                    d.productId === detail.productId ? { ...d, status: v as ProductStatus } : d
                                   )
                                 )
                               }}
@@ -865,6 +912,7 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                       <TableHead>Vị trí</TableHead>
                       <TableHead>Trạng thái</TableHead>
                       <TableHead>SL</TableHead>
+                      {currentUser?.position === 'MANAGER' && <TableHead>Thao tác</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -882,6 +930,22 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                           </span>
                         </TableCell>
                         <TableCell>{d.quantity}</TableCell>
+                        {currentUser?.position === 'MANAGER' && (
+                          <TableCell>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                handleOpenAdjustInventory(d.productId)
+                                setShowStocktakingDialog(false)
+                              }}
+                              className="text-blue-600"
+                            >
+                              <Edit className="mr-1 h-3 w-3" />
+                              Điều chỉnh
+                            </Button>
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))}
                   </TableBody>
@@ -923,6 +987,71 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                 <Trash2 className="mr-2 h-4 w-4" />
               )}
               Xóa phiếu
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog điều chỉnh tồn kho (Manager only) */}
+      <Dialog open={showAdjustInventoryDialog} onOpenChange={setShowAdjustInventoryDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-blue-600">
+              <Package className="h-5 w-5" />
+              Điều chỉnh số lượng tồn kho
+            </DialogTitle>
+            <DialogDescription>
+              Chức năng này dành cho Manager để điều chỉnh số lượng tồn kho sau khi kiểm kê
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="rounded-lg bg-blue-50 p-4">
+              <p className="text-sm text-gray-700">
+                <strong>Sản phẩm:</strong>{' '}
+                {products.find((p) => p.id === adjustingProductId)?.name}
+              </p>
+              <p className="text-sm text-gray-700">
+                <strong>Số lượng hiện tại:</strong>{' '}
+                {products.find((p) => p.id === adjustingProductId)?.amount}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-amount">Số lượng mới</Label>
+              <Input
+                id="new-amount"
+                type="number"
+                min="0"
+                value={newInventoryAmount}
+                onChange={(e) => setNewInventoryAmount(Number(e.target.value) || 0)}
+                placeholder="Nhập số lượng mới..."
+              />
+              <p className="text-xs text-gray-500">
+                ⚠️ Thay đổi này sẽ cập nhật trực tiếp số lượng tồn kho trong hệ thống
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowAdjustInventoryDialog(false)
+                setAdjustingProductId(null)
+              }}
+              disabled={loading}
+            >
+              Hủy
+            </Button>
+            <Button
+              onClick={handleConfirmAdjustInventory}
+              disabled={loading}
+              className="bg-blue-600"
+            >
+              {loading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="mr-2 h-4 w-4" />
+              )}
+              Xác nhận
             </Button>
           </DialogFooter>
         </DialogContent>

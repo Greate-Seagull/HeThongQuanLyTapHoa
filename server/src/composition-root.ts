@@ -418,6 +418,7 @@ import { ListStocktakingsUsecase } from "./application/services/stocktaking/list
 import { GetStocktakingByIdUsecase } from "./application/services/stocktaking/get-stocktaking-by-id.usecase";
 import { UpdateStocktakingUsecase } from "./application/services/stocktaking/update-stocktaking.usecase";
 import { UpdateProductStatusUsecase } from "./application/services/product/update-product-slot-status.usecase";
+import { AdjustProductInventoryUsecase } from "./application/services/product/adjust-product-inventory.usecase";
 
 export const listStocktakingsUsecase = new ListStocktakingsUsecase(
   stocktakingRepo
@@ -432,6 +433,9 @@ export const updateStocktakingUsecase = new UpdateStocktakingUsecase(
 );
 export const updateProductStatusUsecase = new UpdateProductStatusUsecase(
   prisma
+);
+export const adjustProductInventoryUsecase = new AdjustProductInventoryUsecase(
+  productRepo1
 );
 import { GetInvoicesUsecase } from "./application/services/invoice/get-invoices.usecase";
 import { GetInvoiceByIdUsecase } from "./application/services/invoice/get-invoice-by-id.usecase";

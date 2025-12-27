@@ -10,6 +10,7 @@ import {
   updateProductUsecase,
   deleteProductUsecase,
   updateProductStatusUsecase,
+  adjustProductInventoryUsecase,
 } from "../../composition-root";
 
 const router = Router();
@@ -30,6 +31,13 @@ router.put("/", controller(updateProductUsecase));
 router.patch(
   "/:productId/status",
   controller(updateProductStatusUsecase)
+);
+
+// API điều chỉnh tồn kho (Manager only)
+router.patch(
+  "/:productId/adjust-inventory",
+  authorizationMiddleware("MANAGER"),
+  controller(adjustProductInventoryUsecase)
 );
 
 // router.delete("/:id", controller(deleteProductUsecase));
