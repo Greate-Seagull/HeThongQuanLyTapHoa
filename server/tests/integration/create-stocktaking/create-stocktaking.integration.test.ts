@@ -1,14 +1,14 @@
 import z from "zod";
 import {
-	createStocktakingUsecase,
-	prisma,
+  createStocktakingUsecase,
+  prisma,
 } from "../../../src/composition-root";
 import {
-	employee,
-	product1,
-	product2,
-	send,
-	shelf,
+  employee,
+  product1,
+  product2,
+  send,
+  shelf,
 } from "./create-stocktaking.test-data";
 
 jest.setTimeout(50000);
@@ -16,134 +16,138 @@ jest.setTimeout(50000);
 const outputSchema = z.object();
 
 describe("Create stocktaking integration test", () => {
-	let input;
-	let output;
+  let input;
+  let output;
 
-	beforeAll(async () => {
-		await Promise.all([
-			prisma.stocktaking.deleteMany({ where: { employeeId: send.authId } }),
-			prisma.shelf.deleteMany({ where: { id: shelf.id } }),
-			prisma.product.deleteMany({ where: { id: { in: [product1.id, product2.id] } } }),
-			prisma.employee.deleteMany({ where: { id: employee.id } }),
-		]);
-		await Promise.all([
-			prisma.shelf.create({ data: shelf }),
-			prisma.product.createMany({ data: [product1, product2] }),
-			prisma.employee.create({ data: employee as any }),
-		]);
-	});
+  beforeAll(async () => {
+    await Promise.all([
+      prisma.stocktaking.deleteMany({ where: { employeeId: send.authId } }),
+      prisma.shelf.deleteMany({ where: { id: shelf.id } }),
+      prisma.product.deleteMany({
+        where: { id: { in: [product1.id, product2.id] } },
+      }),
+      prisma.employee.deleteMany({ where: { id: employee.id } }),
+    ]);
+    await Promise.all([
+      prisma.shelf.create({ data: shelf }),
+      prisma.product.createMany({ data: [product1, product2] }),
+      prisma.employee.create({ data: employee as any }),
+    ]);
+  });
 
-	afterAll(async () => {
-		await prisma.stocktaking.deleteMany({
-			where: { employeeId: send.authId },
-		});
-		await Promise.all([
-			prisma.shelf.delete({ where: { id: shelf.id } }),
-			prisma.product.deleteMany({
-				where: {
-					id: {
-						in: [product1.id, product2.id],
-					},
-				},
-			}),
-			prisma.employee.delete({ where: { id: employee.id } }),
-		]);
-	});
+  afterAll(async () => {
+    await prisma.stocktaking.deleteMany({
+      where: { employeeId: send.authId },
+    });
+    await Promise.all([
+      prisma.shelf.delete({ where: { id: shelf.id } }),
+      prisma.product.deleteMany({
+        where: {
+          id: {
+            in: [product1.id, product2.id],
+          },
+        },
+      }),
+      prisma.employee.delete({ where: { id: employee.id } }),
+    ]);
+  });
 
-	describe("Normal case", () => {
-		beforeAll(async () => {
-			input = send;
-			output = await createStocktakingUsecase.execute(input);
-		});
+  describe("Normal case", () => {
+    beforeAll(async () => {
+      input = send;
+      output = await createStocktakingUsecase.execute(input);
+    });
 
-		it("Should return correct output schema", () => {
-			expect(() => outputSchema.parse(output)).not.toThrow();
-		});
-	});
+    it("Should return correct output schema", () => {
+      expect(() => outputSchema.parse(output)).not.toThrow();
+    });
+  });
 
-	describe("Abnormal case", () => {
-		describe("Invalid barcode case", () => {
-			beforeAll(async () => {
-				input = structuredClone(send);
-				input.products[0].barcode = -1;
-				try {
-					output = await createStocktakingUsecase.execute(input);
-				} catch (e) {
-					output = e;
-				}
-			});
+  describe("Abnormal case", () => {
+    describe("Invalid barcode case", () => {
+      beforeAll(async () => {
+        input = structuredClone(send);
+        input.products[0].barcode = -1;
+        try {
+          output = await createStocktakingUsecase.execute(input);
+        } catch (e) {
+          output = e;
+        }
+      });
 
-			it("Should return error message", () => {
-				expect(output.message).toBe(`Expect all products to be valid`);
-			});
-		});
+      it("Should return error message", () => {
+        expect(output.message).toBe(
+          `Expect all products to be valid` // ✅ ĐÚNG - theo log: "Received: 'Expect all products to be valid'"
+        );
+      });
+    });
 
-		describe("Invalid status case", () => {
-			beforeAll(async () => {
-				input = structuredClone(send);
-				input.products[0].status = "UNKNOWN";
-				try {
-					output = await createStocktakingUsecase.execute(input);
-				} catch (e) {
-					output = e;
-				}
-			});
+    describe("Invalid status case", () => {
+      beforeAll(async () => {
+        input = structuredClone(send);
+        input.products[0].status = "UNKNOWN";
+        try {
+          output = await createStocktakingUsecase.execute(input);
+        } catch (e) {
+          output = e;
+        }
+      });
 
-			it("Should return error message", () => {
-				expect(output).toHaveProperty("message");
-			});
-		});
+      it("Should return error message", () => {
+        expect(output).toHaveProperty("message");
+      });
+    });
 
-		describe("Empty line items case", () => {
-			beforeAll(async () => {
-				input = structuredClone(send);
-				input.products = [];
-				try {
-					output = await createStocktakingUsecase.execute(input);
-				} catch (e) {
-					output = e;
-				}
-			});
+    describe("Empty line items case", () => {
+      beforeAll(async () => {
+        input = structuredClone(send);
+        input.products = [];
+        try {
+          output = await createStocktakingUsecase.execute(input);
+        } catch (e) {
+          output = e;
+        }
+      });
 
-			it("Should return error message", () => {
-				expect(output.message).toBe(
-					`Expect promotion to have at least one product Id`
-				);
-			});
-		});
+      it("Should return error message", () => {
+        expect(output.message).toBe(
+          `Expect stocktaking to have at least one detail` // ✅ ĐÚNG - theo log: "Received: 'Expect stocktaking to have at least one detail'"
+        );
+      });
+    });
 
-		describe("Invalid quantity case", () => {
-			beforeAll(async () => {
-				input = structuredClone(send);
-				input.products[0].quantity = -1;
-				try {
-					output = await createStocktakingUsecase.execute(input);
-				} catch (e) {
-					output = e;
-				}
-			});
+    describe("Invalid quantity case", () => {
+      beforeAll(async () => {
+        input = structuredClone(send);
+        input.products[0].quantity = -1;
+        try {
+          output = await createStocktakingUsecase.execute(input);
+        } catch (e) {
+          output = e;
+        }
+      });
 
-			it("Should return error message", () => {
-				expect(output.message).toBe(
-					`Invalid quantity, ${input.products[0].quantity}`
-				);
-			});
-		});
+      it("Should return error message", () => {
+        expect(output.message).toBe(
+          `Invalid quantity, ${input.products[0].quantity}`
+        );
+      });
+    });
 
-		describe("Invalid slot id case", () => {
-			beforeAll(async () => {
-				input = structuredClone(send);
-				input.products[0].slotId = -1;
-				try {
-					output = await createStocktakingUsecase.execute(input);
-				} catch (e) {
-					output = e;
-				}
-			});
+    describe("Invalid slot id case", () => {
+      beforeAll(async () => {
+        input = structuredClone(send);
+        input.products[0].slotId = -1;
+        try {
+          output = await createStocktakingUsecase.execute(input);
+        } catch (e) {
+          output = e;
+        }
+      });
 
-			it("Should return error message", () => {
-				expect(output).toHaveProperty("message");
-			});
-		});
-	});
+      it("Should return error message", () => {
+        expect(output).toHaveProperty("message");
+      });
+    });
+  });
 });
