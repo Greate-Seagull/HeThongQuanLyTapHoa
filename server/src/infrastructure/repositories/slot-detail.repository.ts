@@ -10,7 +10,7 @@ export class SlotDetailRepository {
   }
 
   async update(slotId: number, productId: number) {
-    console.log("slotid, productid", slotId, productId);    
+    console.log("slotid, productid", slotId, productId);
     // Xóa TẤT CẢ SlotDetail cũ của slot này trước
     await this.prisma.slotDetail.deleteMany({
       where: { slotId: slotId },
@@ -31,7 +31,18 @@ export class SlotDetailRepository {
 
   async getAllWithProduct() {
     return this.prisma.slotDetail.findMany({
-      include: { slot: true, product: true },
+      include: {
+        product: true,
+        slot: {
+          include: {
+            rack: {
+              include: {
+                shelf: true, // Lấy thông tin Kệ (Shelf) từ Rack
+              },
+            },
+          },
+        },
+      },
     });
   }
 }

@@ -111,7 +111,7 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
   const [showStocktakingDialog, setShowStocktakingDialog] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deletingStocktakingId, setDeletingStocktakingId] = useState<number | null>(null)
-
+  const [actualQuantity, setActualQuantity] = useState<number>(0)
   // Form state
   const [barcodeInput, setBarcodeInput] = useState('')
   const [selectedProductId, setSelectedProductId] = useState<number>(0)
@@ -212,6 +212,8 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
     setSelectedSlotId(0)
     setSelectedStatus(ProductStatus.GOOD)
     setCurrentQuantity(0)
+    setActualQuantity(0) // ← Thêm dòng này
+
     setBarcodeInput('')
   }
 
@@ -222,6 +224,10 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
 
     const detail = await getStocktakingById(stocktaking.id)
     setStocktakingDetails(detail.stocktakingDetails || [])
+    setSelectedProductId(0)
+    setSelectedSlotId(0)
+    setActualQuantity(0)
+    setCurrentQuantity(0)
   }
 
   const handleBarcodeSearch = () => {
@@ -242,16 +248,18 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
       return
     }
 
-    const product = products.find((p) => p.id === selectedProductId)
-    const slotData = allSlotsWithProduct.find((s) => s.slotId === selectedSlotId) // ĐỔI
-
-    if (!product || !slotData) {
-      // ĐỔI
-      toast.error('Sản phẩm hoặc vị trí không hợp lệ')
+    if (actualQuantity < 0) {
+      toast.error('Số lượng thực tế phải >= 0')
       return
     }
 
-    const quantity = currentQuantity
+    const product = products.find((p) => p.id === selectedProductId)
+    const slotData = allSlotsWithProduct.find((s) => s.slotId === selectedSlotId)
+
+    if (!product || !slotData) {
+      toast.error('Sản phẩm hoặc vị trí không hợp lệ')
+      return
+    }
 
     const newId = Date.now()
     const newDetail: StocktakingDetail = {
@@ -265,14 +273,25 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
         _name: slotData.slotName,
       } as any,
       status: selectedStatus,
-      quantity,
+      quantity: actualQuantity, // ← Dùng số lượng thực tế
     }
 
+    // Tính chênh lệch
+    const difference = currentQuantity - actualQuantity
+    const diffText = difference > 0 ? `+${difference}` : difference < 0 ? `${difference}` : 'Khớp'
+
+    toast.success(`Đã thêm ${product.name}`, {
+      description: `HT: ${currentQuantity} | Thực tế: ${actualQuantity} | Đã bán: ${diffText}`, // ← ĐỔI text
+    })
     setStocktakingDetails([...stocktakingDetails, newDetail])
     setSelectedProductId(0)
     setSelectedSlotId(0)
     setCurrentQuantity(0)
-    toast.success(`Đã thêm ${product.name} (SL: ${quantity})`)
+    setActualQuantity(0) // ← Reset
+
+    toast.success(`Đã thêm ${product.name}`, {
+      description: `HT: ${currentQuantity} | Thực tế: ${actualQuantity} | Chênh lệch: ${diffText}`,
+    })
   }
 
   const handleRemoveDetail = (detailId: number) => {
@@ -494,8 +513,12 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                     <PopoverTrigger asChild>
                       <Button variant="outline" role="combobox" className="w-full justify-between">
                         {selectedSlotId
-                          ? availableSlots.find((s) => s.slotId === selectedSlotId)?.slotName ||
-                            'Chọn vị trí...'
+                          ? (() => {
+                              const slot = availableSlots.find((s) => s.slotId === selectedSlotId)
+                              return slot
+                                ? `${slot.shelfName} - ${slot.rackName} - ${slot.slotName}`
+                                : 'Chọn vị trí...'
+                            })()
                           : 'Chọn vị trí...'}
                         <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
                       </Button>
@@ -509,7 +532,7 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                             {availableSlots.map((slot) => (
                               <CommandItem
                                 key={slot.slotId}
-                                value={slot.slotName}
+                                value={`${slot.shelfName} ${slot.rackName} ${slot.slotName}`}
                                 onSelect={() => {
                                   setSelectedSlotId(slot.slotId)
                                   setOpenSlotCombobox(false)
@@ -518,7 +541,7 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                                 <Check
                                   className={`mr-2 h-4 w-4 ${selectedSlotId === slot.slotId ? 'opacity-100' : 'opacity-0'}`}
                                 />
-                                {slot.slotName}
+                                {slot.shelfName} {slot.rackName} {slot.slotName}
                               </CommandItem>
                             ))}
                           </CommandGroup>
@@ -547,16 +570,28 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                   </Select>
                 </div>
 
-                {/* Current Quantity (Read-only) */}
+                {/* Số lượng hệ thống (Read-only) */}
                 <div className="space-y-2">
-                  <Label>Số lượng hiện tại</Label>
+                  <Label>Số lượng hệ thống</Label>
                   <Input
                     value={currentQuantity}
                     readOnly
                     className="bg-gray-50 font-semibold"
-                    placeholder="Chọn sản phẩm và vị trí"
+                    placeholder="Chọn sản phẩm"
                   />
                 </div>
+              </div>
+
+              {/* Thêm dòng mới cho số lượng thực tế */}
+              <div className="space-y-2">
+                <Label>Số lượng thực tế kiểm kê</Label>
+                <Input
+                  type="number"
+                  value={actualQuantity}
+                  onChange={(e) => setActualQuantity(Number(e.target.value) || 0)}
+                  placeholder="Nhập số lượng đếm được..."
+                  min="0"
+                />
               </div>
 
               <Button
@@ -581,51 +616,88 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                       <TableHead>Sản phẩm</TableHead>
                       <TableHead>Vị trí</TableHead>
                       <TableHead>Trạng thái</TableHead>
-                      <TableHead>Số lượng</TableHead>
+                      <TableHead>SL Hệ thống</TableHead>
+                      <TableHead>SL Thực tế</TableHead>
+                      <TableHead>Đã Bán </TableHead>
                       <TableHead className="text-right">Xóa</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {stocktakingDetails.map((detail) => (
-                      <TableRow key={detail.id}>
-                        <TableCell>{detail.product!.name}</TableCell>
-                        <TableCell className="text-sm">
-                          {detail.slot!.rack?.shelf?.name} &gt; {detail.slot!.rack?.name} &gt;{' '}
-                          {detail.slot!._name}
-                        </TableCell>
-                        <TableCell>
-                          <Select
-                            value={detail.status}
-                            onValueChange={(v) => {
-                              setStocktakingDetails(
-                                stocktakingDetails.map((d) =>
-                                  d.id === detail.id ? { ...d, status: v as ProductStatus } : d
+                    {stocktakingDetails.map((detail) => {
+                      const systemQty = products.find((p) => p.id === detail.productId)?.amount || 0
+                      const actualQty = detail.quantity
+                      const diff = systemQty - actualQty
+
+                      return (
+                        <TableRow key={detail.id}>
+                          <TableCell>{detail.product!.name}</TableCell>
+                          <TableCell className="text-sm">
+                            {detail.slot!.rack?.shelf?.name} &gt; {detail.slot!.rack?.name} &gt;{' '}
+                            {detail.slot!._name}
+                          </TableCell>
+                          <TableCell>
+                            <Select
+                              value={detail.status}
+                              onValueChange={(v) => {
+                                setStocktakingDetails(
+                                  stocktakingDetails.map((d) =>
+                                    d.id === detail.id ? { ...d, status: v as ProductStatus } : d
+                                  )
                                 )
-                              )
-                            }}
-                          >
-                            <SelectTrigger className="h-8 w-32">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value={ProductStatus.GOOD}>Tốt</SelectItem>
-                              <SelectItem value={ProductStatus.EXPIRED}>Hết hạn</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell className="font-semibold">{detail.quantity}</TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveDetail(detail.id)}
-                            className="text-red-600"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                              }}
+                            >
+                              <SelectTrigger className="h-8 w-32">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value={ProductStatus.GOOD}>Tốt</SelectItem>
+                                <SelectItem value={ProductStatus.EXPIRED}>Hết hạn</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>{systemQty}</TableCell>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              value={actualQty}
+                              onChange={(e) => {
+                                const newQty = Number(e.target.value) || 0
+                                setStocktakingDetails(
+                                  stocktakingDetails.map((d) =>
+                                    d.id === detail.id ? { ...d, quantity: newQty } : d
+                                  )
+                                )
+                              }}
+                              className="h-8 w-20"
+                              min="0"
+                            />
+                          </TableCell>{' '}
+                          <TableCell>
+                            <span
+                              className={`font-semibold ${
+                                diff > 0
+                                  ? 'text-green-600'
+                                  : diff < 0
+                                    ? 'text-red-600'
+                                    : 'text-gray-600'
+                              }`}
+                            >
+                              {diff > 0 ? `${diff}` : diff < 0 ? diff : '0'}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveDetail(detail.id)}
+                              className="text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
                   </TableBody>
                 </Table>
               </div>
