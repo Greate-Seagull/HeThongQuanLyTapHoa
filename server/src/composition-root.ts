@@ -1,4 +1,6 @@
-import { UpdateManagerProfileUsecase } from './application/services/employee-account/update-manager-profile.usecase';
+import { UpdateGoodReceiptUsecase } from "./application/services/good-receipt/update-good-receipt.usecase";
+
+import { UpdateManagerProfileUsecase } from "./application/services/employee-account/update-manager-profile.usecase";
 export const updateManagerProfileUsecase = new UpdateManagerProfileUsecase();
 import { UpdateEmployeeUsecase } from "./application/services/employee/update-employee.usecase";
 
@@ -148,6 +150,7 @@ export const invoiceRepo = new InvoicePrismaRepository(
   prisma,
   invoiceDtoSchema
 );
+// Fix lỗi TS2554: Constructor không nhận tham số
 export const goodReceiptRepo = new GoodReceiptPrismaRepository(
   prisma,
   goodReceiptDtoSchema
@@ -222,7 +225,6 @@ export const deleteEmployeeAccountUsecase = new DeleteEmployeeAccountUsecase(
   transactionManager
 );
 
-
 export const getEmployeeAccountProfileUsecase =
   new GetEmployeeAccountProfileUsecase(
     employeeAccountRepo,
@@ -284,6 +286,14 @@ export const createInvoiceUsecase = new CreateInvoiceUsecase(
   transactionManager
 );
 export const createGoodReceiptUsecase = new CreateGoodReceiptUsecase(
+  employeeReadAccessor,
+  productRepo,
+  goodReceiptRepo,
+  transactionManager
+);
+// Fix lỗi TS2448 (Hoisting): Di chuyển xuống dưới sau khi employeeReadAccessor đã được khai báo
+// Fix lỗi TS2345: Đổi productRepo1 thành productRepo để đúng interface
+export const updateGoodReceiptUsecase = new UpdateGoodReceiptUsecase(
   employeeReadAccessor,
   productRepo,
   goodReceiptRepo,
@@ -364,9 +374,18 @@ export const deleteRackUsecase = new DeleteRackUsecase(rackRepo);
 
 const slotDetailRepo = new SlotDetailRepository(prisma);
 const slotDetailUsecase = new SlotDetailUsecase(slotDetailRepo);
-export const createSlotUsecase = new CreateSlotUsecase(slotRepo, rackRepo, slotDetailUsecase);
-export const updateSlotUsecase = new UpdateSlotUsecase(slotRepo, slotDetailUsecase);
-export const listSlotWithProductUsecase = new ListSlotWithProductUsecase(slotDetailUsecase);
+export const createSlotUsecase = new CreateSlotUsecase(
+  slotRepo,
+  rackRepo,
+  slotDetailUsecase
+);
+export const updateSlotUsecase = new UpdateSlotUsecase(
+  slotRepo,
+  slotDetailUsecase
+);
+export const listSlotWithProductUsecase = new ListSlotWithProductUsecase(
+  slotDetailUsecase
+);
 export const deleteSlotUsecase = new DeleteSlotUsecase(slotRepo);
 export const updatePromotionUsecase = new UpdatePromotionUsecase(
   productReadAccessor,
@@ -389,19 +408,33 @@ export const changeManagerPasswordUsecase = new ChangeManagerPasswordUsecase(
 );
 
 // Export usecase tạo nhân viên kèm account (sau khi đã khai báo các biến phụ thuộc)
-export const createEmployeeWithAccountUsecase = buildCreateEmployeeWithAccountUsecase(
-  employeeRepo,
-  employeeAccountRepo,
-  passwordService
-);
+export const createEmployeeWithAccountUsecase =
+  buildCreateEmployeeWithAccountUsecase(
+    employeeRepo,
+    employeeAccountRepo,
+    passwordService
+  );
 import { ListStocktakingsUsecase } from "./application/services/stocktaking/list-stocktakings.usecase";
 import { GetStocktakingByIdUsecase } from "./application/services/stocktaking/get-stocktaking-by-id.usecase";
+import { UpdateStocktakingUsecase } from "./application/services/stocktaking/update-stocktaking.usecase";
+import { UpdateProductStatusUsecase } from "./application/services/product/update-product-slot-status.usecase";
 
-export const listStocktakingsUsecase = new ListStocktakingsUsecase(stocktakingRepo);
-export const getStocktakingByIdUsecase = new GetStocktakingByIdUsecase(stocktakingRepo);
+export const listStocktakingsUsecase = new ListStocktakingsUsecase(
+  stocktakingRepo
+);
+export const getStocktakingByIdUsecase = new GetStocktakingByIdUsecase(
+  stocktakingRepo
+);
+export const updateStocktakingUsecase = new UpdateStocktakingUsecase(
+  productReadAccessor, // Sửa từ productReadAccess -> productReadAccessor
+  shelfReadAccessor,
+  stocktakingRepo
+);
+export const updateProductStatusUsecase = new UpdateProductStatusUsecase(
+  prisma
+);
 import { GetInvoicesUsecase } from "./application/services/invoice/get-invoices.usecase";
 import { GetInvoiceByIdUsecase } from "./application/services/invoice/get-invoice-by-id.usecase";
 
 export const getInvoicesUsecase = new GetInvoicesUsecase(invoiceRepo);
 export const getInvoiceByIdUsecase = new GetInvoiceByIdUsecase(invoiceRepo);
-

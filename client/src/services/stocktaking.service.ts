@@ -1,9 +1,5 @@
 import { apiClient } from './api-client'
-import { 
-  Stocktaking,
-  StocktakingWithDetails,
-  CreateStocktakingRequest 
-} from '@/types'
+import { Stocktaking, StocktakingWithDetails, CreateStocktakingRequest } from '@/types'
 
 // ======================
 // STOCKTAKING SERVICE API CALLS
@@ -13,10 +9,10 @@ import {
  * Create Stocktaking (Phiếu Kiểm Kê)
  * POST /stocktakings
  * Authorization: Requires INVENTORY position
- * 
+ *
  * ✅ GOOD: Authorization is position-based (INVENTORY)
  * Only inventory staff can create stocktakings
- * 
+ *
  * Body format:
  * {
  *   employeeId: number,
@@ -24,48 +20,42 @@ import {
  *     { productId, slotId, status, quantity }
  *   ]
  * }
- * 
+ *
  * ⚠️ QUESTION: What happens after stocktaking is created?
  * - Does it automatically update product amounts?
  * - Or is there an approval/apply step?
- * 
+ *
  * ⚠️ DEPENDENCY: Requires Slot system to be set up
  * (Shelf → Rack → Slot structure)
  */
-export const createStocktaking = async (
-  data: CreateStocktakingRequest
-): Promise<Stocktaking> => {
+export const createStocktaking = async (data: CreateStocktakingRequest): Promise<Stocktaking> => {
   try {
     const response = await apiClient.post<Stocktaking>('/stocktakings', data)
     return response
   } catch (error: any) {
     console.error('Create stocktaking error:', error)
-    
+
     if (error.response?.status === 403) {
       throw new Error('Bạn không có quyền tạo phiếu kiểm kê. Chỉ nhân viên kiểm kê mới được phép.')
     }
-    
+
     if (error.response?.status === 400) {
-      throw new Error(
-        error.response?.data?.message || 
-        'Dữ liệu phiếu kiểm kê không hợp lệ.'
-      )
+      throw new Error(error.response?.data?.message || 'Dữ liệu phiếu kiểm kê không hợp lệ.')
     }
-    
+
     if (error.response?.status === 404) {
       throw new Error('Sản phẩm hoặc vị trí kho không tồn tại.')
     }
-    
+
     throw new Error(
-      error.response?.data?.message || 
-      'Không thể tạo phiếu kiểm kê. Vui lòng thử lại.'
+      error.response?.data?.message || 'Không thể tạo phiếu kiểm kê. Vui lòng thử lại.'
     )
   }
 }
 
 /**
  * ⚠️ MISSING ENDPOINTS (Commonly needed for stocktaking management):
- * 
+ *
  * 1. GET /stocktakings - Get all stocktakings (with pagination)
  * 2. GET /stocktakings/:id - Get stocktaking details
  * 3. GET /stocktakings/employee/:employeeId - Get stocktakings by employee
@@ -75,7 +65,7 @@ export const createStocktaking = async (
  * 7. DELETE /stocktakings/:id - Delete stocktaking
  * 8. POST /stocktakings/:id/apply - Apply stocktaking adjustments
  * 9. GET /stocktakings/discrepancies - Get products with discrepancies
- * 
+ *
  * Also need Slot/Rack/Shelf management endpoints:
  * 10. GET /shelves - Get warehouse structure
  * 11. GET /slots - Get all storage slots
@@ -88,10 +78,10 @@ export const createStocktaking = async (
  */
 export const getStocktakings = async (): Promise<StocktakingWithDetails[]> => {
   try {
-    const response = await apiClient.get<StocktakingWithDetails[]>('/stocktakings');
-    return response;
+    const response = await apiClient.get<StocktakingWithDetails[]>('/stocktakings')
+    return response
   } catch (error: any) {
-    throw new Error(error?.response?.data?.message || 'Không thể lấy danh sách phiếu kiểm kê.');
+    throw new Error(error?.response?.data?.message || 'Không thể lấy danh sách phiếu kiểm kê.')
   }
 }
 
@@ -103,10 +93,10 @@ export const getStocktakingById = async (
   stocktakingId: number
 ): Promise<StocktakingWithDetails> => {
   try {
-    const response = await apiClient.get<StocktakingWithDetails>(`/stocktakings/${stocktakingId}`);
-    return response;
+    const response = await apiClient.get<StocktakingWithDetails>(`/stocktakings/${stocktakingId}`)
+    return response
   } catch (error: any) {
-    throw new Error(error?.response?.data?.message || 'Không thể lấy chi tiết phiếu kiểm kê.');
+    throw new Error(error?.response?.data?.message || 'Không thể lấy chi tiết phiếu kiểm kê.')
   }
 }
 
@@ -119,7 +109,7 @@ export const getStocktakingsByEmployee = async (
 ): Promise<StocktakingWithDetails[]> => {
   throw new Error(
     'Chức năng xem phiếu kiểm kê theo nhân viên chưa được backend hỗ trợ. ' +
-    'Cần endpoint: GET /stocktakings/employee/:id'
+      'Cần endpoint: GET /stocktakings/employee/:id'
   )
 }
 
@@ -130,7 +120,7 @@ export const getStocktakingsByEmployee = async (
 export const getTodayStocktakings = async (): Promise<StocktakingWithDetails[]> => {
   throw new Error(
     'Chức năng xem phiếu kiểm kê hôm nay chưa được backend hỗ trợ. ' +
-    'Cần endpoint: GET /stocktakings/today'
+      'Cần endpoint: GET /stocktakings/today'
   )
 }
 
@@ -148,14 +138,14 @@ export interface StocktakingStats {
 export const getStocktakingStats = async (): Promise<StocktakingStats> => {
   throw new Error(
     'Chức năng xem thống kê kiểm kê chưa được backend hỗ trợ. ' +
-    'Cần endpoint: GET /stocktakings/stats'
+      'Cần endpoint: GET /stocktakings/stats'
   )
 }
 
 /**
  * Get Inventory Discrepancies (NOT IMPLEMENTED)
  * Expected: GET /stocktakings/discrepancies
- * 
+ *
  * Shows products where counted quantity differs from system quantity
  */
 export interface InventoryDiscrepancy {
@@ -171,7 +161,7 @@ export interface InventoryDiscrepancy {
 export const getInventoryDiscrepancies = async (): Promise<InventoryDiscrepancy[]> => {
   throw new Error(
     'Chức năng xem chênh lệch tồn kho chưa được backend hỗ trợ. ' +
-    'Cần endpoint: GET /stocktakings/discrepancies'
+      'Cần endpoint: GET /stocktakings/discrepancies'
   )
 }
 
@@ -183,10 +173,28 @@ export const updateStocktaking = async (
   stocktakingId: number,
   updates: Partial<CreateStocktakingRequest>
 ): Promise<Stocktaking> => {
-  throw new Error(
-    'Chức năng cập nhật phiếu kiểm kê chưa được backend hỗ trợ. ' +
-    'Cần endpoint: PUT /stocktakings/:id'
-  )
+  try {
+    const response = await apiClient.put<Stocktaking>(`/stocktakings/${stocktakingId}`, updates)
+    return response
+  } catch (error: any) {
+    console.error('Create stocktaking error:', error)
+
+    if (error.response?.status === 403) {
+      throw new Error('Bạn không có quyền tạo phiếu kiểm kê. Chỉ nhân viên kiểm kê mới được phép.')
+    }
+
+    if (error.response?.status === 400) {
+      throw new Error(error.response?.data?.message || 'Dữ liệu phiếu kiểm kê không hợp lệ.')
+    }
+
+    if (error.response?.status === 404) {
+      throw new Error('Sản phẩm hoặc vị trí kho không tồn tại.')
+    }
+
+    throw new Error(
+      error.response?.data?.message || 'Không thể tạo phiếu kiểm kê. Vui lòng thử lại.'
+    )
+  }
 }
 
 /**
@@ -196,20 +204,20 @@ export const updateStocktaking = async (
 export const deleteStocktaking = async (stocktakingId: number): Promise<void> => {
   throw new Error(
     'Chức năng xóa phiếu kiểm kê chưa được backend hỗ trợ. ' +
-    'Cần endpoint: DELETE /stocktakings/:id'
+      'Cần endpoint: DELETE /stocktakings/:id'
   )
 }
 
 /**
  * Apply Stocktaking Adjustments (NOT IMPLEMENTED)
  * Expected: POST /stocktakings/:id/apply
- * 
+ *
  * Updates product quantities based on stocktaking results
  */
 export const applyStocktaking = async (stocktakingId: number): Promise<void> => {
   throw new Error(
     'Chức năng áp dụng điều chỉnh kiểm kê chưa được backend hỗ trợ. ' +
-    'Cần endpoint: POST /stocktakings/:id/apply'
+      'Cần endpoint: POST /stocktakings/:id/apply'
   )
 }
 
@@ -219,12 +227,12 @@ export const applyStocktaking = async (stocktakingId: number): Promise<void> => 
 
 /**
  * ⚠️ CRITICAL MISSING: Warehouse structure management
- * 
+ *
  * Stocktaking requires Shelf/Rack/Slot system but no APIs exist for:
  * - Creating shelves, racks, slots
  * - Viewing warehouse structure
  * - Assigning products to slots
- * 
+ *
  * Needed endpoints:
  * - GET /shelves - List all shelves
  * - POST /shelves - Create shelf

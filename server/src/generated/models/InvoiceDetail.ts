@@ -30,6 +30,9 @@ export type InvoiceDetailAvgAggregateOutputType = {
   productId: number | null
   quantity: number | null
   promotionId: number | null
+  discountAmount: number | null
+  finalPrice: number | null
+  price: number | null
 }
 
 export type InvoiceDetailSumAggregateOutputType = {
@@ -37,6 +40,9 @@ export type InvoiceDetailSumAggregateOutputType = {
   productId: number | null
   quantity: number | null
   promotionId: number | null
+  discountAmount: number | null
+  finalPrice: number | null
+  price: number | null
 }
 
 export type InvoiceDetailMinAggregateOutputType = {
@@ -44,6 +50,9 @@ export type InvoiceDetailMinAggregateOutputType = {
   productId: number | null
   quantity: number | null
   promotionId: number | null
+  discountAmount: number | null
+  finalPrice: number | null
+  price: number | null
 }
 
 export type InvoiceDetailMaxAggregateOutputType = {
@@ -51,6 +60,9 @@ export type InvoiceDetailMaxAggregateOutputType = {
   productId: number | null
   quantity: number | null
   promotionId: number | null
+  discountAmount: number | null
+  finalPrice: number | null
+  price: number | null
 }
 
 export type InvoiceDetailCountAggregateOutputType = {
@@ -58,6 +70,9 @@ export type InvoiceDetailCountAggregateOutputType = {
   productId: number
   quantity: number
   promotionId: number
+  discountAmount: number
+  finalPrice: number
+  price: number
   _all: number
 }
 
@@ -67,6 +82,9 @@ export type InvoiceDetailAvgAggregateInputType = {
   productId?: true
   quantity?: true
   promotionId?: true
+  discountAmount?: true
+  finalPrice?: true
+  price?: true
 }
 
 export type InvoiceDetailSumAggregateInputType = {
@@ -74,6 +92,9 @@ export type InvoiceDetailSumAggregateInputType = {
   productId?: true
   quantity?: true
   promotionId?: true
+  discountAmount?: true
+  finalPrice?: true
+  price?: true
 }
 
 export type InvoiceDetailMinAggregateInputType = {
@@ -81,6 +102,9 @@ export type InvoiceDetailMinAggregateInputType = {
   productId?: true
   quantity?: true
   promotionId?: true
+  discountAmount?: true
+  finalPrice?: true
+  price?: true
 }
 
 export type InvoiceDetailMaxAggregateInputType = {
@@ -88,6 +112,9 @@ export type InvoiceDetailMaxAggregateInputType = {
   productId?: true
   quantity?: true
   promotionId?: true
+  discountAmount?: true
+  finalPrice?: true
+  price?: true
 }
 
 export type InvoiceDetailCountAggregateInputType = {
@@ -95,6 +122,9 @@ export type InvoiceDetailCountAggregateInputType = {
   productId?: true
   quantity?: true
   promotionId?: true
+  discountAmount?: true
+  finalPrice?: true
+  price?: true
   _all?: true
 }
 
@@ -189,6 +219,9 @@ export type InvoiceDetailGroupByOutputType = {
   productId: number
   quantity: number
   promotionId: number | null
+  discountAmount: number
+  finalPrice: number
+  price: number
   _count: InvoiceDetailCountAggregateOutputType | null
   _avg: InvoiceDetailAvgAggregateOutputType | null
   _sum: InvoiceDetailSumAggregateOutputType | null
@@ -219,6 +252,9 @@ export type InvoiceDetailWhereInput = {
   productId?: Prisma.IntFilter<"InvoiceDetail"> | number
   quantity?: Prisma.IntFilter<"InvoiceDetail"> | number
   promotionId?: Prisma.IntNullableFilter<"InvoiceDetail"> | number | null
+  discountAmount?: Prisma.IntFilter<"InvoiceDetail"> | number
+  finalPrice?: Prisma.IntFilter<"InvoiceDetail"> | number
+  price?: Prisma.IntFilter<"InvoiceDetail"> | number
   invoice?: Prisma.XOR<Prisma.InvoiceScalarRelationFilter, Prisma.InvoiceWhereInput>
   product?: Prisma.XOR<Prisma.ProductScalarRelationFilter, Prisma.ProductWhereInput>
   promotion?: Prisma.XOR<Prisma.PromotionNullableScalarRelationFilter, Prisma.PromotionWhereInput> | null
@@ -229,6 +265,9 @@ export type InvoiceDetailOrderByWithRelationInput = {
   productId?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
   promotionId?: Prisma.SortOrderInput | Prisma.SortOrder
+  discountAmount?: Prisma.SortOrder
+  finalPrice?: Prisma.SortOrder
+  price?: Prisma.SortOrder
   invoice?: Prisma.InvoiceOrderByWithRelationInput
   product?: Prisma.ProductOrderByWithRelationInput
   promotion?: Prisma.PromotionOrderByWithRelationInput
@@ -243,6 +282,9 @@ export type InvoiceDetailWhereUniqueInput = Prisma.AtLeast<{
   productId?: Prisma.IntFilter<"InvoiceDetail"> | number
   quantity?: Prisma.IntFilter<"InvoiceDetail"> | number
   promotionId?: Prisma.IntNullableFilter<"InvoiceDetail"> | number | null
+  discountAmount?: Prisma.IntFilter<"InvoiceDetail"> | number
+  finalPrice?: Prisma.IntFilter<"InvoiceDetail"> | number
+  price?: Prisma.IntFilter<"InvoiceDetail"> | number
   invoice?: Prisma.XOR<Prisma.InvoiceScalarRelationFilter, Prisma.InvoiceWhereInput>
   product?: Prisma.XOR<Prisma.ProductScalarRelationFilter, Prisma.ProductWhereInput>
   promotion?: Prisma.XOR<Prisma.PromotionNullableScalarRelationFilter, Prisma.PromotionWhereInput> | null
@@ -253,6 +295,9 @@ export type InvoiceDetailOrderByWithAggregationInput = {
   productId?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
   promotionId?: Prisma.SortOrderInput | Prisma.SortOrder
+  discountAmount?: Prisma.SortOrder
+  finalPrice?: Prisma.SortOrder
+  price?: Prisma.SortOrder
   _count?: Prisma.InvoiceDetailCountOrderByAggregateInput
   _avg?: Prisma.InvoiceDetailAvgOrderByAggregateInput
   _max?: Prisma.InvoiceDetailMaxOrderByAggregateInput
@@ -268,10 +313,16 @@ export type InvoiceDetailScalarWhereWithAggregatesInput = {
   productId?: Prisma.IntWithAggregatesFilter<"InvoiceDetail"> | number
   quantity?: Prisma.IntWithAggregatesFilter<"InvoiceDetail"> | number
   promotionId?: Prisma.IntNullableWithAggregatesFilter<"InvoiceDetail"> | number | null
+  discountAmount?: Prisma.IntWithAggregatesFilter<"InvoiceDetail"> | number
+  finalPrice?: Prisma.IntWithAggregatesFilter<"InvoiceDetail"> | number
+  price?: Prisma.IntWithAggregatesFilter<"InvoiceDetail"> | number
 }
 
 export type InvoiceDetailCreateInput = {
   quantity: number
+  discountAmount?: number
+  finalPrice?: number
+  price?: number
   invoice: Prisma.InvoiceCreateNestedOneWithoutInvoiceDetailsInput
   product: Prisma.ProductCreateNestedOneWithoutInvoiceDetailsInput
   promotion?: Prisma.PromotionCreateNestedOneWithoutInvoiceDetailsInput
@@ -282,10 +333,16 @@ export type InvoiceDetailUncheckedCreateInput = {
   productId: number
   quantity: number
   promotionId?: number | null
+  discountAmount?: number
+  finalPrice?: number
+  price?: number
 }
 
 export type InvoiceDetailUpdateInput = {
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  discountAmount?: Prisma.IntFieldUpdateOperationsInput | number
+  finalPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  price?: Prisma.IntFieldUpdateOperationsInput | number
   invoice?: Prisma.InvoiceUpdateOneRequiredWithoutInvoiceDetailsNestedInput
   product?: Prisma.ProductUpdateOneRequiredWithoutInvoiceDetailsNestedInput
   promotion?: Prisma.PromotionUpdateOneWithoutInvoiceDetailsNestedInput
@@ -296,6 +353,9 @@ export type InvoiceDetailUncheckedUpdateInput = {
   productId?: Prisma.IntFieldUpdateOperationsInput | number
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   promotionId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  discountAmount?: Prisma.IntFieldUpdateOperationsInput | number
+  finalPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  price?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type InvoiceDetailCreateManyInput = {
@@ -303,10 +363,16 @@ export type InvoiceDetailCreateManyInput = {
   productId: number
   quantity: number
   promotionId?: number | null
+  discountAmount?: number
+  finalPrice?: number
+  price?: number
 }
 
 export type InvoiceDetailUpdateManyMutationInput = {
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  discountAmount?: Prisma.IntFieldUpdateOperationsInput | number
+  finalPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  price?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type InvoiceDetailUncheckedUpdateManyInput = {
@@ -314,6 +380,9 @@ export type InvoiceDetailUncheckedUpdateManyInput = {
   productId?: Prisma.IntFieldUpdateOperationsInput | number
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   promotionId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  discountAmount?: Prisma.IntFieldUpdateOperationsInput | number
+  finalPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  price?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type InvoiceDetailListRelationFilter = {
@@ -336,6 +405,9 @@ export type InvoiceDetailCountOrderByAggregateInput = {
   productId?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
   promotionId?: Prisma.SortOrder
+  discountAmount?: Prisma.SortOrder
+  finalPrice?: Prisma.SortOrder
+  price?: Prisma.SortOrder
 }
 
 export type InvoiceDetailAvgOrderByAggregateInput = {
@@ -343,6 +415,9 @@ export type InvoiceDetailAvgOrderByAggregateInput = {
   productId?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
   promotionId?: Prisma.SortOrder
+  discountAmount?: Prisma.SortOrder
+  finalPrice?: Prisma.SortOrder
+  price?: Prisma.SortOrder
 }
 
 export type InvoiceDetailMaxOrderByAggregateInput = {
@@ -350,6 +425,9 @@ export type InvoiceDetailMaxOrderByAggregateInput = {
   productId?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
   promotionId?: Prisma.SortOrder
+  discountAmount?: Prisma.SortOrder
+  finalPrice?: Prisma.SortOrder
+  price?: Prisma.SortOrder
 }
 
 export type InvoiceDetailMinOrderByAggregateInput = {
@@ -357,6 +435,9 @@ export type InvoiceDetailMinOrderByAggregateInput = {
   productId?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
   promotionId?: Prisma.SortOrder
+  discountAmount?: Prisma.SortOrder
+  finalPrice?: Prisma.SortOrder
+  price?: Prisma.SortOrder
 }
 
 export type InvoiceDetailSumOrderByAggregateInput = {
@@ -364,6 +445,9 @@ export type InvoiceDetailSumOrderByAggregateInput = {
   productId?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
   promotionId?: Prisma.SortOrder
+  discountAmount?: Prisma.SortOrder
+  finalPrice?: Prisma.SortOrder
+  price?: Prisma.SortOrder
 }
 
 export type InvoiceDetailCreateNestedManyWithoutProductInput = {
@@ -494,6 +578,9 @@ export type InvoiceDetailUncheckedUpdateManyWithoutInvoiceNestedInput = {
 
 export type InvoiceDetailCreateWithoutProductInput = {
   quantity: number
+  discountAmount?: number
+  finalPrice?: number
+  price?: number
   invoice: Prisma.InvoiceCreateNestedOneWithoutInvoiceDetailsInput
   promotion?: Prisma.PromotionCreateNestedOneWithoutInvoiceDetailsInput
 }
@@ -502,6 +589,9 @@ export type InvoiceDetailUncheckedCreateWithoutProductInput = {
   invoiceId: number
   quantity: number
   promotionId?: number | null
+  discountAmount?: number
+  finalPrice?: number
+  price?: number
 }
 
 export type InvoiceDetailCreateOrConnectWithoutProductInput = {
@@ -538,10 +628,16 @@ export type InvoiceDetailScalarWhereInput = {
   productId?: Prisma.IntFilter<"InvoiceDetail"> | number
   quantity?: Prisma.IntFilter<"InvoiceDetail"> | number
   promotionId?: Prisma.IntNullableFilter<"InvoiceDetail"> | number | null
+  discountAmount?: Prisma.IntFilter<"InvoiceDetail"> | number
+  finalPrice?: Prisma.IntFilter<"InvoiceDetail"> | number
+  price?: Prisma.IntFilter<"InvoiceDetail"> | number
 }
 
 export type InvoiceDetailCreateWithoutPromotionInput = {
   quantity: number
+  discountAmount?: number
+  finalPrice?: number
+  price?: number
   invoice: Prisma.InvoiceCreateNestedOneWithoutInvoiceDetailsInput
   product: Prisma.ProductCreateNestedOneWithoutInvoiceDetailsInput
 }
@@ -550,6 +646,9 @@ export type InvoiceDetailUncheckedCreateWithoutPromotionInput = {
   invoiceId: number
   productId: number
   quantity: number
+  discountAmount?: number
+  finalPrice?: number
+  price?: number
 }
 
 export type InvoiceDetailCreateOrConnectWithoutPromotionInput = {
@@ -580,6 +679,9 @@ export type InvoiceDetailUpdateManyWithWhereWithoutPromotionInput = {
 
 export type InvoiceDetailCreateWithoutInvoiceInput = {
   quantity: number
+  discountAmount?: number
+  finalPrice?: number
+  price?: number
   product: Prisma.ProductCreateNestedOneWithoutInvoiceDetailsInput
   promotion?: Prisma.PromotionCreateNestedOneWithoutInvoiceDetailsInput
 }
@@ -588,6 +690,9 @@ export type InvoiceDetailUncheckedCreateWithoutInvoiceInput = {
   productId: number
   quantity: number
   promotionId?: number | null
+  discountAmount?: number
+  finalPrice?: number
+  price?: number
 }
 
 export type InvoiceDetailCreateOrConnectWithoutInvoiceInput = {
@@ -620,10 +725,16 @@ export type InvoiceDetailCreateManyProductInput = {
   invoiceId: number
   quantity: number
   promotionId?: number | null
+  discountAmount?: number
+  finalPrice?: number
+  price?: number
 }
 
 export type InvoiceDetailUpdateWithoutProductInput = {
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  discountAmount?: Prisma.IntFieldUpdateOperationsInput | number
+  finalPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  price?: Prisma.IntFieldUpdateOperationsInput | number
   invoice?: Prisma.InvoiceUpdateOneRequiredWithoutInvoiceDetailsNestedInput
   promotion?: Prisma.PromotionUpdateOneWithoutInvoiceDetailsNestedInput
 }
@@ -632,22 +743,34 @@ export type InvoiceDetailUncheckedUpdateWithoutProductInput = {
   invoiceId?: Prisma.IntFieldUpdateOperationsInput | number
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   promotionId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  discountAmount?: Prisma.IntFieldUpdateOperationsInput | number
+  finalPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  price?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type InvoiceDetailUncheckedUpdateManyWithoutProductInput = {
   invoiceId?: Prisma.IntFieldUpdateOperationsInput | number
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   promotionId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  discountAmount?: Prisma.IntFieldUpdateOperationsInput | number
+  finalPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  price?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type InvoiceDetailCreateManyPromotionInput = {
   invoiceId: number
   productId: number
   quantity: number
+  discountAmount?: number
+  finalPrice?: number
+  price?: number
 }
 
 export type InvoiceDetailUpdateWithoutPromotionInput = {
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  discountAmount?: Prisma.IntFieldUpdateOperationsInput | number
+  finalPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  price?: Prisma.IntFieldUpdateOperationsInput | number
   invoice?: Prisma.InvoiceUpdateOneRequiredWithoutInvoiceDetailsNestedInput
   product?: Prisma.ProductUpdateOneRequiredWithoutInvoiceDetailsNestedInput
 }
@@ -656,22 +779,34 @@ export type InvoiceDetailUncheckedUpdateWithoutPromotionInput = {
   invoiceId?: Prisma.IntFieldUpdateOperationsInput | number
   productId?: Prisma.IntFieldUpdateOperationsInput | number
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  discountAmount?: Prisma.IntFieldUpdateOperationsInput | number
+  finalPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  price?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type InvoiceDetailUncheckedUpdateManyWithoutPromotionInput = {
   invoiceId?: Prisma.IntFieldUpdateOperationsInput | number
   productId?: Prisma.IntFieldUpdateOperationsInput | number
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  discountAmount?: Prisma.IntFieldUpdateOperationsInput | number
+  finalPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  price?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type InvoiceDetailCreateManyInvoiceInput = {
   productId: number
   quantity: number
   promotionId?: number | null
+  discountAmount?: number
+  finalPrice?: number
+  price?: number
 }
 
 export type InvoiceDetailUpdateWithoutInvoiceInput = {
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  discountAmount?: Prisma.IntFieldUpdateOperationsInput | number
+  finalPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  price?: Prisma.IntFieldUpdateOperationsInput | number
   product?: Prisma.ProductUpdateOneRequiredWithoutInvoiceDetailsNestedInput
   promotion?: Prisma.PromotionUpdateOneWithoutInvoiceDetailsNestedInput
 }
@@ -680,12 +815,18 @@ export type InvoiceDetailUncheckedUpdateWithoutInvoiceInput = {
   productId?: Prisma.IntFieldUpdateOperationsInput | number
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   promotionId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  discountAmount?: Prisma.IntFieldUpdateOperationsInput | number
+  finalPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  price?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type InvoiceDetailUncheckedUpdateManyWithoutInvoiceInput = {
   productId?: Prisma.IntFieldUpdateOperationsInput | number
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   promotionId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  discountAmount?: Prisma.IntFieldUpdateOperationsInput | number
+  finalPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  price?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 
@@ -695,6 +836,9 @@ export type InvoiceDetailSelect<ExtArgs extends runtime.Types.Extensions.Interna
   productId?: boolean
   quantity?: boolean
   promotionId?: boolean
+  discountAmount?: boolean
+  finalPrice?: boolean
+  price?: boolean
   invoice?: boolean | Prisma.InvoiceDefaultArgs<ExtArgs>
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   promotion?: boolean | Prisma.InvoiceDetail$promotionArgs<ExtArgs>
@@ -705,6 +849,9 @@ export type InvoiceDetailSelectCreateManyAndReturn<ExtArgs extends runtime.Types
   productId?: boolean
   quantity?: boolean
   promotionId?: boolean
+  discountAmount?: boolean
+  finalPrice?: boolean
+  price?: boolean
   invoice?: boolean | Prisma.InvoiceDefaultArgs<ExtArgs>
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   promotion?: boolean | Prisma.InvoiceDetail$promotionArgs<ExtArgs>
@@ -715,6 +862,9 @@ export type InvoiceDetailSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   productId?: boolean
   quantity?: boolean
   promotionId?: boolean
+  discountAmount?: boolean
+  finalPrice?: boolean
+  price?: boolean
   invoice?: boolean | Prisma.InvoiceDefaultArgs<ExtArgs>
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   promotion?: boolean | Prisma.InvoiceDetail$promotionArgs<ExtArgs>
@@ -725,9 +875,12 @@ export type InvoiceDetailSelectScalar = {
   productId?: boolean
   quantity?: boolean
   promotionId?: boolean
+  discountAmount?: boolean
+  finalPrice?: boolean
+  price?: boolean
 }
 
-export type InvoiceDetailOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"invoiceId" | "productId" | "quantity" | "promotionId", ExtArgs["result"]["invoiceDetail"]>
+export type InvoiceDetailOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"invoiceId" | "productId" | "quantity" | "promotionId" | "discountAmount" | "finalPrice" | "price", ExtArgs["result"]["invoiceDetail"]>
 export type InvoiceDetailInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   invoice?: boolean | Prisma.InvoiceDefaultArgs<ExtArgs>
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
@@ -756,6 +909,9 @@ export type $InvoiceDetailPayload<ExtArgs extends runtime.Types.Extensions.Inter
     productId: number
     quantity: number
     promotionId: number | null
+    discountAmount: number
+    finalPrice: number
+    price: number
   }, ExtArgs["result"]["invoiceDetail"]>
   composites: {}
 }
@@ -1186,6 +1342,9 @@ export interface InvoiceDetailFieldRefs {
   readonly productId: Prisma.FieldRef<"InvoiceDetail", 'Int'>
   readonly quantity: Prisma.FieldRef<"InvoiceDetail", 'Int'>
   readonly promotionId: Prisma.FieldRef<"InvoiceDetail", 'Int'>
+  readonly discountAmount: Prisma.FieldRef<"InvoiceDetail", 'Int'>
+  readonly finalPrice: Prisma.FieldRef<"InvoiceDetail", 'Int'>
+  readonly price: Prisma.FieldRef<"InvoiceDetail", 'Int'>
 }
     
 

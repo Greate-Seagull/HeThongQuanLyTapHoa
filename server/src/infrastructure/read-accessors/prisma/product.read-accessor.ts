@@ -68,6 +68,13 @@ export class ProductPrismaReadAccessor
       },
     });
   }
+  async getProductAmount(productId: number): Promise<number> {
+    const product = await this.client.product.findUnique({
+      where: { id: productId },
+      select: { amount: true },
+    });
+    return product?.amount ?? 0;
+  }
 
   async getIdsByBarcodes(
     barcodes: ProductBarcode[]

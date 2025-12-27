@@ -71,7 +71,7 @@ export class Promotion extends BaseEntity<PromotionId> {
   }
 
   public update(input: any) {
-    console.log('Promotion.update input:', JSON.stringify(input, null, 2));
+    console.log("Promotion.update input:", JSON.stringify(input, null, 2));
     if (input.name !== undefined) this.name = input.name;
     if (input.description !== undefined) this.description = input.description;
     if (input.value !== undefined) this.value = input.value;
@@ -89,7 +89,9 @@ export class Promotion extends BaseEntity<PromotionId> {
       input.promotionDetails &&
       Array.isArray(input.promotionDetails) &&
       input.promotionDetails.length > 0 &&
-      input.promotionDetails.every((d: any) => d && typeof d === 'object' && 'productId' in d)
+      input.promotionDetails.every(
+        (d: any) => d && typeof d === "object" && "productId" in d
+      )
     ) {
       this.promotionDetails = input.promotionDetails.map((d: any) =>
         PromotionDetail.create(d.productId)
@@ -112,23 +114,29 @@ export class Promotion extends BaseEntity<PromotionId> {
   }
 
   public calculateDiscount(basePrice: number): number {
+    let discount = 0;
     switch (this.promotionType) {
       case PromotionType.FIXED:
-        return this.value;
+        discount = this.value;
+        break;
       case PromotionType.PERCENTAGE:
-        return this.value * basePrice;
+        discount = (this.value / 100) * basePrice; // ← SỬA: Chia 100 cho percentage
+        break;
       default:
         throw Error(`Expect a valid promotion type, got ${this.promotionType}`);
     }
+    return Math.min(discount, basePrice);
   }
 
   public applyDiscount(product: Product): number {
     const searchedDetails = this._promotionDetails.filter(
-      (pd) => pd && pd.productId == product.id // Thêm check "pd &&" để tránh null
+      (pd) => pd && pd.productId === product.id // Thêm check "pd &&" để tránh null
     );
     if (!product) {
       throw Error(`Product is undefined for promotion ${this._id}`);
     }
+    console.log("searchedDetails", searchedDetails);
+
     if (searchedDetails.length != 1) {
       throw Error(
         `The promotion ${this._id} cannot apply to the product ${product.id}`

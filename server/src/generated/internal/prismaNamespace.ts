@@ -1899,9 +1899,9 @@ export const ProductScalarFieldEnum = {
   amount: 'amount',
   barcode: 'barcode',
   status: 'status',
-  expiryDate: 'expiryDate',
+  categoryId: 'categoryId',
   supplierId: 'supplierId',
-  categoryId: 'categoryId'
+  expiryDate: 'expiryDate'
 } as const
 
 export type ProductScalarFieldEnum = (typeof ProductScalarFieldEnum)[keyof typeof ProductScalarFieldEnum]
@@ -1986,7 +1986,10 @@ export const InvoiceDetailScalarFieldEnum = {
   invoiceId: 'invoiceId',
   productId: 'productId',
   quantity: 'quantity',
-  promotionId: 'promotionId'
+  promotionId: 'promotionId',
+  discountAmount: 'discountAmount',
+  finalPrice: 'finalPrice',
+  price: 'price'
 } as const
 
 export type InvoiceDetailScalarFieldEnum = (typeof InvoiceDetailScalarFieldEnum)[keyof typeof InvoiceDetailScalarFieldEnum]

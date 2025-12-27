@@ -1,4 +1,4 @@
-import { SlotDetailRepository } from '../../../infrastructure/repositories/slot-detail.repository';
+import { SlotDetailRepository } from "../../../infrastructure/repositories/slot-detail.repository";
 
 export class SlotDetailUsecase {
   constructor(private readonly slotDetailRepo: SlotDetailRepository) {}
@@ -17,5 +17,8 @@ export class SlotDetailUsecase {
 
   async getAllWithProduct() {
     return this.slotDetailRepo.getAllWithProduct();
+  }
+  async deleteBySlotId(slotId: number) {
+    return this.slotDetailRepo.deleteBySlotId(slotId);
   }
 }

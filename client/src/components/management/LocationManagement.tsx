@@ -318,11 +318,32 @@ export function LocationManagement() {
   const handleSaveSlot = async () => {
     setIsSavingSlot(true)
     try {
-      // Logic: Nếu productId là 0 hoặc rỗng thì gửi undefined/null để backend không lưu vào SlotDetail
+      // ✅ THÊM VALIDATION NÀY
+      // Kiểm tra nếu đang edit và slot hiện tại có sản phẩm
+      // if (editingSlot) {
+      //   const currentSlotInfo = slotsWithProduct.find((s) => s.slotId === editingSlot.id)
+
+      //   // Nếu slot đang có sản phẩm mà người dùng chọn "Không có sản phẩm" (productId = 0)
+      //   if (
+      //     currentSlotInfo?.productId &&
+      //     (!slotFormData.productId || slotFormData.productId === 0)
+      //   ) {
+      //     toast.error(
+      //       'Không thể xóa sản phẩm khỏi ô này. Vui lòng chọn sản phẩm khác hoặc giữ nguyên.'
+      //     )
+      //     setIsSavingSlot(false)
+      //     return
+      //   }
+      // }
+      // ✅ KẾT THÚC VALIDATION
+
       const payload = {
         name: slotFormData.name,
         rackId: slotFormData.rackId,
-        productId: slotFormData.productId && slotFormData.productId !== 0 ? slotFormData.productId : undefined
+        productId:
+          slotFormData.productId && slotFormData.productId !== 0
+            ? slotFormData.productId
+            : undefined,
       }
 
       if (editingSlot) {
@@ -330,7 +351,7 @@ export function LocationManagement() {
         if (data) {
           toast.success('Ô đã được cập nhật thành công')
           fetchLocations()
-          fetchSlotsWithProduct() // Refresh cả thông tin sản phẩm
+          fetchSlotsWithProduct()
         }
       } else {
         const data = await apiClient.post<Slot>('/slots', payload)
@@ -349,7 +370,7 @@ export function LocationManagement() {
     }
   }
 
- const confirmDelete = async () => {
+  const confirmDelete = async () => {
     const { type, id } = deleteConfirm
     try {
       if (type === 'shelf') {
@@ -388,8 +409,10 @@ export function LocationManagement() {
   const filteredSlots = allSlotsForDisplay.filter((slot) => {
     const searchLower = searchTerm.toLowerCase()
     return (
-      (slot.name?.toLowerCase().includes(searchLower) || '') ||
-      (slot.productName?.toLowerCase().includes(searchLower) || '')
+      slot.name?.toLowerCase().includes(searchLower) ||
+      '' ||
+      slot.productName?.toLowerCase().includes(searchLower) ||
+      ''
     )
   })
 
@@ -445,7 +468,7 @@ export function LocationManagement() {
                 ) : (
                   shelves.map((shelf) => (
                     <TableRow key={shelf.id} className="hover:bg-blue-50">
-                      <TableCell>{shelf.id}</TableCell>
+                      <TableCell>K{shelf.id}</TableCell>
                       <TableCell>{shelf.name}</TableCell>
                       <TableCell className="text-right">
                         <Button
@@ -490,7 +513,7 @@ export function LocationManagement() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-blue-50">
-                  <TableHead className="text-blue-900">ID</TableHead>
+                  <TableHead className="text-blue-900">NG ID</TableHead>
                   <TableHead className="text-blue-900">Tên ngăn</TableHead>
                   <TableHead className="text-blue-900">Thuộc kệ</TableHead>
                   <TableHead className="text-right text-blue-900">Thao tác</TableHead>
@@ -508,7 +531,7 @@ export function LocationManagement() {
                     const shelf = shelves.find((s) => s.id === rack.shelfId)
                     return (
                       <TableRow key={rack.id} className="hover:bg-blue-50">
-                        <TableCell>{rack.id}</TableCell>
+                        <TableCell>NG{rack.id}</TableCell>
                         <TableCell>{rack.name}</TableCell>
                         <TableCell>{shelf?.name || '-'}</TableCell>
                         <TableCell className="text-right">
@@ -569,7 +592,7 @@ export function LocationManagement() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-blue-50">
-                  <TableHead className="text-blue-900">ID</TableHead>
+                  <TableHead className="text-blue-900">O ID</TableHead>
                   <TableHead className="text-blue-900">Tên ô</TableHead>
                   <TableHead className="text-blue-900">Vị trí (Kệ - Ngăn)</TableHead>
                   <TableHead className="text-blue-900">Tên sản phẩm</TableHead>
@@ -587,17 +610,17 @@ export function LocationManagement() {
                   filteredSlots.map((slot) => {
                     return (
                       <TableRow key={slot.id} className="hover:bg-blue-50">
-                        <TableCell>{slot.id}</TableCell>
+                        <TableCell>O{slot.id}</TableCell>
                         <TableCell>{slot.name}</TableCell>
                         <TableCell className="text-sm text-gray-500">
                           {slot.shelfName} - {slot.rackName}
                         </TableCell>
                         <TableCell>
-                            {slot.productName ? (
-                              <span className="font-medium text-blue-700">{slot.productName}</span>
-                            ) : (
-                              <span className="text-gray-400 italic">Trống</span>
-                            )}
+                          {slot.productName ? (
+                            <span className="font-medium text-blue-700">{slot.productName}</span>
+                          ) : (
+                            <span className="italic text-gray-400">Trống</span>
+                          )}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button

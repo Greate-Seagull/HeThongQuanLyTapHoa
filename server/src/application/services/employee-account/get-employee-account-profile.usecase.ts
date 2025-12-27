@@ -34,7 +34,7 @@ export class GetEmployeeAccountProfileUsecase {
     });
     log.info("Task started");
 
-    const account = await this.employeeAccountRepo.getById(parsedInput.id);
+    const account = await this.employeeAccountRepo.findByEmployeeId(parsedInput.id);
     if (!account) throw Error("Employee account not found");
     
     // Lấy thông tin employee

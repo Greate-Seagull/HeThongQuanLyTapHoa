@@ -281,10 +281,9 @@ export interface CreatePromotionRequest {
 }
 
 export interface CreateInvoiceRequest {
-  employeeId: number
   userId?: number | null
   usedPoint?: number
-  details: {
+  items: {
     productId: number
     quantity: number
     promotionId?: number | null
@@ -292,8 +291,7 @@ export interface CreateInvoiceRequest {
 }
 
 export interface CreateGoodReceiptRequest {
-  employeeId: number
-  details: {
+  items: {
     productId: number
     quantity: number
     price: number
@@ -301,9 +299,8 @@ export interface CreateGoodReceiptRequest {
 }
 
 export interface CreateStocktakingRequest {
-  employeeId: number
-  details: {
-    productId: number
+  products: {
+    barcode: number
     slotId: number
     status: ProductStatus
     quantity: number

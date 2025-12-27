@@ -15,6 +15,7 @@ export class InvoiceReadAccessor {
 								name: true,
 								barcode: true,
 								unit: true,
+								price: true,
 							},
 						},
 						promotion: true,

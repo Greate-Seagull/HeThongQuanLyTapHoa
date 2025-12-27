@@ -1,15 +1,27 @@
-import { prisma } from '../../../composition-root';
-import bcrypt from 'bcryptjs';
+import { prisma } from "../../../composition-root";
+import bcrypt from "bcryptjs";
 
 export class ChangeEmployeePasswordUsecase {
-  async execute({ id, currentPassword, newPassword }: { id: number; currentPassword: string; newPassword: string }) {
+  async execute({
+    id,
+    currentPassword,
+    newPassword,
+  }: {
+    id: number;
+    currentPassword: string;
+    newPassword: string;
+  }) {
     // Lấy account theo id
-    const account = await prisma.employeeAccount.findUnique({ where: { id } });
-    if (!account) throw new Error('Tài khoản không tồn tại');
+    const account = await prisma.employeeAccount.findFirst({
+      where: { employeeId: id },
+    });
+    console.log("testabc1", account);
+    
+    if (!account) throw new Error("Tài khoản không tồn tại");
 
     // Kiểm tra mật khẩu hiện tại
     const isMatch = bcrypt.compareSync(currentPassword, account.passwordHash);
-    if (!isMatch) throw new Error('Mật khẩu hiện tại không đúng');
+    if (!isMatch) throw new Error("Mật khẩu hiện tại không đúng");
 
     // Hash mật khẩu mới
     const salt = bcrypt.genSaltSync(10);
@@ -17,7 +29,7 @@ export class ChangeEmployeePasswordUsecase {
 
     // Cập nhật mật khẩu
     await prisma.employeeAccount.update({
-      where: { id },
+      where: {  id: account.id },
       data: { passwordHash: newHash, salt },
     });
     return { success: true };

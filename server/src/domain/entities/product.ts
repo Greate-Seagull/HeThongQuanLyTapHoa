@@ -19,6 +19,11 @@ export enum ProductUnit {
 }
 
 export class Product extends BaseEntity<ProductId> {
+    // Trả về số lượng đã bán (stub, cần thay bằng truy vấn thực tế)
+    public async getSoldQuantity(): Promise<number> {
+      // TODO: Thay bằng truy vấn thực tế từ DB hoặc service
+      return 0;
+    }
   protected _id: ProductId = null;
   private _name: string = null;
   private _price: number = 0;
@@ -105,6 +110,8 @@ export class Product extends BaseEntity<ProductId> {
 
   // Getters
   @Read
+  @Write
+  @Optional
   @Type(Number)
   public get id(): ProductId {
     return this._id;

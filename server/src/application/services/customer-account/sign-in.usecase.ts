@@ -63,7 +63,7 @@ export class SignInUsecase {
     log.debug("Task saved", {
       accountId: savedAccount.id,
     });
-
+    
     const token = this.tokenService.generateJwt({
       id: account.userId, // Đảm bảo id trong token là userId
       position: "CUSTOMER",

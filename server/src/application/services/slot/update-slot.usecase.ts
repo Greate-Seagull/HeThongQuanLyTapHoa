@@ -1,19 +1,19 @@
 import z from "zod";
 import { SlotRepository } from "../../../infrastructure/repositories/slot.repository";
 import { logger } from "../../../domain/services/logger.service";
-import { SlotDetailUsecase } from './slot-detail.usecase';
+import { SlotDetailUsecase } from "./slot-detail.usecase";
 
 const inputSchema = z.object({
   id: z.coerce.number(),
   authId: z.number(),
   name: z.string().min(1).optional(),
+  rackId: z.number().optional(),
   productId: z.number().optional(),
 });
 
 const outputSchema = z.object({
   slotId: z.number(),
 });
-
 
 export class UpdateSlotUsecase {
   constructor(
@@ -30,21 +30,30 @@ export class UpdateSlotUsecase {
     });
     log.info("Task started");
 
-    const slots = await this.slotRepo.getByIds([parsedInput.id]);
-    if (slots.length === 0) {
+    const slot = await this.slotRepo.getById(parsedInput.id);
+    if (!slot) {
       throw Error(`Slot with id ${parsedInput.id} not found`);
     }
-    const slot = slots[0];
+    console.log("slotsdata", slot);
+    console.log("parsedInput:", parsedInput);
 
     slot.update(parsedInput);
-    const savedSlot = await this.slotRepo.update(slot);
+    await this.slotRepo.update(slot);
+    console.log("Slot with id", slot.id, "after update:", slot);
 
-    // Nếu có productId thì cập nhật SlotDetail
-    if (parsedInput.productId) {
-      await this.slotDetailUsecase.update(savedSlot.id, parsedInput.productId);
+    if (parsedInput.productId !== undefined && parsedInput.productId !== null) {
+      // Có productId hợp lệ → Cập nhật
+      await this.slotDetailUsecase.update(
+        parsedInput.id,
+        parsedInput.productId
+      );
+    } else {
+      // KHÔNG có productId hoặc productId = null → Xóa
+      await this.slotDetailUsecase.deleteBySlotId(parsedInput.id);
     }
+    // Không truyền productId → Giữ nguyên, không làm gì
 
     log.info("Task completed");
-    return outputSchema.parse({ slotId: savedSlot.id });
+    return outputSchema.parse({ slotId: parsedInput.id });
   }
 }

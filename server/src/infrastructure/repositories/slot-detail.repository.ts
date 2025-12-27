@@ -10,8 +10,13 @@ export class SlotDetailRepository {
   }
 
   async update(slotId: number, productId: number) {
-    // Xóa hết slotDetail cũ của slot, chỉ giữ 1 sản phẩm/slot
-    await this.prisma.slotDetail.deleteMany({ where: { slotId } });
+    console.log("slotid, productid", slotId, productId);
+    // Xóa TẤT CẢ SlotDetail cũ của slot này trước
+    await this.prisma.slotDetail.deleteMany({
+      where: { slotId: slotId },
+    });
+
+    // Tạo mới SlotDetail với productId mới
     return this.prisma.slotDetail.create({
       data: { slotId, productId },
     });
@@ -23,10 +28,26 @@ export class SlotDetailRepository {
       include: { product: true },
     });
   }
+  async deleteBySlotId(slotId: number) {
+    return this.prisma.slotDetail.deleteMany({
+      where: { slotId },
+    });
+  }
 
   async getAllWithProduct() {
     return this.prisma.slotDetail.findMany({
-      include: { slot: true, product: true },
+      include: {
+        product: true,
+        slot: {
+          include: {
+            rack: {
+              include: {
+                shelf: true, // Lấy thông tin Kệ (Shelf) từ Rack
+              },
+            },
+          },
+        },
+      },
     });
   }
 }

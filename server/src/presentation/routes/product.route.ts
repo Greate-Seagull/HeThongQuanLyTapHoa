@@ -9,6 +9,7 @@ import {
   createProductUsecase,
   updateProductUsecase,
   deleteProductUsecase,
+  updateProductStatusUsecase,
 } from "../../composition-root";
 
 const router = Router();
@@ -24,6 +25,13 @@ router.put(
 );
 router.post("/", controller(createProductUsecase));
 router.put("/", controller(updateProductUsecase));
+
+// API cập nhật trạng thái sản phẩm
+router.patch(
+  "/:productId/status",
+  controller(updateProductStatusUsecase)
+);
+
 // router.delete("/:id", controller(deleteProductUsecase));
 router.delete("/:id", (req, res) =>
   controller(deleteProductUsecase)({ ...req, id: req.params.id }, res)
