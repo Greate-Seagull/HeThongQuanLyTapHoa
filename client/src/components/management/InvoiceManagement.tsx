@@ -1197,21 +1197,72 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
                     <TableRow className="bg-gray-50">
                       <TableHead>Sản phẩm</TableHead>
                       <TableHead className="text-center">SL</TableHead>
+                      <TableHead className="text-right">Đơn giá</TableHead>
+                      <TableHead className="text-right">Giảm giá</TableHead>
+                      <TableHead className="text-right">Thành tiền</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {currentInvoice.details.map((detail, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{detail.product?.name || ''}</TableCell>
-                        <TableCell className="text-center">{detail.quantity}</TableCell>
-                      </TableRow>
-                    ))}
+                    {currentInvoice.details.map((detail, index) => {
+                      const unitPrice = detail.product?.price || 0
+                      const discount = detail.promotion
+                        ? calculateDiscountAmount(detail.promotion, unitPrice)
+                        : 0
+                      const finalPrice = unitPrice - discount
+                      const totalAmount = finalPrice * detail.quantity
+
+                      return (
+                        <TableRow key={index}>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{detail.product?.name || ''}</p>
+                              {detail.promotion && (
+                                <p className="flex items-center gap-1 text-xs text-green-600">
+                                  <Tag className="h-3 w-3" />
+                                  {detail.promotion.name}
+                                </p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">{detail.quantity}</TableCell>
+                          <TableCell className="text-right">
+                            {unitPrice.toLocaleString('vi-VN')}đ
+                          </TableCell>
+                          <TableCell className="text-right text-green-600">
+                            {discount > 0 ? `-${discount.toLocaleString('vi-VN')}đ` : '-'}
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">
+                            {totalAmount.toLocaleString('vi-VN')}đ
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
                   </TableBody>
                 </Table>
               </div>
 
               {/* Invoice Summary */}
               <div className="space-y-2 border-t pt-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Tạm tính:</span>
+                  <span>{currentInvoice.subtotal.toLocaleString('vi-VN')}đ</span>
+                </div>
+                {currentInvoice.totalDiscount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Giảm giá KM:</span>
+                    <span className="text-green-600">
+                      -{currentInvoice.totalDiscount.toLocaleString('vi-VN')}đ
+                    </span>
+                  </div>
+                )}
+                {currentInvoice.pointsUsed > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Giảm điểm:</span>
+                    <span className="text-purple-600">
+                      -{currentInvoice.pointsUsed.toLocaleString('vi-VN')}đ
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between border-t pt-2 text-xl font-bold">
                   <span>Tổng cộng:</span>
                   <span className="text-blue-600">
@@ -1219,6 +1270,16 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
                   </span>
                 </div>
               </div>
+
+              {/* Invoice Summary */}
+              {/* <div className="space-y-2 border-t pt-4">
+                <div className="flex justify-between border-t pt-2 text-xl font-bold">
+                  <span>Tổng cộng:</span>
+                  <span className="text-blue-600">
+                    {currentInvoice.total.toLocaleString('vi-VN')}đ
+                  </span>
+                </div>
+              </div> */}
 
               {/* Footer */}
               <div className="border-t pt-4 text-center text-sm text-gray-600">

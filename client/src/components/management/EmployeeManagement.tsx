@@ -105,12 +105,12 @@ export function EmployeeManagement() {
       const response = await apiClient.get<Account[]>('/employee-accounts')
       // Nếu backend chưa trả về hasActivity, có thể cần map lại ở đây
       setAccounts(
-        response.map(acc => ({
+        response.map((acc) => ({
           ...acc,
           employee: {
             ...acc.employee,
-            hasActivity: acc.employee.hasActivity ?? false // fallback nếu chưa có
-          }
+            hasActivity: acc.employee.hasActivity ?? false, // fallback nếu chưa có
+          },
         }))
       )
     } catch (error) {
@@ -168,9 +168,10 @@ export function EmployeeManagement() {
         error?.response?.status === 400
       ) {
         // Show specific backend reason if available, else generic business message
-        const detail = backendMsg && backendMsg !== '' && backendMsg !== 'đã có dữ liệu hoạt động'
-          ? backendMsg
-          : `Nhân viên này đã có dữ liệu hoạt động (Hóa đơn, Nhập hàng hoặc Kiểm kê).`
+        const detail =
+          backendMsg && backendMsg !== '' && backendMsg !== 'đã có dữ liệu hoạt động'
+            ? backendMsg
+            : `Nhân viên này đã có dữ liệu hoạt động (Hóa đơn, Nhập hàng hoặc Kiểm kê).`
         toast.error(`Không thể xóa nhân viên "${deleteConfirm.name}": ${detail}`)
       }
     } finally {
@@ -181,23 +182,23 @@ export function EmployeeManagement() {
   const handleSave = async () => {
     // Validate không cho phép tên rỗng khi thêm hoặc sửa
     if (!formData.name.trim()) {
-      toast.error('Tên nhân viên không được để trống!');
-      return;
+      toast.error('Tên nhân viên không được để trống!')
+      return
     }
     // Validate không cho phép username rỗng khi thêm mới
     if (!editingAccount && !formData.username.trim()) {
-      toast.error('Username không được để trống!');
-      return;
+      toast.error('Username không được để trống!')
+      return
     }
     // Validate password khi thêm mới nhân viên
     if (!editingAccount) {
       if (!formData.password.trim()) {
-        toast.error('Mật khẩu không được để trống!');
-        return;
+        toast.error('Mật khẩu không được để trống!')
+        return
       }
       if (formData.password.length < 6) {
-        toast.error('Mật khẩu phải có ít nhất 6 ký tự!');
-        return;
+        toast.error('Mật khẩu phải có ít nhất 6 ký tự!')
+        return
       }
     }
     setIsSaving(true)
@@ -232,14 +233,17 @@ export function EmployeeManagement() {
       }
       setIsDialogOpen(false)
     } catch (error: any) {
-      const backendMsg = error?.response?.data?.message || '';
+      const backendMsg = error?.response?.data?.message || ''
       if (
         error?.response?.status === 409 ||
-        backendMsg.toLowerCase().includes('username') && (backendMsg.toLowerCase().includes('tồn tại') || backendMsg.toLowerCase().includes('exists') || backendMsg.toLowerCase().includes('duplicate'))
+        (backendMsg.toLowerCase().includes('username') &&
+          (backendMsg.toLowerCase().includes('tồn tại') ||
+            backendMsg.toLowerCase().includes('exists') ||
+            backendMsg.toLowerCase().includes('duplicate')))
       ) {
-        toast.error('Tên đăng nhập (username) đã tồn tại, vui lòng chọn tên khác!');
+        toast.error('Tên đăng nhập (username) đã tồn tại, vui lòng chọn tên khác!')
       } else {
-        toast.error(backendMsg || 'Đã xảy ra lỗi. Vui lòng thử lại.');
+        toast.error(backendMsg || 'Đã xảy ra lỗi. Vui lòng thử lại.')
       }
     } finally {
       setIsSaving(false)
@@ -297,7 +301,7 @@ export function EmployeeManagement() {
                   ) : (
                     filteredAccounts.map((account) => (
                       <TableRow key={account.id} className="hover:bg-blue-50">
-                        <TableCell className="font-medium">{account.employee.id}</TableCell>
+                        <TableCell className="font-medium">NV{account.employee.id}</TableCell>{' '}
                         <TableCell className="font-medium text-blue-600">
                           {account.username}
                         </TableCell>
@@ -394,7 +398,10 @@ export function EmployeeManagement() {
                 }
                 disabled={!!editingAccount && editingAccount.employee.hasActivity}
               >
-                <SelectTrigger className="border-blue-200" disabled={!!editingAccount && editingAccount.employee.hasActivity}>
+                <SelectTrigger
+                  className="border-blue-200"
+                  disabled={!!editingAccount && editingAccount.employee.hasActivity}
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -406,7 +413,9 @@ export function EmployeeManagement() {
               </Select>
               {/* Nếu không cho đổi chức vụ, hiển thị cảnh báo */}
               {editingAccount && editingAccount.employee.hasActivity && (
-                <div className="text-xs text-red-500 mt-1">Không thể đổi chức vụ vì nhân viên đã có hoạt động ở vai trò này.</div>
+                <div className="mt-1 text-xs text-red-500">
+                  Không thể đổi chức vụ vì nhân viên đã có hoạt động ở vai trò này.
+                </div>
               )}
             </div>
             {/* Only show password input when adding a new employee */}

@@ -1,3 +1,4 @@
+import { employeeAccount } from './../../../../tests/integration/create-employee-account/create-account.test-data';
 import { PrismaTransactionManager } from '../../../infrastructure/transaction';
 import { PasswordService } from '../../../domain/services/encrypt.service';
 import z from 'zod';
@@ -19,8 +20,8 @@ export class ChangeManagerPasswordUsecase {
 
     return this.transactionManager.transaction(async (tx) => {
       // Lấy employeeAccount theo id
-      const account = await tx.employeeAccount.findUnique({
-        where: { id: parsed.id },
+      const account = await tx.employeeAccount.findFirst({
+        where: { employeeId: parsed.id },
         select: { id: true, passwordHash: true, salt: true },
       });
       if (!account) throw new Error('Không tìm thấy tài khoản');
