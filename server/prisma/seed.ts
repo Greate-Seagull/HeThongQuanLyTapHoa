@@ -129,51 +129,51 @@ async function main() {
   console.log(`✅ Created ${categories.length} product categories`)
 
   // ============================================
-  // 3. USERS (Customers)
+  // 3. USERS (Customers) - Tất cả khách hàng đều có tài khoản
   // ============================================
   console.log('Creating users...')
   const users = await Promise.all([
     prisma.user.create({
       data: {
         name: 'Nguyễn Văn An',
-        point: 150,
+        point: 500, // Đã tích luỹ 500 điểm (mua 50,000đ)
       },
     }),
     prisma.user.create({
       data: {
         name: 'Trần Thị Bình',
-        point: 250,
+        point: 1200, // Đã tích luỹ 1,200 điểm (mua 120,000đ)
       },
     }),
     prisma.user.create({
       data: {
         name: 'Lê Hoàng Cường',
-        point: 100,
+        point: 800, // Đã tích luỹ 800 điểm (mua 80,000đ)
       },
     }),
     prisma.user.create({
       data: {
         name: 'Phạm Thị Dung',
-        point: 320,
+        point: 2500, // Đã tích luỹ 2,500 điểm (mua 250,000đ)
       },
     }),
     prisma.user.create({
       data: {
         name: 'Võ Minh Em',
-        point: 80,
+        point: 350, // Đã tích luỹ 350 điểm (mua 35,000đ)
       },
     }),
     prisma.user.create({
       data: {
         name: 'Đặng Thị Phương',
-        point: 200,
+        point: 1500, // Đã tích luỹ 1,500 điểm (mua 150,000đ)
       },
     }),
   ])
   console.log(`✅ Created ${users.length} users`)
 
   // ============================================
-  // 2. ACCOUNTS (Customer Login Accounts)
+  // 4. ACCOUNTS (Customer Login Accounts) - Tất cả user đều có account
   // ============================================
   console.log('Creating customer accounts...')
   const accounts = await Promise.all([
@@ -212,11 +212,18 @@ async function main() {
         ...generatePasswordWithSalt('123456'),
       },
     }),
+    prisma.account.create({
+      data: {
+        userId: users[5].id,
+        phoneNumber: '0956789012',
+        ...generatePasswordWithSalt('123456'),
+      },
+    }),
   ])
   console.log(`✅ Created ${accounts.length} customer accounts`)
 
   // ============================================
-  // 3. EMPLOYEES
+  // 5. EMPLOYEES
   // ============================================
   console.log('Creating employees...')
   const employees = await Promise.all([
@@ -266,7 +273,7 @@ async function main() {
   console.log(`✅ Created ${employees.length} employees`)
 
   // ============================================
-  // 4. EMPLOYEE ACCOUNTS
+  // 6. EMPLOYEE ACCOUNTS
   // ============================================
   console.log('Creating employee accounts...')
   const employeeAccounts = await Promise.all([
@@ -704,13 +711,13 @@ async function main() {
   const goodReceipts = await Promise.all([
     prisma.goodReceipt.create({
       data: {
-        employeeId: employees[2].id, // Nhân viên nhập hàng 1
-        createdAt: new Date('2024-11-15T09:00:00'), // Earlier than invoices
+        employeeId: employees[2].id, // Trần Thanh Nhập
+        createdAt: new Date('2024-11-15T09:00:00'),
       },
     }),
     prisma.goodReceipt.create({
       data: {
-        employeeId: employees[3].id, // Nhân viên nhập hàng 2
+        employeeId: employees[3].id, // Phạm Văn Hùng
         createdAt: new Date('2024-11-20T10:30:00'),
       },
     }),
@@ -736,7 +743,7 @@ async function main() {
   console.log(`✅ Created ${goodReceipts.length} good receipts`)
 
   // ============================================
-  // 11. GOOD RECEIPT DETAILS - Realistic data
+  // 13. GOOD RECEIPT DETAILS - Realistic data
   // ============================================
   console.log('Creating good receipt details...')
   const goodReceiptDetails = await Promise.all([
@@ -857,57 +864,63 @@ async function main() {
   // ============================================
   console.log('Creating invoices...')
   const invoices = await Promise.all([
+    // Invoice 1: Coca x3 (10000*3*90%=27000) + Ostar x2 (7000*2*66.67%=9334) = 36334 - 50đ = 36284
     prisma.invoice.create({
       data: {
-        employeeId: employees[0].id, // Nhân viên bán hàng 1
-        userId: users[0].id,
+        employeeId: employees[0].id, // Lê Văn Bán
+        userId: users[0].id, // Nguyễn Văn An (500 điểm)
         usedPoint: 50,
-        total: 45000,
+        total: 36284,
         createdAt: new Date('2024-12-01T10:30:00'),
       },
     }),
+    // Invoice 2: Lavie x5 (5000*5*90%=22500) + Hảo Hảo x10 (4000*10-5000*10=-10000→0) + Vinamilk x1 (35000-10000=25000) = 47500 - 100đ = 47400
     prisma.invoice.create({
       data: {
-        employeeId: employees[1].id, // Nhân viên bán hàng 2
-        userId: users[1].id,
+        employeeId: employees[1].id, // Nguyễn Thị Thu
+        userId: users[1].id, // Trần Thị Bình (1200 điểm)
         usedPoint: 100,
-        total: 80000,
+        total: 47400,
         createdAt: new Date('2024-12-03T14:15:00'),
       },
     }),
+    // Invoice 3: Chocopie x5 (5000*5=25000) - không khuyến mãi
     prisma.invoice.create({
       data: {
         employeeId: employees[0].id,
-        userId: users[2].id,
+        userId: users[2].id, // Lê Hoàng Cường (800 điểm)
         usedPoint: 0,
         total: 25000,
         createdAt: new Date('2024-12-05T09:45:00'),
       },
     }),
+    // Invoice 4: Dầu gội x1 (120000*85%=102000) + Vinamilk x2 ((35000-10000)*2=50000) = 152000 - 200đ = 151800
     prisma.invoice.create({
       data: {
         employeeId: employees[1].id,
-        userId: users[3].id,
+        userId: users[3].id, // Phạm Thị Dung (2500 điểm)
         usedPoint: 200,
-        total: 150000,
+        total: 151800,
         createdAt: new Date('2024-12-07T16:20:00'),
       },
     }),
+    // Invoice 5: Sting x2 (12000*2*90%=21600) + Poca x2 (6500*2*66.67%=8667) = 30267 - 30đ = 30237
     prisma.invoice.create({
       data: {
         employeeId: employees[0].id,
-        userId: users[4].id,
+        userId: users[4].id, // Võ Minh Em (350 điểm)
         usedPoint: 30,
-        total: 35000,
+        total: 30237,
         createdAt: new Date('2024-12-10T11:00:00'),
       },
     }),
+    // Invoice 6: Pepsi x2 (9500*2*90%=17100) - Khách vãng lai
     prisma.invoice.create({
       data: {
         employeeId: employees[1].id,
         userId: null, // Khách vãng lai
         usedPoint: 0,
-        total: 20000,
+        total: 17100,
         createdAt: new Date('2024-12-12T15:30:00'),
       },
     }),
@@ -1017,38 +1030,26 @@ async function main() {
   console.log(`✅ Created ${invoiceDetails.length} invoice details`)
 
   // ============================================
-  // 14. STOCKTAKINGS (Phiếu kiểm kê)
+  // 14. STOCKTAKING (Phiếu kiểm kê)
   // ============================================
   console.log('Creating stocktakings...')
   const stocktakings = await Promise.all([
     prisma.stocktaking.create({
       data: {
-        employeeId: employees[4].id, // Nhân viên kiểm kê 1
-        createdAt: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000),
+        employeeId: employees[4].id, // Nguyễn Văn Kiểm
+        createdAt: new Date('2024-12-01T08:00:00'),
       },
     }),
     prisma.stocktaking.create({
       data: {
-        employeeId: employees[5].id, // Nhân viên kiểm kê 2
-        createdAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+        employeeId: employees[5].id, // Lê Thị Lan
+        createdAt: new Date('2024-12-10T09:30:00'),
       },
     }),
     prisma.stocktaking.create({
       data: {
-        employeeId: employees[4].id,
-        createdAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
-      },
-    }),
-    prisma.stocktaking.create({
-      data: {
-        employeeId: employees[5].id,
-        createdAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000),
-      },
-    }),
-    prisma.stocktaking.create({
-      data: {
-        employeeId: employees[4].id,
-        createdAt: new Date(),
+        employeeId: employees[4].id, // Nguyễn Văn Kiểm
+        createdAt: new Date('2024-12-20T10:00:00'),
       },
     }),
   ])
@@ -1059,42 +1060,81 @@ async function main() {
   // ============================================
   console.log('Creating stocktaking details...')
   const stocktakingDetails = await Promise.all([
-    // Stocktaking 1
-    ...products.slice(0, 5).map((product, index) =>
-      prisma.stocktakingDetail.create({
-        data: {
-          stocktakingId: stocktakings[0].id,
-          productId: product.id,
-          slotId: slots[index].id,
-          status: ProductStatus.GOOD,
-          quantity: Math.floor(Math.random() * 50) + 50,
-        },
-      })
-    ),
-    // Stocktaking 2
-    ...products.slice(5, 10).map((product, index) =>
-      prisma.stocktakingDetail.create({
-        data: {
-          stocktakingId: stocktakings[1].id,
-          productId: product.id,
-          slotId: slots[index + 5].id,
-          status: ProductStatus.GOOD,
-          quantity: Math.floor(Math.random() * 40) + 40,
-        },
-      })
-    ),
-    // Stocktaking 3
-    ...products.slice(10, 15).map((product, index) =>
-      prisma.stocktakingDetail.create({
-        data: {
-          stocktakingId: stocktakings[2].id,
-          productId: product.id,
-          slotId: slots[index + 10].id,
-          status: index % 5 === 4 ? ProductStatus.EXPIRED : ProductStatus.GOOD,
-          quantity: Math.floor(Math.random() * 30) + 30,
-        },
-      })
-    ),
+    // Phiếu kiểm kê 1
+    prisma.stocktakingDetail.create({
+      data: {
+        stocktakingId: stocktakings[0].id,
+        productId: products[0].id, // Coca Cola
+        slotId: slots[0].id,
+        status: ProductStatus.GOOD,
+        quantity: 100,
+      },
+    }),
+    prisma.stocktakingDetail.create({
+      data: {
+        stocktakingId: stocktakings[0].id,
+        productId: products[1].id, // Pepsi
+        slotId: slots[1].id,
+        status: ProductStatus.GOOD,
+        quantity: 80,
+      },
+    }),
+    prisma.stocktakingDetail.create({
+      data: {
+        stocktakingId: stocktakings[0].id,
+        productId: products[2].id, // Lavie
+        slotId: slots[2].id,
+        status: ProductStatus.GOOD,
+        quantity: 200,
+      },
+    }),
+    // Phiếu kiểm kê 2
+    prisma.stocktakingDetail.create({
+      data: {
+        stocktakingId: stocktakings[1].id,
+        productId: products[3].id, // Sting
+        slotId: slots[3].id,
+        status: ProductStatus.GOOD,
+        quantity: 60,
+      },
+    }),
+    prisma.stocktakingDetail.create({
+      data: {
+        stocktakingId: stocktakings[1].id,
+        productId: products[4].id, // Trà xanh
+        slotId: slots[4].id,
+        status: ProductStatus.GOOD,
+        quantity: 90,
+      },
+    }),
+    prisma.stocktakingDetail.create({
+      data: {
+        stocktakingId: stocktakings[1].id,
+        productId: products[5].id, // Ostar
+        slotId: slots[5].id,
+        status: ProductStatus.EXPIRED,
+        quantity: 5,
+      },
+    }),
+    // Phiếu kiểm kê 3
+    prisma.stocktakingDetail.create({
+      data: {
+        stocktakingId: stocktakings[2].id,
+        productId: products[8].id, // Hảo Hảo
+        slotId: slots[8].id,
+        status: ProductStatus.GOOD,
+        quantity: 150,
+      },
+    }),
+    prisma.stocktakingDetail.create({
+      data: {
+        stocktakingId: stocktakings[2].id,
+        productId: products[10].id, // Sữa Vinamilk
+        slotId: slots[10].id,
+        status: ProductStatus.GOOD,
+        quantity: 40,
+      },
+    }),
   ])
   console.log(`✅ Created ${stocktakingDetails.length} stocktaking details`)
 
@@ -1102,7 +1142,7 @@ async function main() {
   console.log('\n📊 Summary:')
   console.log(`   - Suppliers: ${suppliers.length}`)
   console.log(`   - Product Categories: ${categories.length}`)
-  console.log(`   - Users: ${users.length}`)
+  console.log(`   - Users: ${users.length} (all with accounts)`)
   console.log(`   - Customer Accounts: ${accounts.length}`)
   console.log(`   - Employees: ${employees.length}`)
   console.log(`   - Employee Accounts: ${employeeAccounts.length}`)
@@ -1113,12 +1153,10 @@ async function main() {
   console.log(`   - Racks: ${racks.length}`)
   console.log(`   - Slots: ${slots.length}`)
   console.log(`   - Slot Details: ${slotDetails.length}`)
-  console.log(`   - Good Receipts: ${goodReceipts.length}`)
-  console.log(`   - Good Receipt Details: ${goodReceiptDetails.length}`)
-  console.log(`   - Invoices: ${invoices.length}`)
-  console.log(`   - Invoice Details: ${invoiceDetails.length}`)
   console.log(`   - Stocktakings: ${stocktakings.length}`)
   console.log(`   - Stocktaking Details: ${stocktakingDetails.length}`)
+  console.log(`   - Good Receipts: ${goodReceipts.length}`)
+  console.log(`   - Invoice: ${invoices.length}`)
   console.log('\n🔑 Test Accounts:')
   console.log('   Customers (phone/password):')
   console.log('   - 0901234567 / 123456')
@@ -1128,6 +1166,7 @@ async function main() {
   console.log('   - ttnhap / 123456 (RECEIVING)')
   console.log('   - nvkiem / 123456 (INVENTORY)')
   console.log('   - vvquan / 123456 (MANAGER)')
+  console.log('\n💡 Point System: 100,000đ = 1,000 points | 1 point = 1đ discount')
 }
 
 main()
