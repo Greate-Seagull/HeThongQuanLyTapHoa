@@ -271,6 +271,13 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
       slot: {
         _id: slotData.slotId,
         _name: slotData.slotName,
+        name: slotData.slotName,
+        rack: {
+          name: slotData.rackName,
+          shelf: {
+            name: slotData.shelfName,
+          },
+        },
       } as any,
       status: selectedStatus,
       quantity: actualQuantity, // ← Dùng số lượng thực tế
@@ -281,7 +288,7 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
     const diffText = difference > 0 ? `+${difference}` : difference < 0 ? `${difference}` : 'Khớp'
 
     toast.success(`Đã thêm ${product.name}`, {
-      description: `HT: ${currentQuantity} | Thực tế: ${actualQuantity} | Đã bán: ${diffText}`, // ← ĐỔI text
+      description: `HT: ${currentQuantity} | Thực tế: ${actualQuantity} | Chênh lệch: ${diffText}`, // ← ĐỔI text
     })
     setStocktakingDetails([...stocktakingDetails, newDetail])
     setSelectedProductId(0)
@@ -313,30 +320,30 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
       return
     }
 
-    // ✅ THÊM VALIDATION: Kiểm tra số lượng thực tế không được > số lượng hệ thống
-    const invalidItems: string[] = []
+    // // ✅ THÊM VALIDATION: Kiểm tra số lượng thực tế không được > số lượng hệ thống
+    // const invalidItems: string[] = []
 
-    for (const detail of stocktakingDetails) {
-      const systemQty = products.find((p) => p.id === detail.productId)?.amount || 0
-      const actualQty = detail.quantity
+    // for (const detail of stocktakingDetails) {
+    //   const systemQty = products.find((p) => p.id === detail.productId)?.amount || 0
+    //   const actualQty = detail.quantity
 
-      // Nếu số lượng thực tế > số lượng hệ thống → Lỗi
-      if (actualQty > systemQty) {
-        const productName = detail.product?.name || 'Không rõ'
-        invalidItems.push(
-          `${productName}: Thực tế ${actualQty} > Hệ thống ${systemQty} (dư ${actualQty - systemQty})`
-        )
-      }
-    }
+    //   // Nếu số lượng thực tế > số lượng hệ thống → Lỗi
+    //   if (actualQty > systemQty) {
+    //     const productName = detail.product?.name || 'Không rõ'
+    //     invalidItems.push(
+    //       `${productName}: Thực tế ${actualQty} > Hệ thống ${systemQty} (dư ${actualQty - systemQty})`
+    //     )
+    //   }
+    // }
 
-    // Nếu có lỗi, hiển thị toast và dừng lại
-    if (invalidItems.length > 0) {
-      toast.error('Số lượng thực tế không hợp lệ!', {
-        description: invalidItems.join('\n'),
-        duration: 6000,
-      })
-      return
-    }
+    // // Nếu có lỗi, hiển thị toast và dừng lại
+    // if (invalidItems.length > 0) {
+    //   toast.error('Số lượng thực tế không hợp lệ!', {
+    //     description: invalidItems.join('\n'),
+    //     duration: 6000,
+    //   })
+    //   return
+    // }
 
     // ✅ Nếu hợp lệ, tiếp tục lưu phiếu
     setLoading(true)
@@ -387,7 +394,6 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
       setLoading(false)
     }
   }
-
   const handleViewStocktaking = async (stocktaking: Stocktaking) => {
     setLoadingDetail(true)
     setShowStocktakingDialog(true)
@@ -644,7 +650,7 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                       <TableHead>Trạng thái</TableHead>
                       <TableHead>SL Hệ thống</TableHead>
                       <TableHead>SL Thực tế</TableHead>
-                      <TableHead>Đã Bán </TableHead>
+                      <TableHead>Chênh lệch</TableHead>
                       <TableHead className="text-right">Xóa</TableHead>
                     </TableRow>
                   </TableHeader>
