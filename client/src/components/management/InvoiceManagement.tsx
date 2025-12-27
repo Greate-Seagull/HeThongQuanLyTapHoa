@@ -116,19 +116,21 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
 
   const selectedCustomer = customers.find((c) => c.id === selectedCustomerId)
 
-  const filteredInvoices = invoices.filter((invoice) => {
-    const term = searchTerm.trim().toLowerCase()
-    if (!term) return true
-    // Tìm theo mã hóa đơn (id hoặc mã HDxxx), tên nhân viên, tên khách hàng, số điện thoại khách hàng
-    const idMatch = invoice.id.toString().includes(term)
-    // Hỗ trợ tìm theo mã hóa đơn dạng HD001, HD002...
-    const code = `hd${invoice.id.toString().padStart(3, '0')}`
-    const codeMatch = code.includes(term)
-    const employeeMatch = invoice.employee?.name?.toLowerCase().includes(term)
-    const customerNameMatch = invoice.customer?.name?.toLowerCase().includes(term)
-    const customerPhoneMatch = invoice.customer?.phone?.toLowerCase().includes(term)
-    return idMatch || codeMatch || employeeMatch || customerNameMatch || customerPhoneMatch
-  })
+  const filteredInvoices = invoices
+    .filter((invoice) => {
+      const term = searchTerm.trim().toLowerCase()
+      if (!term) return true
+      // Tìm theo mã hóa đơn (id hoặc mã HDxxx), tên nhân viên, tên khách hàng, số điện thoại khách hàng
+      const idMatch = invoice.id.toString().includes(term)
+      // Hỗ trợ tìm theo mã hóa đơn dạng HD001, HD002...
+      const code = `hd${invoice.id.toString().padStart(3, '0')}`
+      const codeMatch = code.includes(term)
+      const employeeMatch = invoice.employee?.name?.toLowerCase().includes(term)
+      const customerNameMatch = invoice.customer?.name?.toLowerCase().includes(term)
+      const customerPhoneMatch = invoice.customer?.phone?.toLowerCase().includes(term)
+      return idMatch || codeMatch || employeeMatch || customerNameMatch || customerPhoneMatch
+    })
+    .sort((a, b) => b.id - a.id) // Sắp xếp theo mã hóa đơn giảm dần (mới nhất trước)
 
   const calculateDiscountAmount = (promotion: Promotion, price: number): number => {
     let discount = 0
