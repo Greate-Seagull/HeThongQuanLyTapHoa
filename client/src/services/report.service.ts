@@ -552,13 +552,13 @@ export const exportSalesToExcel = async (data: SalesReportData) => {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Báo Cáo Bán Hàng');
 
-  worksheet.mergeCells('A1:F1');
+  worksheet.mergeCells('A1:J1');
   const titleCell = worksheet.getCell('A1');
-  titleCell.value = 'BÁO CÁO BÁN HÀNG';
+  titleCell.value = 'BÁO CÁO BÁN HÀNG CHI TIẾT';
   titleCell.font = { size: 16, bold: true, color: { argb: 'FFFFC000' } };
   titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
 
-  worksheet.mergeCells('A2:F2');
+  worksheet.mergeCells('A2:J2');
   const dateCell = worksheet.getCell('A2');
   dateCell.value = `Ngày xuất: ${new Date().toLocaleString('vi-VN')}`;
   dateCell.font = { italic: true };
@@ -607,7 +607,19 @@ export const exportSalesToExcel = async (data: SalesReportData) => {
 
   worksheet.addRow([]);
 
-  const headerRow = worksheet.addRow(['Mã HĐ', 'Ngày tạo', 'Nhân viên', 'Khách hàng', 'SL SP', 'Điểm dùng', 'Tổng tiền']);
+  // Header với nhiều cột hơn để hiển thị chi tiết
+  const headerRow = worksheet.addRow([
+    'Mã HĐ', 
+    'Ngày tạo', 
+    'Nhân viên', 
+    'Khách hàng', 
+    'Sản phẩm',
+    'SL',
+    'Đơn giá',
+    'Khuyến mãi',
+    'Thành tiền',
+    'Tổng HĐ'
+  ]);
   
   headerRow.eachCell((cell) => {
     cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
@@ -640,28 +652,110 @@ export const exportSalesToExcel = async (data: SalesReportData) => {
       minute: '2-digit',
       hour12: false
     }) : '-';
-    const row = worksheet.addRow([
-      sale.id,
-      createdAt,
-      sale.employee,
-      sale.customer,
-      sale.totalQuantity,
-      sale.usedPoint,
-      sale.total.toLocaleString('vi-VN') + 'đ'
-    ]);
-    row.height = 20;
-    row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
-    row.getCell(2).alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
-    row.getCell(3).alignment = { horizontal: 'left', vertical: 'middle' };
-    row.getCell(4).alignment = { horizontal: 'left', vertical: 'middle' };
-    row.getCell(5).alignment = { horizontal: 'center', vertical: 'middle' };
-    row.getCell(6).alignment = { horizontal: 'center', vertical: 'middle' };
-    row.getCell(7).alignment = { horizontal: 'right', vertical: 'middle' };
+
+    // Nếu có chi tiết sản phẩm, hiển thị từng dòng
+    if (sale.details && sale.details.length > 0) {
+      sale.details.forEach((detail: any, index: number) => {
+        // Tính toán giá sau khuyến mãi
+        let finalPrice = detail.productPrice || 0;
+        let discountAmount = 0;
+        
+        if (detail.promotionValue && detail.promotionType) {
+          if (detail.promotionType === 'PERCENTAGE') {
+            // Giảm theo %
+            discountAmount = Math.round((finalPrice * detail.promotionValue) / 100);
+            finalPrice = finalPrice - discountAmount;
+          } else if (detail.promotionType === 'FIXED_AMOUNT') {
+            // Giảm số tiền cố định
+            discountAmount = detail.promotionValue;
+            finalPrice = Math.max(0, finalPrice - detail.promotionValue);
+          } else if (detail.promotionType === 'BUY_X_GET_Y') {
+            // Mua X tặng Y - giá không đổi nhưng có khuyến mãi
+            // Giữ nguyên giá gốc
+          }
+        }
+        
+        const totalPrice = finalPrice * (detail.quantity || 0);
+        
+        const row = worksheet.addRow([
+          index === 0 ? sale.id : '', // Chỉ hiện mã HĐ ở dòng đầu
+          index === 0 ? createdAt : '',
+          index === 0 ? sale.employee : '',
+          index === 0 ? sale.customer : '',
+          detail.productName || 'N/A',
+          detail.quantity || 0,
+          finalPrice.toLocaleString('vi-VN') + 'đ',
+          detail.promotion || '-',
+          totalPrice.toLocaleString('vi-VN') + 'đ',
+          index === 0 ? sale.total.toLocaleString('vi-VN') + 'đ' : '' // Chỉ hiện tổng HĐ ở dòng đầu
+        ]);
+        
+        // Alignment
+        row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+        row.getCell(2).alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+        row.getCell(3).alignment = { horizontal: 'left', vertical: 'middle' };
+        row.getCell(4).alignment = { horizontal: 'left', vertical: 'middle' };
+        row.getCell(5).alignment = { horizontal: 'left', vertical: 'middle' };
+        row.getCell(6).alignment = { horizontal: 'center', vertical: 'middle' };
+        row.getCell(7).alignment = { horizontal: 'right', vertical: 'middle' };
+        row.getCell(8).alignment = { horizontal: 'center', vertical: 'middle' };
+        row.getCell(9).alignment = { horizontal: 'right', vertical: 'middle' };
+        row.getCell(10).alignment = { horizontal: 'right', vertical: 'middle' };
+        
+        // Highlight tổng hóa đơn
+        if (index === 0) {
+          row.getCell(10).font = { bold: true };
+        }
+      });
+      
+      // Thêm dòng thông tin điểm sử dụng (nếu có)
+      if (sale.usedPoint && sale.usedPoint > 0) {
+        const pointRow = worksheet.addRow([
+          '', '', '', '', 
+          '→ Điểm tích lũy sử dụng',
+          '',
+          '',
+          '',
+          `- ${sale.usedPoint.toLocaleString('vi-VN')}đ`,
+          ''
+        ]);
+        pointRow.getCell(5).font = { italic: true, color: { argb: 'FF0066CC' } };
+        pointRow.getCell(9).font = { italic: true, color: { argb: 'FF0066CC' } };
+        pointRow.getCell(9).alignment = { horizontal: 'right', vertical: 'middle' };
+      }
+      
+      // Thêm dòng trống giữa các hóa đơn để dễ đọc
+      worksheet.addRow([]);
+    } else {
+      // Fallback: nếu không có details, hiển thị dạng tổng hợp như cũ
+      const row = worksheet.addRow([
+        sale.id,
+        createdAt,
+        sale.employee,
+        sale.customer,
+        `${sale.totalQuantity} sản phẩm`,
+        sale.totalQuantity,
+        '',
+        sale.usedPoint > 0 ? `Dùng ${sale.usedPoint} điểm` : '-',
+        '',
+        sale.total.toLocaleString('vi-VN') + 'đ'
+      ]);
+      row.height = 20;
+      row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+      row.getCell(2).alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+      row.getCell(3).alignment = { horizontal: 'left', vertical: 'middle' };
+      row.getCell(4).alignment = { horizontal: 'left', vertical: 'middle' };
+      row.getCell(5).alignment = { horizontal: 'center', vertical: 'middle' };
+      row.getCell(6).alignment = { horizontal: 'center', vertical: 'middle' };
+      row.getCell(8).alignment = { horizontal: 'center', vertical: 'middle' };
+      row.getCell(10).alignment = { horizontal: 'right', vertical: 'middle' };
+      row.getCell(10).font = { bold: true };
+    }
   });
 
   const endRow = worksheet.lastRow?.number || startRow;
   for (let i = startRow; i <= endRow; i++) {
-    for (let j = 1; j <= 7; j++) {
+    for (let j = 1; j <= 10; j++) {
       const cell = worksheet.getRow(i).getCell(j);
       cell.border = {
         top: { style: 'thin' },
@@ -672,8 +766,8 @@ export const exportSalesToExcel = async (data: SalesReportData) => {
     }
   }
 
-  // Auto-size columns based on content
-  autoSizeColumns(worksheet, startRow, 7);
+  // Auto-size columns based on content (10 cột)
+  autoSizeColumns(worksheet, startRow, 10);
 
   // Configure page setup for PDF export
   configurePageSetup(worksheet);
