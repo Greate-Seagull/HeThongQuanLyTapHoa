@@ -741,9 +741,10 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
                               value={actualQty}
                               onChange={(e) => {
                                 const newQty = Number(e.target.value) || 0
+                                // Đồng bộ số lượng thực tế cho tất cả dòng cùng sản phẩm
                                 setStocktakingDetails(
                                   stocktakingDetails.map((d) =>
-                                    d.id === detail.id ? { ...d, quantity: newQty } : d
+                                    d.productId === detail.productId ? { ...d, quantity: newQty } : d
                                   )
                                 )
                               }}
