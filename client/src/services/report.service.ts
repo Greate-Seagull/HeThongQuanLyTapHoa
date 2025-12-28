@@ -37,6 +37,30 @@ function autoSizeColumns(worksheet: ExcelJS.Worksheet, headerRow: number, column
   });
 }
 
+// Helper to configure page setup for PDF export
+function configurePageSetup(worksheet: ExcelJS.Worksheet) {
+  worksheet.pageSetup = {
+    paperSize: 9, // A4
+    orientation: 'landscape', // Ngang để vừa nhiều cột hơn
+    fitToPage: true,
+    fitToWidth: 1, // Vừa chiều rộng trong 1 trang
+    fitToHeight: 0, // Không giới hạn chiều cao, để tự động xuống trang
+    margins: {
+      left: 0.25,
+      right: 0.25,
+      top: 0.75,
+      bottom: 0.75,
+      header: 0.3,
+      footer: 0.3
+    },
+    printArea: undefined, // Tự động xác định vùng in
+    horizontalCentered: true, // Căn giữa theo chiều ngang
+  };
+
+  // Cấu hình in ấn
+  worksheet.properties.defaultRowHeight = 15;
+}
+
 // Report types
 export interface InventoryReportData {
   summary: {
@@ -368,6 +392,9 @@ export const exportInventoryToExcel = async (data: InventoryReportData) => {
   // Auto-size all columns
   autoSizeColumns(worksheet, 4, 10); // Summary starts at row 4, 10 columns total
 
+  // Configure page setup for PDF export
+  configurePageSetup(worksheet);
+
   // Export
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], {
@@ -511,6 +538,9 @@ export const exportGoodsReceiptToExcel = async (data: GoodsReceiptReportData) =>
   // Auto-size columns
   autoSizeColumns(worksheet, 4, 8);
 
+  // Configure page setup for PDF export
+  configurePageSetup(worksheet);
+
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -645,6 +675,9 @@ export const exportSalesToExcel = async (data: SalesReportData) => {
   // Auto-size columns based on content
   autoSizeColumns(worksheet, startRow, 7);
 
+  // Configure page setup for PDF export
+  configurePageSetup(worksheet);
+
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -765,6 +798,9 @@ export const exportCustomerToExcel = async (data: CustomerReportData) => {
 
   // Auto-size columns
   autoSizeColumns(worksheet, 4, 7);
+
+  // Configure page setup for PDF export
+  configurePageSetup(worksheet);
 
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], {
@@ -907,6 +943,9 @@ export const exportStocktakingToExcel = async (data: StocktakingReportData) => {
 
   // Auto-size columns
   autoSizeColumns(worksheet, 4, 8);
+
+  // Configure page setup for PDF export
+  configurePageSetup(worksheet);
 
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], {
@@ -1060,6 +1099,9 @@ export const exportRevenueProfitToExcel = async (data: RevenueProfitReportData) 
     // Auto-size columns
     autoSizeColumns(worksheet, 4, numColumns);
   }
+
+  // Configure page setup for PDF export
+  configurePageSetup(worksheet);
 
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], {
