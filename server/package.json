@@ -23,6 +23,11 @@
 		"dev": "nodemon --exec ts-node index.ts",
 		"start": "node dist/index.js",
 		"test": "npx jest --runInBand --verbose --roots=tests",
+		"test:unit": "npx jest --runInBand --verbose --roots=tests/unit",
+		"test:integration": "npx jest --runInBand --verbose --roots=tests/integration",
+		"test:watch": "npx jest --watch",
+		"test:coverage": "npx jest --coverage --runInBand --roots=tests",
+		"test:ci": "npx jest --ci --coverage --maxWorkers=2",
 		"seed": "ts-node prisma/seed.ts"
 	},
 	"dependencies": {
