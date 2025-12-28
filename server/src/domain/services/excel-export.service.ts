@@ -1,6 +1,30 @@
 import ExcelJS from "exceljs";
 
 export class ExcelExportService {
+	// Helper to configure page setup for PDF export
+	private configurePageSetup(worksheet: ExcelJS.Worksheet) {
+		worksheet.pageSetup = {
+			paperSize: 9, // A4
+			orientation: "landscape", // Ngang để vừa nhiều cột hơn
+			fitToPage: true,
+			fitToWidth: 1, // Vừa chiều rộng trong 1 trang
+			fitToHeight: 0, // Không giới hạn chiều cao, để tự động xuống trang
+			margins: {
+				left: 0.25,
+				right: 0.25,
+				top: 0.75,
+				bottom: 0.75,
+				header: 0.3,
+				footer: 0.3,
+			},
+			printArea: undefined, // Tự động xác định vùng in
+			horizontalCentered: true, // Căn giữa theo chiều ngang
+		};
+
+		// Cấu hình in ấn
+		worksheet.properties.defaultRowHeight = 15;
+	}
+
 	// Export inventory report
 	async exportInventoryReport(data: any): Promise<Buffer> {
 		const workbook = new ExcelJS.Workbook();
