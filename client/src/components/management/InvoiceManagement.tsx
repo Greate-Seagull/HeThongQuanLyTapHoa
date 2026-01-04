@@ -192,8 +192,8 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
   }
   // Lấy các khuyến mãi của 1 sản phẩm từ allPromotions
   const getPromotionsForProductId = (productId: number): Promotion[] => {
-    return allPromotions.filter((promo) =>
-      promo.promotionDetails?.some((detail) => detail.productId === productId)
+    return allPromotions.filter((promo: Promotion) =>
+      (promo as any).promotionDetails?.some((detail: any) => detail.productId === productId)
     )
   }
 
@@ -305,14 +305,15 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
         ])
         console.log(productsData)
         console.log('All promotions loaded:', promotionsData)
-        const promo161 = promotionsData?.find((p) => p.id === 161)
+        const promo161 = (promotionsData as any)?.find((p: any) => p.id === 161)
         console.log('Promotion 161 details:', promo161?.promotionDetails)
         console.log(
           'Has product 276?',
-          promo161?.promotionDetails?.some((pd) => pd.productId === 276)
+          promo161?.promotionDetails?.some((pd: any) => pd.productId === 276)
         )
         setAllPromotions(Array.isArray(promotionsData) ? promotionsData : [])
-        setProducts(Array.isArray(productsData?.products) ? productsData?.products : [])
+        const productsArray = Array.isArray(productsData) ? productsData : (Array.isArray((productsData as any)?.products) ? (productsData as any).products : [])
+        setProducts(productsArray)
         setCustomers(
           Array.isArray(customersData)
             ? customersData.map((c: any) => ({
@@ -480,7 +481,7 @@ export function InvoiceManagement({ currentUser }: InvoiceManagementProps) {
           ? {
               id: detail.user.id,
               name: detail.user.name,
-              phone: detail.user.accounts?.[0]?.phoneNumber,
+              phone: (detail.user as any).accounts?.[0]?.phoneNumber || (detail.user as any).phoneNumber || '',
               loyaltyPoints: 0,
             }
           : null,

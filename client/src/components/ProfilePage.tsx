@@ -53,9 +53,19 @@ interface ApiResponse {
   data: UserProfile
 }
 
+interface ProfilePageProps {
+  user?: {
+    id: number
+    name: string
+    username: string
+    loggedAt: Date
+  }
+  role?: string
+}
+
 const API_BASE_URL = 'http://localhost:3000' // Thay URL này
 
-export function ProfilePage() {
+export function ProfilePage({ user: initialUser, role }: ProfilePageProps = {}) {
   // Đóng dialog đổi mật khẩu
   const handleClosePasswordDialog = () => {
     setPasswordData({

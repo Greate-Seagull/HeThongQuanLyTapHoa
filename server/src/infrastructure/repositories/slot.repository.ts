@@ -6,11 +6,6 @@ import {
   toPersistenceObject,
 } from "../../domain/services/mapper.service";
 import { buildSafePrismaSelect } from "../../domain/services/query-builder.service";
-import { includes } from "zod";
-import {
-  rack,
-  slot,
-} from "tests/integration/create-stocktaking/create-stocktaking.test-data";
 
 export class SlotRepository {
   private tracker = new ChangeTracker<any>();

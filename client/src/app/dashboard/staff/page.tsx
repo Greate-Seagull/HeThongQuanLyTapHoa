@@ -126,7 +126,6 @@ export default function StaffDashboardPage() {
               id: employeeData.id,
               name: employeeData.name,
               username: user.username,
-              position: employeeData.position,
               loggedAt: new Date(),
             }}
             role="staff"
