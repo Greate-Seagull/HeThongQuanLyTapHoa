@@ -1,4 +1,3 @@
-import { employeeAccount } from './../../../../tests/integration/create-employee-account/create-account.test-data';
 import { PrismaTransactionManager } from '../../../infrastructure/transaction';
 import { PasswordService } from '../../../domain/services/encrypt.service';
 import z from 'zod';

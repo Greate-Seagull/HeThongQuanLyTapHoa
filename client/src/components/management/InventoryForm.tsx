@@ -134,7 +134,7 @@ export function InventoryForm({ currentUser }: InventoryFormProps) {
   const [lastCheckedStocktakingCount, setLastCheckedStocktakingCount] = useState<number>(0)
 
   const selectedProduct = products.find((p) => p.id === selectedProductId)
-  const selectedSlot = slots.find((s) => s._id === selectedSlotId)
+  const selectedSlot = slots.find((s) => s.id === selectedSlotId)
   const filteredStocktakings = stocktakings
     .filter(
       (stocktaking) =>

@@ -48,10 +48,6 @@ import type { Employee, Product } from '@/types'
 import { createGoodReceipt } from '@/services/good-receipt.service'
 import { apiClient } from '@/services/api-client'
 
-// ...existing code...
-
-// ...existing code...
-
 // Local interfaces cho component này
 interface GoodReceiptDetail {
   productId: number
@@ -98,10 +94,13 @@ export function ImportForm({ currentUser }: ImportFormProps) {
   const fetchProducts = async () => {
     try {
       const res = await apiClient.get<Product[]>('/products')
-      const productData = res?.products || res?.products || []
+      // Xử lý response có thể là array trực tiếp hoặc {products: array}
+      const productData = Array.isArray(res) ? res : (Array.isArray((res as any)?.products) ? (res as any).products : [])
 
-      setProducts(Array.isArray(productData) ? productData : [])
+      console.log('📦 Loaded products:', productData.length, 'items')
+      setProducts(productData)
     } catch (err) {
+      console.error('❌ Error loading products:', err)
       setProducts([])
       toast.error('Không thể tải danh sách sản phẩm')
     }
@@ -249,7 +248,9 @@ export function ImportForm({ currentUser }: ImportFormProps) {
   const handleBarcodeSearch = () => {
     if (!barcodeInput) return
 
-    const product = products.find((p) => p.barcode.toString() === barcodeInput)
+    const searchBarcode = barcodeInput.trim()
+    const product = products.find((p) => String(p.barcode).trim() === searchBarcode)
+    
     if (product) {
       // Kiểm tra sản phẩm đã được thêm chưa
       if (receiptDetails.some((d) => d.productId === product.id)) {
@@ -869,13 +870,13 @@ export function ImportForm({ currentUser }: ImportFormProps) {
                         {viewingReceipt.details.map((detail) => (
                           <TableRow key={detail.productId} className="hover:bg-blue-50">
                             <TableCell className="max-w-[200px]">
-                              <div className="truncate" title={detail.product.name}>
-                                {detail.product.name}
+                              <div className="truncate" title={detail.product?.name || ''}>
+                                {detail.product?.name}
                               </div>
                             </TableCell>
                             <TableCell>
-                              <div className="truncate" title={detail.product.barcode}>
-                                {detail.product.barcode}
+                              <div className="truncate" title={String(detail.product?.barcode || '')}>
+                                {detail.product?.barcode}
                               </div>
                             </TableCell>
                             <TableCell>{detail.quantity}</TableCell>
@@ -911,7 +912,7 @@ export function ImportForm({ currentUser }: ImportFormProps) {
                           <div className="grid grid-cols-2 gap-2 text-sm">
                             <div>
                               <span className="text-gray-600">Mã vạch:</span>
-                              <div className="truncate font-medium" title={detail.product.barcode}>
+                              <div className="truncate font-medium" title={String(detail.product.barcode)}>
                                 {detail.product.barcode}
                               </div>
                             </div>
