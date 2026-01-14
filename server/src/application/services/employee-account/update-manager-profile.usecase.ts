@@ -18,7 +18,6 @@ const outputSchema = z.object({
 
 export class UpdateManagerProfileUsecase {
     async execute(input: any) {
-           console.log('[UpdateManagerProfileUsecase] Payload input:', input);
         try {
  
       const parsed = inputSchema.parse(input);
@@ -62,7 +61,6 @@ export class UpdateManagerProfileUsecase {
       
       return outputSchema.parse(result);
     } catch (error) {
-      console.error('[UpdateManagerProfileUsecase] Error:', error && (error.message || error));
       throw error;
     }
   }
