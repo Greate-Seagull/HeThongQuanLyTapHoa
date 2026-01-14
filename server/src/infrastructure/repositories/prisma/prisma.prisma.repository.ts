@@ -107,13 +107,8 @@ export abstract class PrismaRepository<
   protected abstract getRepository(transaction?: Prisma.TransactionClient): any;
 
   protected buildEntity(raw: any): EntityType | null {
-    if (!raw) {
-      console.debug("[buildEntity] raw is null");
-      return null;
-    }
-    console.debug("[buildEntity] raw input:", JSON.stringify(raw));
+    if (!raw) return null;
     const entity = this.fromPersistence(raw);
-    console.debug("[buildEntity] entity output:", JSON.stringify(entity));
     return entity;
   }
 

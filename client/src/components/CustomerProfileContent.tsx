@@ -28,6 +28,7 @@ import {
 } from 'lucide-react'
 import { apiClient } from '@/services/api-client'
 import { toast } from 'sonner'
+import { AvatarUpload } from '@/components/ui/avatar-upload'
 
 enum EmployeePosition {
   SALES = 'SALES',
@@ -45,6 +46,7 @@ interface AccountResponse {
     id: number
     name: string
     point: number
+    avatar?: string // Thêm avatar field
   }
 }
 
@@ -67,6 +69,20 @@ interface UserProfile {
   phoneNumber?: string
   point?: number
   type: 'EMPLOYEE' | 'CUSTOMER'
+  avatar?: string
+}
+
+const API_BASE_URL = 'http://localhost:3000'
+
+// Helper function để convert relative avatar path thành full URL
+const getAvatarUrl = (avatar?: string | null): string | null => {
+  if (!avatar) return null
+  // Nếu đã là full URL (http/https), return luôn
+  if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
+    return avatar
+  }
+  // Nếu là relative path, thêm API_BASE_URL
+  return `${API_BASE_URL}${avatar.startsWith('/') ? '' : '/'}${avatar}`
 }
 
 export function CustomerProfileContent() {
@@ -76,6 +92,8 @@ export function CustomerProfileContent() {
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
     id: 0,
@@ -110,7 +128,10 @@ export function CustomerProfileContent() {
         phoneNumber: response.phoneNumber,
         point: response.user.point,
         type: 'CUSTOMER', // Từ response structure này là customer
+        avatar: response.user.avatar // Lấy avatar từ user object
       }
+
+      console.log('Customer avatar from API:', response.user.avatar);
 
       setUser(mappedUser)
       setFormData({
@@ -144,10 +165,32 @@ export function CustomerProfileContent() {
 
     setIsSaving(true)
     try {
+      let avatarUrl = user?.avatar; // Giữ nguyên avatar cũ nếu không có thay đổi
+
+      // Upload avatar nếu có file mới
+      if (avatarFile) {
+        const formDataUpload = new FormData();
+        formDataUpload.append('avatar', avatarFile);
+        
+        try {
+          const uploadResponse = await apiClient.post<{ avatarUrl: string }>('/users/avatar', formDataUpload, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+          avatarUrl = uploadResponse.avatarUrl;
+          toast.success('Tải ảnh đại diện lên thành công!');
+        } catch (uploadError) {
+          console.error('Error uploading avatar:', uploadError);
+          toast.error('Không thể tải ảnh lên, nhưng sẽ tiếp tục cập nhật thông tin khác');
+        }
+      }
+
       // Gửi cả name và phoneNumber (phoneNumber không cho sửa, nhưng backend yêu cầu)
       const response = await apiClient.put<AccountResponse>('/accounts/profile', {
         name: formData.name,
         phoneNumber: formData.phoneNumber, // Đảm bảo luôn gửi lên
+        avatar: avatarUrl,
       })
 
       // Update user state with new data
@@ -157,6 +200,7 @@ export function CustomerProfileContent() {
         phoneNumber: response.phoneNumber,
         point: response.user.point,
         type: 'CUSTOMER',
+        avatar: avatarUrl,
       }
 
       setUser(mappedUser)
@@ -166,6 +210,10 @@ export function CustomerProfileContent() {
         username: '',
         phoneNumber: response.phoneNumber,
       })
+
+      // Reset avatar states after successful save
+      setAvatarFile(null)
+      setAvatarPreview(null)
 
       setIsEditing(false)
       toast.success('Cập nhật thông tin thành công!')
@@ -186,6 +234,9 @@ export function CustomerProfileContent() {
         phoneNumber: user.phoneNumber || '',
       })
     }
+    // Reset avatar states
+    setAvatarFile(null)
+    setAvatarPreview(null)
     setIsEditing(false)
   }
 
@@ -406,6 +457,24 @@ export function CustomerProfileContent() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
+                  {/* Avatar */}
+                  <div className="flex flex-col items-center space-y-4 pb-6 border-b border-gray-200">
+                    <AvatarUpload
+                      currentAvatar={avatarPreview || getAvatarUrl(user.avatar)}
+                      onAvatarChange={(file, previewUrl) => {
+                        setAvatarFile(file)
+                        setAvatarPreview(previewUrl)
+                      }}
+                      disabled={!isEditing}
+                      size="xl"
+                    />
+                    {isEditing && (
+                      <p className="text-xs text-gray-500 text-center">
+                        Nhấp để tải ảnh lên hoặc kéo thả ảnh vào đây
+                      </p>
+                    )}
+                  </div>
+
                   {/* Họ và tên */}
                   <div className="space-y-2">
                     <Label htmlFor="name" className="flex items-center gap-2">

@@ -67,6 +67,7 @@ export interface User {
   id: number
   name: string
   point: number
+  avatar?: string // URL hoặc base64 của avatar
 }
 
 export interface UserWithDetails extends User {

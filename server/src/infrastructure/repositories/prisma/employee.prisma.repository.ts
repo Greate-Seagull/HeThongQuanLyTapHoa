@@ -9,7 +9,15 @@ export class EmployeePrismaRepository
 	extends PrismaRepository<Employee, EmployeeDto>
 	implements EmployeeRepository
 {
-	private static baseSelect = buildSafePrismaSelect(Employee);
+	// ✅ Explicit select avatar
+	private static baseSelect = {
+		select: {
+			id: true,
+			name: true,
+			position: true,
+			avatar: true,
+		}
+	};
 
 	protected buildUpdateData(entity: Employee): Partial<EmployeeDto> {
 		return this.toPersistence(entity);

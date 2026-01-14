@@ -29,6 +29,7 @@ import {
 import { apiClient } from '@/services/api-client'
 import { toast } from 'sonner'
 import { set } from 'react-hook-form'
+import { AvatarUpload } from '@/components/ui/avatar-upload'
 
 enum EmployeePosition {
   SALES = 'SALES',
@@ -46,6 +47,7 @@ interface UserProfile {
   point?: number
   type: 'EMPLOYEE' | 'CUSTOMER'
   employeeId?: number // Thêm trường này để lưu id của bảng Employee
+  avatar?: string // Avatar URL
 }
 
 interface ApiResponse {
@@ -65,6 +67,17 @@ interface ProfilePageProps {
 
 const API_BASE_URL = 'http://localhost:3000' // Thay URL này
 
+// Helper function để convert relative avatar path thành full URL
+const getAvatarUrl = (avatar?: string | null): string | null => {
+  if (!avatar) return null
+  // Nếu đã là full URL (http/https), return luôn
+  if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
+    return avatar
+  }
+  // Nếu là relative path, thêm API_BASE_URL
+  return `${API_BASE_URL}${avatar.startsWith('/') ? '' : '/'}${avatar}`
+}
+
 export function ProfilePage({ user: initialUser, role }: ProfilePageProps = {}) {
   // Đóng dialog đổi mật khẩu
   const handleClosePasswordDialog = () => {
@@ -81,6 +94,8 @@ export function ProfilePage({ user: initialUser, role }: ProfilePageProps = {}) 
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
     id: 0,
@@ -110,8 +125,14 @@ export function ProfilePage({ user: initialUser, role }: ProfilePageProps = {}) 
         } as any)
         console.log('API /employee-accounts/profile response:', response);
         // Luôn lấy employeeId từ response (không fallback sang id)
-        setUser({ ...response, type: 'EMPLOYEE', employeeId: response.employeeId });
+        setUser({ 
+          ...response, 
+          type: 'EMPLOYEE', 
+          employeeId: response.employeeId,
+          avatar: response.avatar // Đảm bảo lấy avatar từ response
+        });
         console.log('user.employeeId set:', response.employeeId);
+        console.log('user.avatar set:', response.avatar);
         setFormData({
           id: response.employeeId,
           name: response.name,
@@ -130,7 +151,9 @@ export function ProfilePage({ user: initialUser, role }: ProfilePageProps = {}) 
             point: response.user.point,
             type: 'CUSTOMER',
             username: '',
+            avatar: response.user.avatar // Lấy avatar từ user object trong response
           })
+          console.log('Customer avatar from API:', response.user.avatar);
           setFormData({
             id: response.id,
             name: response.user.name,
@@ -168,6 +191,27 @@ export function ProfilePage({ user: initialUser, role }: ProfilePageProps = {}) 
     }
 
     try {
+      let avatarUrl = user?.avatar; // Giữ nguyên avatar cũ nếu không có thay đổi
+
+      // Upload avatar nếu có file mới
+      if (avatarFile) {
+        const formDataUpload = new FormData();
+        formDataUpload.append('avatar', avatarFile);
+        
+        try {
+          const uploadResponse = await apiClient.post<{ avatarUrl: string }>('/users/avatar', formDataUpload, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+          avatarUrl = uploadResponse.avatarUrl;
+          toast.success('Tải ảnh đại diện lên thành công!');
+        } catch (uploadError) {
+          console.error('Error uploading avatar:', uploadError);
+          toast.error('Không thể tải ảnh lên, nhưng sẽ tiếp tục cập nhật thông tin khác');
+        }
+      }
+
       let response;
       if (user?.type === 'CUSTOMER') {
         // Cập nhật thông tin khách hàng
@@ -175,6 +219,7 @@ export function ProfilePage({ user: initialUser, role }: ProfilePageProps = {}) 
           id: formData.id,
           name: formData.name,
           phoneNumber: formData.phoneNumber,
+          avatar: avatarUrl,
         });
       } else if (user?.position === EmployeePosition.MANAGER) {
         // Chỉ MANAGER mới gửi employeeId lên /accounts/manager
@@ -182,6 +227,7 @@ export function ProfilePage({ user: initialUser, role }: ProfilePageProps = {}) 
           id: user.employeeId,
           name: formData.name,
           username: formData.username,
+          avatar: avatarUrl,
         };
         console.log('USER object:', user);
         console.log('PUT /accounts/manager payload:', managerPayload);
@@ -192,6 +238,7 @@ export function ProfilePage({ user: initialUser, role }: ProfilePageProps = {}) 
           id: user.id,
           name: formData.name,
           username: formData.username,
+          avatar: avatarUrl,
         };
         console.log('USER object:', user);
         console.log('PUT /employee-accounts payload:', employeePayload);
@@ -210,6 +257,7 @@ export function ProfilePage({ user: initialUser, role }: ProfilePageProps = {}) 
           position: EmployeePosition.MANAGER,
           // Giữ lại employeeId cũ để lần sau vẫn gửi đúng
           employeeId: user.employeeId,
+          avatar: avatarUrl,
         });
       } else if (user?.type === 'EMPLOYEE') {
         setUser({
@@ -217,15 +265,22 @@ export function ProfilePage({ user: initialUser, role }: ProfilePageProps = {}) 
           type: 'EMPLOYEE',
           position: user.position,
           employeeId: user.employeeId,
+          avatar: avatarUrl,
         });
       } else if (user?.type === 'CUSTOMER') {
         setUser({
           ...result,
           type: 'CUSTOMER',
+          avatar: avatarUrl,
         });
       } else {
         setUser(result);
       }
+      
+      // Reset avatar states after successful save
+      setAvatarFile(null);
+      setAvatarPreview(null);
+      
       setIsEditing(false);
       toast.success('Cập nhật thông tin thành công!');
     } catch (error) {
@@ -243,6 +298,9 @@ export function ProfilePage({ user: initialUser, role }: ProfilePageProps = {}) 
       username: user?.username || '',
       phoneNumber: user?.phoneNumber || '',
     })
+    // Reset avatar states
+    setAvatarFile(null)
+    setAvatarPreview(null)
     setIsEditing(false)
   }
 
@@ -470,6 +528,24 @@ export function ProfilePage({ user: initialUser, role }: ProfilePageProps = {}) 
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
+                  {/* Avatar */}
+                  <div className="flex flex-col items-center space-y-4 pb-6 border-b border-gray-200">
+                    <AvatarUpload
+                      currentAvatar={avatarPreview || getAvatarUrl(user.avatar)}
+                      onAvatarChange={(file, previewUrl) => {
+                        setAvatarFile(file)
+                        setAvatarPreview(previewUrl)
+                      }}
+                      disabled={!isEditing}
+                      size="xl"
+                    />
+                    {isEditing && (
+                      <p className="text-xs text-gray-500 text-center">
+                        Nhấp để tải ảnh lên hoặc kéo thả ảnh vào đây
+                      </p>
+                    )}
+                  </div>
+
                   {/* Họ và tên */}
                   <div className="space-y-2">
                     <Label htmlFor="name" className="flex items-center gap-2">

@@ -13,6 +13,7 @@ export type EmployeeId = number | null;
 export class Employee extends BaseEntity<EmployeeId> {
 	private _name: string = null;
 	private _position: EmployeePosition = EmployeePosition.SALES;
+	private _avatar: string | null = null;
 
 	static create(name: string, position: string) {
 		const employee = new Employee();
@@ -21,9 +22,10 @@ export class Employee extends BaseEntity<EmployeeId> {
 		return employee;
 	}
 
-	update(name?: string, position?: string) {
+	update(name?: string, position?: string, avatar?: string) {
 		if (name !== undefined) this.name = name;
 		if (position !== undefined) this.position = position as EmployeePosition;
+		if (avatar !== undefined) this.avatar = avatar;
 	}
 
 	// Setters
@@ -36,6 +38,9 @@ export class Employee extends BaseEntity<EmployeeId> {
 			throw Error(`Invalid position, ${value}`);
 		this._position = value;
 	}
+	private set avatar(value: string | null) {
+		this._avatar = value;
+	}
 
 	// Getters
 	@Read
@@ -47,5 +52,10 @@ export class Employee extends BaseEntity<EmployeeId> {
 	@Write
 	get position() {
 		return this._position;
+	}
+	@Read
+	@Write
+	get avatar() {
+		return this._avatar;
 	}
 }

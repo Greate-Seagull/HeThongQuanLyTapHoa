@@ -24,6 +24,7 @@ export class EmployeeAccountReadAccessor {
             id: true,
             name: true,
             position: true,
+            avatar: true,
           },
         },
       },

@@ -1,6 +1,7 @@
 import express from "express";
 import jsend from "jsend";
 import cors from "cors";
+import path from "path";
 import productRouter from "./presentation/routes/product.route";
 import promotionRouter from "./presentation/routes/promotion.route";
 import invoiceRouter from "./presentation/routes/invoice.route";
@@ -14,6 +15,7 @@ import shelfRouter from "./presentation/routes/shelf.route";
 import slotRouter from "./presentation/routes/slot.route";
 import rackRouter from "./presentation/routes/rack.route";
 import employeeRouter from "./presentation/routes/employee.route";
+import userRouter from "./presentation/routes/user.route";
 
 import { reportRouter } from "./presentation/routes/report.route";
 import * as compositionRoot from "./composition-root";
@@ -37,6 +39,10 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(jsend.middleware);
+
+// Serve static files cho uploads
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 app.use("/products", productRouter);
 app.use("/promotions", promotionRouter);
 app.use("/invoices", invoiceRouter);
@@ -50,6 +56,7 @@ app.use("/shelves", shelfRouter);
 app.use("/slots", slotRouter);
 app.use("/racks", rackRouter);
 app.use("/employees", employeeRouter);
+app.use("/users", userRouter);
 app.use(
   "/reports",
   reportRouter({

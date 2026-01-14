@@ -6,6 +6,7 @@ const schema = z.object({
 	id: z.number().nullable().optional(),
 	name: z.string(),
 	position: z.string(),
+	avatar: z.string().nullable().optional(), // ✅ Add avatar field
 });
 
 export type EmployeeDto = z.infer<typeof schema>;

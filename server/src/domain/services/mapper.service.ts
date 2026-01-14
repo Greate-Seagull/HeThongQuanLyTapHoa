@@ -43,6 +43,10 @@ export function fromPersistence<T extends BaseEntity<Id>>(
 	const relations = instance.__relations || {};
 
 	const e = new cls();
+	
+	const readable = instance.__readable || [];
+	
+	// Map từ Object.keys như cũ
 	for (const key of Object.keys(e)) {
 		const publicKey = key.startsWith("_") ? key.slice(1) : key;
 		const value = raw[publicKey];
@@ -50,6 +54,20 @@ export function fromPersistence<T extends BaseEntity<Id>>(
 			e[key] = value.map((v) => fromPersistence(relations[publicKey], v));
 		else e[key] = fromPersistence(relations[publicKey], value) || value;
 	}
+	
+	// ✅ Fallback để map fields có @Read nhưng không có trong Object.keys
+	for (const publicKey of readable) {
+		const privateKey = `_${publicKey}`;
+		// Chỉ map nếu chưa được map ở trên
+		if (e[privateKey] === undefined && raw[publicKey] !== undefined) {
+			const value = raw[publicKey];
+			if (Array.isArray(value))
+				e[privateKey] = value.map((v) => fromPersistence(relations[publicKey], v));
+			else 
+				e[privateKey] = fromPersistence(relations[publicKey], value) || value;
+		}
+	}
+	
 	return e;
 }
 

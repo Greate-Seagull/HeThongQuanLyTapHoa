@@ -14,6 +14,7 @@ const outputSchema = z.object({
     id: z.number(),
     name: z.string(),
     point: z.number(),
+    avatar: z.string().nullable().optional().default(null), // ✅ Default to null
   }),
 });
 

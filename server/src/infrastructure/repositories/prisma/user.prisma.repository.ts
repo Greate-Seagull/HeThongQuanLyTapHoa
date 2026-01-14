@@ -9,7 +9,15 @@ export class UserPrismaRepository
 	extends PrismaRepository<User, UserDto>
 	implements UserRepository
 {
-	private static baseSelect = buildSafePrismaSelect(User);
+	// ✅ Explicit select avatar
+	private static baseSelect = {
+		select: {
+			id: true,
+			name: true,
+			point: true,
+			avatar: true,
+		}
+	};
 
 	protected buildUpdateData(entity: User): Partial<UserDto> {
 		return this.toPersistence(entity);

@@ -15,6 +15,7 @@ const outputSchema = z.object({
   username: z.string(),
   name: z.string(),
   position: z.string(),
+  avatar: z.string().nullable().optional().default(null), // ✅ Default to null nếu undefined
 });
 
 type EmployeeAccountProfileOutput = z.infer<typeof outputSchema>;
@@ -39,19 +40,23 @@ export class GetEmployeeAccountProfileUsecase {
     
     // Lấy thông tin employee
     let employee = await this.employeeRepo.getById(account.employeeId);
+    
     if (!employee) {
       // fallback nếu không có, thử lấy qua read accessor
       employee = await this.employeeRead.getPositionById(account.employeeId);
       if (!employee) throw Error("Employee not found");
     }
 
-    log.info("Task completed");
-    return outputSchema.parse({
+    const result = {
       id: account.id,
-      employeeId: account.employeeId, // Add employeeId to response
+      employeeId: account.employeeId,
       username: account.username,
       name: employee.name,
       position: employee.position,
-    });
+      avatar: employee.avatar || null,
+    };
+
+    log.info("Task completed");
+    return outputSchema.parse(result);
   }
 }
