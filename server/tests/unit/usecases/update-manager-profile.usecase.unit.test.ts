@@ -31,10 +31,13 @@ describe("UpdateManagerProfileUsecase Unit Tests", () => {
         id: 1,
         name: "Old Name",
         position: "MANAGER",
+        avatar: null,
       });
       mockPrisma.employee.update.mockResolvedValue({
         id: 1,
         name: "New Name",
+        position: "MANAGER", // ✅ Include position in mock response
+        avatar: null,
       });
       mockPrisma.employeeAccount.updateMany.mockResolvedValue({ count: 1 });
 

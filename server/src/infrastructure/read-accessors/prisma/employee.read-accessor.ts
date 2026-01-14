@@ -14,7 +14,7 @@ export class EmployeeReadAccess {
 	async getPositionById(employeeId: number) {
 		return await this.prisma.employee.findUnique({
 			where: { id: employeeId },
-			select: { id: true, name: true, position: true },
+			select: { id: true, name: true, position: true, avatar: true },
 		});
 	}
 

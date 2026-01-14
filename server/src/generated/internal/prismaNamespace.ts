@@ -1931,7 +1931,8 @@ export type PromotionDetailScalarFieldEnum = (typeof PromotionDetailScalarFieldE
 export const UserScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  point: 'point'
+  point: 'point',
+  avatar: 'avatar'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -1952,7 +1953,8 @@ export type AccountScalarFieldEnum = (typeof AccountScalarFieldEnum)[keyof typeo
 export const EmployeeScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  position: 'position'
+  position: 'position',
+  avatar: 'avatar'
 } as const
 
 export type EmployeeScalarFieldEnum = (typeof EmployeeScalarFieldEnum)[keyof typeof EmployeeScalarFieldEnum]

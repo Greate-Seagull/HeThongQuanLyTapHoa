@@ -13,6 +13,7 @@ const inputSchema = z.object({
     .transform((val) => typeof val === 'string' ? Number(val) : val),
   phoneNumber: z.string(),
   name: z.string(),
+  avatar: z.string().optional(),
 });
 
 export class UpdateCustomerAccountUsecase {
@@ -47,10 +48,13 @@ export class UpdateCustomerAccountUsecase {
         data: { phoneNumber: parsed.phoneNumber },
       });
 
-      // Update user (name)
+      // Update user (name and avatar)
       await tx.user.update({
         where: { id: account.userId },
-        data: { name: parsed.name },
+        data: { 
+          name: parsed.name,
+          ...(parsed.avatar !== undefined && { avatar: parsed.avatar }),
+        },
       });
 
       // Lấy lại account kèm user (giống API profile)
@@ -64,6 +68,7 @@ export class UpdateCustomerAccountUsecase {
               id: true,
               name: true,
               point: true,
+              avatar: true,
             },
           },
         },

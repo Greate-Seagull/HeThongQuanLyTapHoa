@@ -94,7 +94,8 @@ describe("UpdateEmployeeAccountUsecase Unit Tests", () => {
 
       expect(mockEmployee.update).toHaveBeenCalledWith(
         "Trần Thị B",
-        "Supervisor"
+        "Supervisor",
+        undefined // avatar parameter
       );
       expect(mockEmployeeRepo.save).toHaveBeenCalledWith(mockEmployee);
       expect(result.name).toBe("Trần Thị B");
@@ -134,7 +135,7 @@ describe("UpdateEmployeeAccountUsecase Unit Tests", () => {
       });
 
       expect(mockAccount.updateUsername).toHaveBeenCalledWith("newuser");
-      expect(mockEmployee.update).toHaveBeenCalledWith("Lê Văn C", "Staff");
+      expect(mockEmployee.update).toHaveBeenCalledWith("Lê Văn C", "Staff", undefined);
       expect(result.id).toBe(1);
       expect(result.username).toBe("newuser");
     });
@@ -165,7 +166,7 @@ describe("UpdateEmployeeAccountUsecase Unit Tests", () => {
         name: "Phạm Thị D",
       });
 
-      expect(mockEmployee.update).toHaveBeenCalledWith("Phạm Thị D", undefined);
+      expect(mockEmployee.update).toHaveBeenCalledWith("Phạm Thị D", undefined, undefined);
     });
   });
 
@@ -237,6 +238,7 @@ describe("UpdateEmployeeAccountUsecase Unit Tests", () => {
 
       expect(mockEmployee.update).toHaveBeenCalledWith(
         "Đỗ Thị Ngọc Ánh",
+        undefined,
         undefined
       );
     });

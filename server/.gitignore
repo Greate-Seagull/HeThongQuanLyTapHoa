@@ -4,3 +4,6 @@ node_modules
 
 src/generated
 src/dist
+
+# Uploads folder (avatar images, etc.)
+uploads/

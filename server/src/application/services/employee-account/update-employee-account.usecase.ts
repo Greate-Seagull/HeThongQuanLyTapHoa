@@ -9,6 +9,7 @@ const inputSchema = z.object({
   name: z.string().optional(),
   username: z.string().optional(),
   position: z.string().optional(),
+  avatar: z.string().optional(),
 });
 
 const outputSchema = z.object({
@@ -16,6 +17,7 @@ const outputSchema = z.object({
   name: z.string(),
   username: z.string(),
   position: z.string(),
+  avatar: z.string().nullable().optional().default(null), // ✅ Default to null
 });
 
 type UpdateEmployeeAccountOutput = z.infer<typeof outputSchema>;
@@ -46,21 +48,23 @@ export class UpdateEmployeeAccountUsecase {
 
     // Cập nhật name/position cho employee nếu có
     let employee = null;
-    if (parsedInput.name !== undefined || parsedInput.position !== undefined) {
+    if (parsedInput.name !== undefined || parsedInput.position !== undefined || parsedInput.avatar !== undefined) {
       employee = await this.employeeRepo.getById(account.employeeId);
       if (!employee) throw Error("Employee not found");
-      employee.update(parsedInput.name, parsedInput.position);
+      employee.update(parsedInput.name, parsedInput.position, parsedInput.avatar);
       await this.employeeRepo.save(employee);
     } else {
       employee = await this.employeeRead.getPositionById(account.employeeId);
     }
 
     log.info("Task completed");
-    return outputSchema.parse({
+    const result = {
       id: savedAccount.id,
       name: employee.name,
       username: savedAccount.username,
       position: employee.position,
-    });
+      avatar: employee.avatar || null,
+    };
+    return outputSchema.parse(result);
   }
 }

@@ -54,5 +54,13 @@ export class EmployeeRepository implements EmployeeRepository {
 		return this.updateById(employee, tx);
 	}
 
-	static baseQuery = buildSafePrismaSelect(Employee);
+	static baseQuery = {
+		select: {
+			id: true,
+			name: true,
+			position: true,
+			avatar: true, // ✅ Explicit select avatar
+		}
+	};
+	// static baseQuery = buildSafePrismaSelect(Employee); // ❌ Không hoạt động với avatar
 }
