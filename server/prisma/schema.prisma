@@ -177,6 +177,7 @@ model Slot {
 model SlotDetail {
   slotId    Int
   productId Int
+  quantity  Int     @default(0) // Số lượng sản phẩm trong ô
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   slot      Slot    @relation(fields: [slotId], references: [id], onDelete: Cascade)
 

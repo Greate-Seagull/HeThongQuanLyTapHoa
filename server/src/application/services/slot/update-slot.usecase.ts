@@ -9,6 +9,7 @@ const inputSchema = z.object({
   name: z.string().min(1).optional(),
   rackId: z.number().optional(),
   productId: z.number().optional(),
+  quantity: z.number().optional(), // Thêm quantity field
 });
 
 const outputSchema = z.object({
@@ -42,10 +43,12 @@ export class UpdateSlotUsecase {
     console.log("Slot with id", slot.id, "after update:", slot);
 
     if (parsedInput.productId !== undefined && parsedInput.productId !== null) {
-      // Có productId hợp lệ → Cập nhật
+      // Có productId hợp lệ → Cập nhật SlotDetail với quantity
+      const quantity = parsedInput.quantity ?? undefined; // Use provided quantity or undefined to keep existing
       await this.slotDetailUsecase.update(
         parsedInput.id,
-        parsedInput.productId
+        parsedInput.productId,
+        quantity
       );
     } else {
       // KHÔNG có productId hoặc productId = null → Xóa

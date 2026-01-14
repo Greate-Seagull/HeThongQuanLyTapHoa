@@ -693,14 +693,19 @@ async function main() {
   // ============================================
   console.log('Creating slot details...')
   const slotDetails = await Promise.all(
-    products.slice(0, 15).map((product, index) =>
-      prisma.slotDetail.create({
+    products.slice(0, 15).map((product, index) => {
+      // Đảm bảo quantity của slot >= amount của product
+      const productAmount = product.amount
+      const slotCapacity = Math.max(productAmount + Math.floor(Math.random() * 50) + 10, productAmount)
+      
+      return prisma.slotDetail.create({
         data: {
           slotId: slots[index % slots.length].id,
           productId: product.id,
+          quantity: slotCapacity, // Slot capacity phải >= product amount
         },
       })
-    )
+    })
   )
   console.log(`✅ Created ${slotDetails.length} slot details`)
 

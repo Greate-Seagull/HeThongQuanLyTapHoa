@@ -34,6 +34,7 @@ import { toast } from 'sonner'
 interface Product {
   id: number
   name: string
+  amount: number
 }
 
 interface SlotWithProduct {
@@ -42,6 +43,7 @@ interface SlotWithProduct {
   rackId: number
   productId?: number
   productName?: string
+  quantity?: number
 }
 
 interface Slot {
@@ -94,7 +96,12 @@ export function LocationManagement() {
 
   const [shelfFormData, setShelfFormData] = useState({ name: '' })
   const [rackFormData, setRackFormData] = useState({ name: '', shelfId: 0 })
-  const [slotFormData, setSlotFormData] = useState({ name: '', rackId: 0, productId: 0 })
+  const [slotFormData, setSlotFormData] = useState({ 
+    name: '', 
+    rackId: 0, 
+    productId: 0,
+    quantity: 0 
+  })
   const [isSavingShelf, setIsSavingShelf] = useState(false)
   const [isSavingRack, setIsSavingRack] = useState(false)
   const [isSavingSlot, setIsSavingSlot] = useState(false)
@@ -170,6 +177,7 @@ export function LocationManagement() {
             shelfName: shelf.name,
             productId: productInfo?.productId,
             productName: productInfo?.productName,
+            quantity: productInfo?.quantity || 0, // Thêm quantity
           })
         })
       })
@@ -290,8 +298,8 @@ export function LocationManagement() {
   const handleAddSlot = () => {
     setEditingSlot(null)
     const allRacks = getAllRacks()
-    // Mặc định productId là 0 (Không chọn sản phẩm)
-    setSlotFormData({ name: '', rackId: allRacks[0]?.id || 0, productId: 0 })
+    // Mặc định productId là 0 (Không chọn sản phẩm), quantity để empty
+    setSlotFormData({ name: '', rackId: allRacks[0]?.id || 0, productId: 0, quantity: 0 })
     setIsSlotDialogOpen(true)
   }
 
@@ -302,6 +310,7 @@ export function LocationManagement() {
       name: slot.name,
       rackId,
       productId: slotWithProduct?.productId || 0, // Nếu không có sản phẩm thì set là 0
+      quantity: slotWithProduct?.quantity || 0, // Lấy quantity hiện tại
     })
     setIsSlotDialogOpen(true)
   }
@@ -318,24 +327,41 @@ export function LocationManagement() {
   const handleSaveSlot = async () => {
     setIsSavingSlot(true)
     try {
-      // ✅ THÊM VALIDATION NÀY
-      // Kiểm tra nếu đang edit và slot hiện tại có sản phẩm
-      // if (editingSlot) {
-      //   const currentSlotInfo = slotsWithProduct.find((s) => s.slotId === editingSlot.id)
+      // ✅ VALIDATION 1: Kiểm tra quantity phải >= 0
+      if (slotFormData.quantity < 0) {
+        toast.error('Số lượng không thể âm')
+        setIsSavingSlot(false)
+        return
+      }
 
-      //   // Nếu slot đang có sản phẩm mà người dùng chọn "Không có sản phẩm" (productId = 0)
-      //   if (
-      //     currentSlotInfo?.productId &&
-      //     (!slotFormData.productId || slotFormData.productId === 0)
-      //   ) {
-      //     toast.error(
-      //       'Không thể xóa sản phẩm khỏi ô này. Vui lòng chọn sản phẩm khác hoặc giữ nguyên.'
-      //     )
-      //     setIsSavingSlot(false)
-      //     return
-      //   }
-      // }
-      // ✅ KẾT THÚC VALIDATION
+      // ✅ VALIDATION 2: Nếu có chọn sản phẩm, kiểm tra product amount
+      if (slotFormData.productId && slotFormData.productId !== 0) {
+        const selectedProduct = products.find((p) => p.id === slotFormData.productId)
+        
+        if (selectedProduct) {
+          // Kiểm tra số lượng có thể chứa của ô phải >= số lượng hiện có của sản phẩm
+          if (slotFormData.quantity < selectedProduct.amount) {
+            toast.error(
+              `Số lượng chứa của ô (${slotFormData.quantity}) phải lớn hơn hoặc bằng số lượng sản phẩm hiện có (${selectedProduct.amount})`
+            )
+            setIsSavingSlot(false)
+            return
+          }
+        }
+
+        // ✅ VALIDATION 3: Kiểm tra sản phẩm đã tồn tại trong ô khác chưa (chỉ khi thêm mới hoặc đổi sản phẩm)
+        const existingSlotWithProduct = slotsWithProduct.find(
+          (s) => s.productId === slotFormData.productId && s.slotId !== editingSlot?.id
+        )
+        
+        if (existingSlotWithProduct) {
+          toast.error(
+            `Sản phẩm này đã được đặt trong ô "${existingSlotWithProduct.slotName}". Mỗi sản phẩm chỉ có thể ở một ô.`
+          )
+          setIsSavingSlot(false)
+          return
+        }
+      }
 
       const payload = {
         name: slotFormData.name,
@@ -344,6 +370,9 @@ export function LocationManagement() {
           slotFormData.productId && slotFormData.productId !== 0
             ? slotFormData.productId
             : undefined,
+        quantity: slotFormData.productId && slotFormData.productId !== 0 
+          ? slotFormData.quantity 
+          : undefined, // Chỉ gửi quantity nếu có sản phẩm
       }
 
       if (editingSlot) {
@@ -596,13 +625,14 @@ export function LocationManagement() {
                   <TableHead className="text-blue-900">Tên ô</TableHead>
                   <TableHead className="text-blue-900">Vị trí (Kệ - Ngăn)</TableHead>
                   <TableHead className="text-blue-900">Tên sản phẩm</TableHead>
+                  <TableHead className="text-center text-blue-900">Số lượng</TableHead>
                   <TableHead className="text-right text-blue-900">Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredSlots.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="py-8 text-center text-gray-500">
+                    <TableCell colSpan={6} className="py-8 text-center text-gray-500">
                       Không tìm thấy ô
                     </TableCell>
                   </TableRow>
@@ -620,6 +650,15 @@ export function LocationManagement() {
                             <span className="font-medium text-blue-700">{slot.productName}</span>
                           ) : (
                             <span className="italic text-gray-400">Trống</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {slot.productId ? (
+                            <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-800">
+                              {slot.quantity || 0}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
                           )}
                         </TableCell>
                         <TableCell className="text-right">
@@ -799,25 +838,78 @@ export function LocationManagement() {
             <div className="space-y-2">
               <Label htmlFor="productId">Sản phẩm (Không bắt buộc)</Label>
               <Select
-                value={slotFormData.productId?.toString() || '0'}
-                onValueChange={(value) =>
-                  setSlotFormData({ ...slotFormData, productId: parseInt(value) })
-                }
+                value={slotFormData.productId && slotFormData.productId !== 0 ? slotFormData.productId.toString() : undefined}
+                onValueChange={(value) => {
+                  const productId = parseInt(value) || 0
+                  const selectedProduct = products.find((p) => p.id === productId)
+                  
+                  // Khi chọn sản phẩm, tự động set quantity tối thiểu = product.amount
+                  if (selectedProduct && productId !== 0) {
+                    setSlotFormData({ 
+                      ...slotFormData, 
+                      productId,
+                      quantity: Math.max(slotFormData.quantity, selectedProduct.amount)
+                    })
+                  } else {
+                    setSlotFormData({ ...slotFormData, productId: 0, quantity: 0 })
+                  }
+                }}
               >
                 <SelectTrigger className="border-blue-200">
-                  <SelectValue />
+                  <SelectValue placeholder="-- Không có sản phẩm --" />
                 </SelectTrigger>
                 <SelectContent className="max-h-[300px]">
                   {/* Thêm option để chọn không có sản phẩm */}
-                  <SelectItem value="0">-- Không có sản phẩm --</SelectItem>
+                  <SelectItem value="none">-- Không có sản phẩm --</SelectItem>
                   {products.map((product) => (
                     <SelectItem key={product.id} value={product.id.toString()}>
-                      {product.name}
+                      {product.name} (Tồn kho: {product.amount})
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+            {/* Hiển thị input Số lượng chỉ khi có sản phẩm được chọn */}
+            {!!(slotFormData.productId && slotFormData.productId !== 0) && (
+              <div className="space-y-2">
+                <Label htmlFor="quantity">
+                  Số lượng có thể chứa 
+                  <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="quantity"
+                  type="number"
+                  min={products.find((p) => p.id === slotFormData.productId)?.amount || 0}
+                  value={slotFormData.quantity}
+                  onChange={(e) =>
+                    setSlotFormData({ ...slotFormData, quantity: parseInt(e.target.value) || 0 })
+                  }
+                  className="border-blue-200"
+                  placeholder="Nhập số lượng sản phẩm"
+                />
+                {(() => {
+                  const selectedProduct = products.find((p) => p.id === slotFormData.productId)
+                  if (selectedProduct) {
+                    return (
+                      <div className="space-y-1">
+                        <p className="text-xs text-gray-600">
+                          <span className="font-semibold">Tồn kho hiện tại:</span> {selectedProduct.amount}
+                        </p>
+                        <p className="text-xs text-blue-600">
+                          Số lượng chứa phải ≥ {selectedProduct.amount}
+                        </p>
+                        {slotFormData.quantity < selectedProduct.amount && (
+                          <p className="text-xs text-red-600 font-semibold">
+                            ⚠️ Số lượng chứa không đủ cho sản phẩm này
+                          </p>
+                        )}
+                      </div>
+                    )
+                  }
+                  return null
+                })()}
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button

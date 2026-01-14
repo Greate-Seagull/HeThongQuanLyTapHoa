@@ -373,7 +373,7 @@ export const updateRackUsecase = new UpdateRackUsecase(rackRepo);
 export const deleteRackUsecase = new DeleteRackUsecase(rackRepo);
 
 const slotDetailRepo = new SlotDetailRepository(prisma);
-const slotDetailUsecase = new SlotDetailUsecase(slotDetailRepo);
+export const slotDetailUsecase = new SlotDetailUsecase(slotDetailRepo);
 export const createSlotUsecase = new CreateSlotUsecase(
   slotRepo,
   rackRepo,

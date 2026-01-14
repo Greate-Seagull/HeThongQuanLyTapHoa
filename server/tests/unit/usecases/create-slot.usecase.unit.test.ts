@@ -46,7 +46,7 @@ describe("CreateSlotUsecase Unit Tests", () => {
       const result = await usecase.execute(input);
 
       expect(result.slotId).toBe(1);
-      expect(mockSlotDetailUsecase.add).toHaveBeenCalledWith(1, 100);
+      expect(mockSlotDetailUsecase.add).toHaveBeenCalledWith(1, 100, 0); // Thêm quantity = 0
     });
 
     it("should create slot with Vietnamese name", async () => {
@@ -58,6 +58,19 @@ describe("CreateSlotUsecase Unit Tests", () => {
       const result = await usecase.execute(input);
 
       expect(result.slotId).toBe(2);
+    });
+
+    it("should create slot with productId and quantity", async () => {
+      const input = { rackId: 1, name: "Slot A1", productId: 100, quantity: 150, authId: 1 };
+      const mockSlot = { id: 3, rackId: 1, name: "Slot A1" };
+      mockRackRepo.getByIds.mockResolvedValue([{ id: 1, name: "Rack A" }]);
+      mockSlotRepo.add.mockResolvedValue(mockSlot);
+      mockSlotDetailUsecase.add.mockResolvedValue(undefined);
+
+      const result = await usecase.execute(input);
+
+      expect(result.slotId).toBe(3);
+      expect(mockSlotDetailUsecase.add).toHaveBeenCalledWith(3, 100, 150);
     });
   });
 

@@ -28,26 +28,31 @@ export type AggregateSlotDetail = {
 export type SlotDetailAvgAggregateOutputType = {
   slotId: number | null
   productId: number | null
+  quantity: number | null
 }
 
 export type SlotDetailSumAggregateOutputType = {
   slotId: number | null
   productId: number | null
+  quantity: number | null
 }
 
 export type SlotDetailMinAggregateOutputType = {
   slotId: number | null
   productId: number | null
+  quantity: number | null
 }
 
 export type SlotDetailMaxAggregateOutputType = {
   slotId: number | null
   productId: number | null
+  quantity: number | null
 }
 
 export type SlotDetailCountAggregateOutputType = {
   slotId: number
   productId: number
+  quantity: number
   _all: number
 }
 
@@ -55,26 +60,31 @@ export type SlotDetailCountAggregateOutputType = {
 export type SlotDetailAvgAggregateInputType = {
   slotId?: true
   productId?: true
+  quantity?: true
 }
 
 export type SlotDetailSumAggregateInputType = {
   slotId?: true
   productId?: true
+  quantity?: true
 }
 
 export type SlotDetailMinAggregateInputType = {
   slotId?: true
   productId?: true
+  quantity?: true
 }
 
 export type SlotDetailMaxAggregateInputType = {
   slotId?: true
   productId?: true
+  quantity?: true
 }
 
 export type SlotDetailCountAggregateInputType = {
   slotId?: true
   productId?: true
+  quantity?: true
   _all?: true
 }
 
@@ -167,6 +177,7 @@ export type SlotDetailGroupByArgs<ExtArgs extends runtime.Types.Extensions.Inter
 export type SlotDetailGroupByOutputType = {
   slotId: number
   productId: number
+  quantity: number
   _count: SlotDetailCountAggregateOutputType | null
   _avg: SlotDetailAvgAggregateOutputType | null
   _sum: SlotDetailSumAggregateOutputType | null
@@ -195,6 +206,7 @@ export type SlotDetailWhereInput = {
   NOT?: Prisma.SlotDetailWhereInput | Prisma.SlotDetailWhereInput[]
   slotId?: Prisma.IntFilter<"SlotDetail"> | number
   productId?: Prisma.IntFilter<"SlotDetail"> | number
+  quantity?: Prisma.IntFilter<"SlotDetail"> | number
   product?: Prisma.XOR<Prisma.ProductScalarRelationFilter, Prisma.ProductWhereInput>
   slot?: Prisma.XOR<Prisma.SlotScalarRelationFilter, Prisma.SlotWhereInput>
 }
@@ -202,6 +214,7 @@ export type SlotDetailWhereInput = {
 export type SlotDetailOrderByWithRelationInput = {
   slotId?: Prisma.SortOrder
   productId?: Prisma.SortOrder
+  quantity?: Prisma.SortOrder
   product?: Prisma.ProductOrderByWithRelationInput
   slot?: Prisma.SlotOrderByWithRelationInput
 }
@@ -213,6 +226,7 @@ export type SlotDetailWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.SlotDetailWhereInput | Prisma.SlotDetailWhereInput[]
   slotId?: Prisma.IntFilter<"SlotDetail"> | number
   productId?: Prisma.IntFilter<"SlotDetail"> | number
+  quantity?: Prisma.IntFilter<"SlotDetail"> | number
   product?: Prisma.XOR<Prisma.ProductScalarRelationFilter, Prisma.ProductWhereInput>
   slot?: Prisma.XOR<Prisma.SlotScalarRelationFilter, Prisma.SlotWhereInput>
 }, "slotId_productId">
@@ -220,6 +234,7 @@ export type SlotDetailWhereUniqueInput = Prisma.AtLeast<{
 export type SlotDetailOrderByWithAggregationInput = {
   slotId?: Prisma.SortOrder
   productId?: Prisma.SortOrder
+  quantity?: Prisma.SortOrder
   _count?: Prisma.SlotDetailCountOrderByAggregateInput
   _avg?: Prisma.SlotDetailAvgOrderByAggregateInput
   _max?: Prisma.SlotDetailMaxOrderByAggregateInput
@@ -233,9 +248,11 @@ export type SlotDetailScalarWhereWithAggregatesInput = {
   NOT?: Prisma.SlotDetailScalarWhereWithAggregatesInput | Prisma.SlotDetailScalarWhereWithAggregatesInput[]
   slotId?: Prisma.IntWithAggregatesFilter<"SlotDetail"> | number
   productId?: Prisma.IntWithAggregatesFilter<"SlotDetail"> | number
+  quantity?: Prisma.IntWithAggregatesFilter<"SlotDetail"> | number
 }
 
 export type SlotDetailCreateInput = {
+  quantity?: number
   product: Prisma.ProductCreateNestedOneWithoutSlotDetailsInput
   slot: Prisma.SlotCreateNestedOneWithoutSlotDetailsInput
 }
@@ -243,9 +260,11 @@ export type SlotDetailCreateInput = {
 export type SlotDetailUncheckedCreateInput = {
   slotId: number
   productId: number
+  quantity?: number
 }
 
 export type SlotDetailUpdateInput = {
+  quantity?: Prisma.IntFieldUpdateOperationsInput | number
   product?: Prisma.ProductUpdateOneRequiredWithoutSlotDetailsNestedInput
   slot?: Prisma.SlotUpdateOneRequiredWithoutSlotDetailsNestedInput
 }
@@ -253,20 +272,23 @@ export type SlotDetailUpdateInput = {
 export type SlotDetailUncheckedUpdateInput = {
   slotId?: Prisma.IntFieldUpdateOperationsInput | number
   productId?: Prisma.IntFieldUpdateOperationsInput | number
+  quantity?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type SlotDetailCreateManyInput = {
   slotId: number
   productId: number
+  quantity?: number
 }
 
 export type SlotDetailUpdateManyMutationInput = {
-
+  quantity?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type SlotDetailUncheckedUpdateManyInput = {
   slotId?: Prisma.IntFieldUpdateOperationsInput | number
   productId?: Prisma.IntFieldUpdateOperationsInput | number
+  quantity?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type SlotDetailListRelationFilter = {
@@ -287,26 +309,31 @@ export type SlotDetailSlotIdProductIdCompoundUniqueInput = {
 export type SlotDetailCountOrderByAggregateInput = {
   slotId?: Prisma.SortOrder
   productId?: Prisma.SortOrder
+  quantity?: Prisma.SortOrder
 }
 
 export type SlotDetailAvgOrderByAggregateInput = {
   slotId?: Prisma.SortOrder
   productId?: Prisma.SortOrder
+  quantity?: Prisma.SortOrder
 }
 
 export type SlotDetailMaxOrderByAggregateInput = {
   slotId?: Prisma.SortOrder
   productId?: Prisma.SortOrder
+  quantity?: Prisma.SortOrder
 }
 
 export type SlotDetailMinOrderByAggregateInput = {
   slotId?: Prisma.SortOrder
   productId?: Prisma.SortOrder
+  quantity?: Prisma.SortOrder
 }
 
 export type SlotDetailSumOrderByAggregateInput = {
   slotId?: Prisma.SortOrder
   productId?: Prisma.SortOrder
+  quantity?: Prisma.SortOrder
 }
 
 export type SlotDetailCreateNestedManyWithoutProductInput = {
@@ -394,11 +421,13 @@ export type SlotDetailUncheckedUpdateManyWithoutSlotNestedInput = {
 }
 
 export type SlotDetailCreateWithoutProductInput = {
+  quantity?: number
   slot: Prisma.SlotCreateNestedOneWithoutSlotDetailsInput
 }
 
 export type SlotDetailUncheckedCreateWithoutProductInput = {
   slotId: number
+  quantity?: number
 }
 
 export type SlotDetailCreateOrConnectWithoutProductInput = {
@@ -433,14 +462,17 @@ export type SlotDetailScalarWhereInput = {
   NOT?: Prisma.SlotDetailScalarWhereInput | Prisma.SlotDetailScalarWhereInput[]
   slotId?: Prisma.IntFilter<"SlotDetail"> | number
   productId?: Prisma.IntFilter<"SlotDetail"> | number
+  quantity?: Prisma.IntFilter<"SlotDetail"> | number
 }
 
 export type SlotDetailCreateWithoutSlotInput = {
+  quantity?: number
   product: Prisma.ProductCreateNestedOneWithoutSlotDetailsInput
 }
 
 export type SlotDetailUncheckedCreateWithoutSlotInput = {
   productId: number
+  quantity?: number
 }
 
 export type SlotDetailCreateOrConnectWithoutSlotInput = {
@@ -471,34 +503,42 @@ export type SlotDetailUpdateManyWithWhereWithoutSlotInput = {
 
 export type SlotDetailCreateManyProductInput = {
   slotId: number
+  quantity?: number
 }
 
 export type SlotDetailUpdateWithoutProductInput = {
+  quantity?: Prisma.IntFieldUpdateOperationsInput | number
   slot?: Prisma.SlotUpdateOneRequiredWithoutSlotDetailsNestedInput
 }
 
 export type SlotDetailUncheckedUpdateWithoutProductInput = {
   slotId?: Prisma.IntFieldUpdateOperationsInput | number
+  quantity?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type SlotDetailUncheckedUpdateManyWithoutProductInput = {
   slotId?: Prisma.IntFieldUpdateOperationsInput | number
+  quantity?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type SlotDetailCreateManySlotInput = {
   productId: number
+  quantity?: number
 }
 
 export type SlotDetailUpdateWithoutSlotInput = {
+  quantity?: Prisma.IntFieldUpdateOperationsInput | number
   product?: Prisma.ProductUpdateOneRequiredWithoutSlotDetailsNestedInput
 }
 
 export type SlotDetailUncheckedUpdateWithoutSlotInput = {
   productId?: Prisma.IntFieldUpdateOperationsInput | number
+  quantity?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type SlotDetailUncheckedUpdateManyWithoutSlotInput = {
   productId?: Prisma.IntFieldUpdateOperationsInput | number
+  quantity?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 
@@ -506,6 +546,7 @@ export type SlotDetailUncheckedUpdateManyWithoutSlotInput = {
 export type SlotDetailSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   slotId?: boolean
   productId?: boolean
+  quantity?: boolean
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   slot?: boolean | Prisma.SlotDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["slotDetail"]>
@@ -513,6 +554,7 @@ export type SlotDetailSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
 export type SlotDetailSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   slotId?: boolean
   productId?: boolean
+  quantity?: boolean
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   slot?: boolean | Prisma.SlotDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["slotDetail"]>
@@ -520,6 +562,7 @@ export type SlotDetailSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
 export type SlotDetailSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   slotId?: boolean
   productId?: boolean
+  quantity?: boolean
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   slot?: boolean | Prisma.SlotDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["slotDetail"]>
@@ -527,9 +570,10 @@ export type SlotDetailSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
 export type SlotDetailSelectScalar = {
   slotId?: boolean
   productId?: boolean
+  quantity?: boolean
 }
 
-export type SlotDetailOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"slotId" | "productId", ExtArgs["result"]["slotDetail"]>
+export type SlotDetailOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"slotId" | "productId" | "quantity", ExtArgs["result"]["slotDetail"]>
 export type SlotDetailInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   slot?: boolean | Prisma.SlotDefaultArgs<ExtArgs>
@@ -552,6 +596,7 @@ export type $SlotDetailPayload<ExtArgs extends runtime.Types.Extensions.Internal
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     slotId: number
     productId: number
+    quantity: number
   }, ExtArgs["result"]["slotDetail"]>
   composites: {}
 }
@@ -979,6 +1024,7 @@ export interface Prisma__SlotDetailClient<T, Null = never, ExtArgs extends runti
 export interface SlotDetailFieldRefs {
   readonly slotId: Prisma.FieldRef<"SlotDetail", 'Int'>
   readonly productId: Prisma.FieldRef<"SlotDetail", 'Int'>
+  readonly quantity: Prisma.FieldRef<"SlotDetail", 'Int'>
 }
     
 

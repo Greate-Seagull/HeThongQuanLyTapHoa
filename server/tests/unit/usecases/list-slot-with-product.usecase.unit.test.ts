@@ -51,6 +51,7 @@ describe("ListSlotWithProductUsecase Unit Tests", () => {
           productName: "Product A",
           productPrice: 10000,
           productUnit: "piece",
+          quantity: 0,
         },
       ]);
     });

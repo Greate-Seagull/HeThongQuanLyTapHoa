@@ -257,7 +257,8 @@ export type SlotScalarFieldEnum = (typeof SlotScalarFieldEnum)[keyof typeof Slot
 
 export const SlotDetailScalarFieldEnum = {
   slotId: 'slotId',
-  productId: 'productId'
+  productId: 'productId',
+  quantity: 'quantity'
 } as const
 
 export type SlotDetailScalarFieldEnum = (typeof SlotDetailScalarFieldEnum)[keyof typeof SlotDetailScalarFieldEnum]
