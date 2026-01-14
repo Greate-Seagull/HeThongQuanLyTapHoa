@@ -24,6 +24,9 @@ export class ListSlotWithProductUsecase {
       productName: sd.product?.name,
       productPrice: sd.product?.price,
       productUnit: sd.product?.unit,
+      
+      // Số lượng sản phẩm trong ô
+      quantity: sd.quantity || 0,
     }));
   }
 }

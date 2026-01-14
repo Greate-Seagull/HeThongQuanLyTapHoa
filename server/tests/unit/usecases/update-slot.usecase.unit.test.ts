@@ -42,7 +42,20 @@ describe("UpdateSlotUsecase Unit Tests", () => {
       const result = await usecase.execute(input);
 
       expect(result.slotId).toBe(1);
-      expect(mockSlotDetailUsecase.update).toHaveBeenCalledWith(1, 100);
+      expect(mockSlotDetailUsecase.update).toHaveBeenCalledWith(1, 100, undefined); // Thêm quantity = undefined
+    });
+
+    it("should update slot with productId and quantity", async () => {
+      const input = { id: 1, name: "Slot A", productId: 100, quantity: 200, authId: 1 };
+      const oldSlot = Slot.create({ id: 1, rackId: 1, name: "Old" });
+      mockSlotRepo.getById.mockResolvedValue(oldSlot);
+      mockSlotRepo.update.mockResolvedValue({ id: 1 });
+      mockSlotDetailUsecase.update.mockResolvedValue(undefined);
+
+      const result = await usecase.execute(input);
+
+      expect(result.slotId).toBe(1);
+      expect(mockSlotDetailUsecase.update).toHaveBeenCalledWith(1, 100, 200);
     });
 
     it("should update slot with Vietnamese name", async () => {

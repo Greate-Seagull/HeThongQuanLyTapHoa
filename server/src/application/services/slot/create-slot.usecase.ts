@@ -9,6 +9,7 @@ const inputSchema = z.object({
   name: z.string().min(1),
   rackId: z.number(),
   productId: z.number().optional(),
+  quantity: z.number().optional(), // Thêm quantity field
 });
 
 const outputSchema = z.object({
@@ -40,9 +41,10 @@ export class CreateSlotUsecase {
     const slot = Slot.create(parsedInput);
     const savedSlot = await this.slotRepo.add(slot);
 
-    // Nếu có productId thì lưu SlotDetail
+    // Nếu có productId thì lưu SlotDetail với quantity
     if (parsedInput.productId) {
-      await this.slotDetailUsecase.add(savedSlot.id, parsedInput.productId);
+      const quantity = parsedInput.quantity ?? 0; // Default to 0 if not provided
+      await this.slotDetailUsecase.add(savedSlot.id, parsedInput.productId, quantity);
     }
 
     log.info("Task completed");
